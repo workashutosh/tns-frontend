@@ -1,0 +1,536 @@
+﻿<!-- Styles -->
+<style>
+    #chartcontrols {
+        background-color: white;
+    }
+    #chartdiv {
+        background-color:white;
+        width: 100%;
+        height: 90vh;
+        max-width: 100%
+    }
+</style>
+
+<!-- Resources -->
+<script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/stock.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+<script src="~/Content/js/jquery-3.4.1.min.js"></script>
+
+<!-- Chart code -->
+<script>
+    am5.ready(function () {
+        tokenname = getParameterByName("tkname");
+      
+        var root = am5.Root.new("chartdiv");
+
+       
+        root.setThemes([am5themes_Animated.new(root)]);
+
+        var stockChart = root.container.children.push(
+            am5stock.StockChart.new(root, {})
+        );
+
+     
+        root.numberFormatter.set("numberFormat", "#,###.00");
+
+    
+        var mainPanel = stockChart.panels.push(
+            am5stock.StockPanel.new(root, {
+                wheelY: "zoomX",
+                panX: true,
+                panY: true
+            })
+        );
+
+     
+        var valueAxis = mainPanel.yAxes.push(
+            am5xy.ValueAxis.new(root, {
+                renderer: am5xy.AxisRendererY.new(root, {
+                    pan: "zoom"
+                }),
+                extraMin: 0.1, // adds some space for for main series
+                tooltip: am5.Tooltip.new(root, {}),
+                numberFormat: "#,###.00",
+                extraTooltipPrecision: 2
+            })
+        );
+
+        var dateAxis = mainPanel.xAxes.push(
+            am5xy.GaplessDateAxis.new(root, {
+                baseInterval: {
+                    timeUnit: "minute",
+                    count: 1
+                },
+                renderer: am5xy.AxisRendererX.new(root, {}),
+                tooltip: am5.Tooltip.new(root, {})
+            })
+        );
+
+        // add range which will show current value
+        var currentValueDataItem = valueAxis.createAxisRange(valueAxis.makeDataItem({ value: 0 }));
+        var currentLabel = currentValueDataItem.get("label");
+        if (currentLabel) {
+            currentLabel.setAll({
+                fill: am5.color(0xffffff),
+                background: am5.Rectangle.new(root, { fill: am5.color(0x000000) })
+            })
+        }
+
+        var currentGrid = currentValueDataItem.get("grid");
+        if (currentGrid) {
+            currentGrid.setAll({ strokeOpacity: 0.5, strokeDasharray: [2, 5] });
+        }
+
+
+        var valueSeries = mainPanel.series.push(
+            am5xy.CandlestickSeries.new(root, {
+                name: tokenname,
+                clustered: false,
+                valueXField: "Date",
+                valueYField: "Close",
+                highValueYField: "High",
+                lowValueYField: "Low",
+                openValueYField: "Open",
+                calculateAggregates: true,
+                xAxis: dateAxis,
+                yAxis: valueAxis,
+                legendValueText:
+                    "open: [bold]{openValueY}[/] high: [bold]{highValueY}[/] low: [bold]{lowValueY}[/] close: [bold]{valueY}[/]",
+                legendRangeValueText: ""
+            })
+        );
+
+        stockChart.set("stockSeries", valueSeries);
+
+        
+        var valueLegend = mainPanel.plotContainer.children.push(
+            am5stock.StockLegend.new(root, {
+                stockChart: stockChart
+            })
+        );
+
+        
+        valueLegend.data.setAll([valueSeries]);
+
+     
+        mainPanel.set(
+            "cursor",
+            am5xy.XYCursor.new(root, {
+                yAxis: valueAxis,
+                xAxis: dateAxis,
+                snapToSeries: [valueSeries],
+                snapToSeriesBy: "y!"
+            })
+        );
+
+       
+        var scrollbar = mainPanel.set(
+            "scrollbarX",
+            am5xy.XYChartScrollbar.new(root, {
+                orientation: "horizontal",
+                height: 0
+            })
+        );
+        stockChart.toolsContainer.children.push(scrollbar);
+
+        var sbDateAxis = scrollbar.chart.xAxes.push(
+            am5xy.GaplessDateAxis.new(root, {
+                baseInterval: {
+                    timeUnit: "minute",
+                    count: 1
+                },
+                renderer: am5xy.AxisRendererX.new(root, {})
+            })
+        );
+
+        var sbValueAxis = scrollbar.chart.yAxes.push(
+            am5xy.ValueAxis.new(root, {
+                renderer: am5xy.AxisRendererY.new(root, {})
+            })
+        );
+
+        var sbSeries = scrollbar.chart.series.push(
+            am5xy.LineSeries.new(root, {
+                valueYField: "Close",
+                valueXField: "Date",
+                xAxis: sbDateAxis,
+                yAxis: sbValueAxis
+            })
+        );
+
+        sbSeries.fills.template.setAll({
+            visible: true,
+            fillOpacity: 0.3
+        });
+
+        // Data generator
+        var firstDate = new Date();
+        var lastDate;
+        var value = 1699;
+
+
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+        // data
+        var tokenname = "";
+
+        function prefix0(value) {
+            var val = ((parseInt(value)) > 9) ? (parseInt(value)) : "0" + (parseInt(value));
+            return val;
+        }
+
+        function fetchToken() {
+            $.ajax({
+                url: "/api/gettoken",
+                type: "get",
+                dataType: "json", // You can change this to "text" if the response is plain text
+                success: function (response) {
+                    console.log("Token Response:", response);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Failed to fetch token:", status, error);
+                    if (xhr.status === 0) {
+                        console.error("Possible CORS issue: Check if the server allows requests from your origin.");
+                    }
+                }
+            });
+        }
+
+
+        function generateChartData() {
+            var chartData = [];
+            var instoken = getParameterByName("instokn");
+        
+            var date1 = new Date();
+            var yy = date1.getFullYear();
+            var mm = ((date1.getMonth() + 1) > 9) ? (date1.getMonth() + 1) : "0" + (date1.getMonth() + 1);
+            var dd = ((date1.getDate()) > 9) ? (date1.getDate()) : "0" + (date1.getDate());
+            var hh = ((date1.getHours()) > 9) ? (date1.getHours()) : "0" + (date1.getHours());
+            var mmm = ((date1.getMinutes()) > 9) ? (date1.getMinutes()) : "0" + (date1.getMinutes());
+            var ss = ((date1.getSeconds()) > 9) ? (date1.getSeconds()) : "0" + (date1.getSeconds());
+            var interval = "minute";
+        
+            var lowmm = ((parseInt(mm) - 1) > 9) ? (parseInt(mm) - 1) : "0" + (parseInt(mm) - 1);
+            var fromdatetime = (parseInt(yy)) + "-" + mm + "-" + dd + "+" + "09:00:00";
+            var todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+            $.ajax({
+                url: "/api/gethistorydata?interval=" + interval + "&instrumenttoken=" + instoken + "&fromdatetime=" + fromdatetime + "&todatetime=" + todatetime,
+                type: "get",
+                dataType: "json", // Explicitly specify JSON response
+                success: function (response) {
+                    var data = response; // No need for JSON.parse since dataType is json
+                  
+                    var mcxdata = "";
+                    $.each(data.data.candles, function (i, item) {
+                        //[timestamp, open, high, low, close, volume]
+                        var actualtime = data.data.candles[i][0];
+                        var date = new Date(actualtime);
+                        var timestamp = date.getTime();
+                        var open = data.data.candles[i][1];
+                        var high = data.data.candles[i][2];
+                        var low = data.data.candles[i][3];
+                        var close = data.data.candles[i][4];
+                        var volume = data.data.candles[i][5];
+                     
+                        chartData.unshift({
+                            Date: timestamp,
+                            Close: close,
+                            Open: open,
+                            Low: low,
+                            High: high
+                        });
+                    });
+                    console.log("chartData", chartData);
+                    valueSeries.data.setAll(chartData);
+                    sbSeries.data.setAll(chartData);
+                    return chartData;
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    if (xhr.status === 0) {
+                        console.error("Possible CORS issue: Check if the server allows requests from your origin.");
+                    }
+                }
+            });
+        }
+
+        function filterchartdata(interval)
+        {
+            var chartData = [];
+            var instoken = getParameterByName("instokn");
+
+            var date1 = new Date();
+            var yy = date1.getFullYear();
+            var mm = ((date1.getMonth() + 1) > 9) ? (date1.getMonth() + 1) : "0" + (date1.getMonth() + 1);
+            var dd = ((date1.getDate()) > 9) ? (date1.getDate()) : "0" + (date1.getDate());
+
+            var hh = ((date1.getHours()) > 9) ? (date1.getHours()) : "0" + (date1.getHours());
+            var mmm = ((date1.getMinutes()) > 9) ? (date1.getMinutes()) : "0" + (date1.getMinutes());
+            var ss = ((date1.getSeconds()) > 9) ? (date1.getSeconds()) : "0" + (date1.getSeconds());
+
+            
+            var fromdatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+            var todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+
+            var intrvl = "";
+            if (interval == "1M" || interval == "2M" || interval == "3M" || interval == "4M" || interval == "5M" || interval == "10M" || interval == "15M" || interval == "30M")
+            {
+                var actualmin=mmm;
+                var mint = interval + "".replace("M", "");
+                intrvl = mint.replace("M", "") + "minute";
+                if (intrvl == "1minute") {
+                    intrvl = "minute";
+                }
+                var newmmm = parseInt(mmm) - parseInt(mint);
+                var newmmt = prefix0(newmmm);
+
+                var d = new Date();
+                d.setDate(d.getDate() - 1);
+                var prey = d.getFullYear();
+                var premm = prefix0((d.getMonth() + 1));
+                var predd = prefix0(d.getDate());
+
+
+                fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+                todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + actualmin + ":" + ss + "";
+            }
+            else if (interval == "1H" || interval == "2H" || interval == "3H" || interval == "4H" || interval == "5H")
+            {
+                var actualhh = hh;
+                var hhh = interval + "".replace("H", "");
+                intrvl = hhh.replace("H", "") + "hour";
+                if (intrvl == "1hour") {
+                    intrvl = "hour";
+                }
+                var newhh = parseInt(dd) - parseInt(7);
+                var d = new Date();
+                d.setDate(d.getDate() - 7);
+               var prey = d.getFullYear();
+                var premm = prefix0( (d.getMonth() + 1));
+                var predd = prefix0( d.getDate());
+               
+                fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+                todatetime = yy + "-" + mm + "-" + dd + "+" + actualhh + ":" + mmm + ":" + ss + "";
+            }
+            else if(interval=="1D")
+            {
+                var actualdd = dd;
+                var dddd = interval + "".replace("D", "");
+                intrvl = "day";
+                var d = new Date();
+                d.setDate(d.getMonth() - 1);
+                var prey = d.getFullYear();
+                var premm = prefix0((d.getMonth()));
+                var predd = prefix0(d.getDate());
+
+                fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+
+                todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+            }
+            else if (interval == "1W")
+            {
+                var actualdd = dd;
+                var dddd = "7";
+                var dddd = interval + "".replace("D", "");
+                intrvl = "week";
+                var d = new Date();
+                d.setDate((d.getMonth()+1) -6);
+                var prey = d.getFullYear();
+                var premm = prefix0((d.getMonth()));
+                var predd = prefix0(d.getDate());
+
+                fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+                todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+            }
+            else if (interval =="1MTH")
+            {
+                var actualdd = dd;
+                var dddd = interval + "".replace("D", "");
+                intrvl = "day";
+                var d = new Date();
+                d.setDate(d.getMonth() - 1);
+                var prey = d.getFullYear();
+                var premm = prefix0((d.getMonth()));
+                var predd = prefix0(d.getDate());
+
+                fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+
+                todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+            }
+            instoken = instoken.replace("D", "");
+
+            $.ajax({
+                url: "/api/gethistorydata?interval=" + intrvl+"&instrumenttoken=" + instoken + "&fromdatetime=" + fromdatetime + "&todatetime=" + todatetime,
+                type: "get",
+                success: function (response) {
+                    var data = JSON.parse(response);
+
+                    var mcxdata = "";
+                    $.each(data.data.candles, function (i, item) {
+                        //[timestamp, open, high, low, close, volume]
+                        var actualtime = data.data.candles[i][0];
+                        var date = new Date(actualtime);
+                        var timestamp = date.getTime();
+                        var open = data.data.candles[i][1];
+                        var high = data.data.candles[i][2];
+                        var low = data.data.candles[i][3];
+                        var close = data.data.candles[i][4];
+                        var volume = data.data.candles[i][5];
+
+                        chartData.unshift({
+                            Date: timestamp,
+                            Close: close,
+                            Open: open,
+                            Low: low,
+                            High: high
+                        });
+                    });
+                    console.log("chartData", chartData);
+                    valueSeries.data.setAll(chartData);
+                    sbSeries.data.setAll(chartData);
+                    return chartData;
+                }
+            });
+        }
+
+
+        var data = generateChartData();
+
+        // set data to all series
+        //valueSeries.data.setAll(data);
+      //  sbSeries.data.setAll(data);
+
+        // update data
+        var previousDate;
+        var myDropdown = am5stock.DropdownListControl.new(root, {
+            stockChart: stockChart,
+            items: [{
+                id: "heading1",
+                label: "Minutes",
+                className: "am5stock-list-info am5stock-list-heading"
+            },{
+                id: "1M",
+                label: "1M"
+                },
+                {
+                    id: "2M",
+                    label: "2M"
+                },
+                {
+                    id: "3M",
+                    label: "3M"
+                },
+                {
+                    id: "4M",
+                    label: "4M"
+                },
+                {
+                id: "5M",
+                label: "5M"
+                },
+                {
+                id: "10M",
+                label: "10M"
+                }, {
+                    id: "15M",
+                    label: "15M"
+                }, {
+                    id: "30M",
+                    label: "30M"
+                },
+                {
+                    id: "heading2",
+                    label: "Hour",
+                    className: "am5stock-list-info am5stock-list-heading"
+                }, {
+                    id: "1H",
+                    label: "1H"
+                }, {
+                    id: "2H",
+                    label: "2H"
+                }, {
+                    id: "3H",
+                    label: "3H"
+                }, {
+                    id: "4H",
+                    label: "4H"
+                },  {
+                    id: "heading3",
+                    label: "Other",
+                    className: "am5stock-list-info am5stock-list-heading"
+                }, {
+                    id: "1D",
+                    label: "1D"
+                }, {
+                    id: "1W",
+                    label: "1W"
+                }
+                , {
+                    id: "1M",
+                    label: "1MTH"
+                }
+            ]
+        });
+
+        myDropdown.events.on("selected", function (ev) {
+           
+            filterchartdata(ev.item.label);
+        });
+        var toolbar = am5stock.StockToolbar.new(root, {
+            container: document.getElementById("chartcontrols"),
+            stockChart: stockChart,
+            controls: [
+                am5stock.IndicatorControl.new(root, {
+                    stockChart: stockChart,
+                    legend: valueLegend
+                }),
+
+                myDropdown,
+       
+                //am5stock.DateRangeSelector.new(root, {
+                //    stockChart: stockChart
+                //}),
+                //am5stock.PeriodSelector.new(root, {
+                //    stockChart: stockChart,
+                //     periods: [
+                //         { timeUnit: "minute", count: 1, name: "1M" },
+                //         { timeUnit: "minute", count: 2, name: "2M" },
+                //         { timeUnit: "minute", count: 3, name: "3M" },
+                //         { timeUnit: "minute", count: 4, name: "4M" },
+                //         { timeUnit: "minute", count: 5, name: "5M" },
+                //         { timeUnit: "minute", count: 10, name: "10M" },
+                //         { timeUnit: "minute", count: 15, name: "15M" },
+                //         { timeUnit: "minute", count: 30, name: "30M" },
+                //         { timeUnit: "hour", count: 1, name: "1H" },
+                //         { timeUnit: "hour", count: 2, name: "2H" },
+                //         { timeUnit: "hour", count: 3, name: "3H" },
+                //         { timeUnit: "hour", count: 4, name: "4H" },
+                //         { timeUnit: "hour", count: 5, name: "5H" },
+
+
+                //    ]
+                //}),
+                
+                am5stock.ResetControl.new(root, {
+                    stockChart: stockChart
+                }),
+                am5stock.SettingsControl.new(root, {
+                    stockChart: stockChart
+                })
+            ]
+        })
+
+    }); // end am5.ready()
+</script>
+
+<!-- HTML -->
+<div id="chartcontrols"></div>
+<div id="chartdiv"></div>

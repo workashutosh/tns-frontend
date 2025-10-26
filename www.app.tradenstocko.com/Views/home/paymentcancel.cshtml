@@ -1,0 +1,70 @@
+﻿
+@{
+    ViewBag.Title = "paymentcancel";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Cancelled</title>
+    <!-- Add Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-xc/3J1FY88p3NaWGm0Nv0fxsC7suO4pmaLEEuGKfrY+sSZ6gwIcA+Q6Rj5jtxyR5cF+UZrRujQ+U7cQ8l6e7Lg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #d9534f;
+        }
+
+        p {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #d9534f;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+
+        .icon {
+            font-size: 48px;
+            color: #d9534f;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <i class="fas fa-times-circle icon"></i>
+        <h1>Payment Cancelled</h1>
+        <p>We're sorry, but your payment has been cancelled by the user.</p>
+        <p>Please try again later or contact customer support for assistance.</p>
+        <a href="/home/accounts" class="btn">Back to Checkout</a>
+    </div>
+</body>
+</html>
+
+
+

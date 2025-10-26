@@ -1,0 +1,31 @@
+.side-logo {
+    text-align:center;
+}
+.sidebar .side-logo {
+    background-color: #1D3557;
+    border-radius: 0;
+    border-right: solid 1px #5c6d86;
+}
+.side-logo a {
+    background-color: #fff;
+    display: block;
+    padding: 15px;
+    width: 100%;
+    border-radius: 40px;
+}
+.side-logo a img {
+    height:100px;
+    max-width:100%;
+    width:auto;
+}
+.crm_body_bg, .metismenu {
+    background-color: #F1FAEE;
+}
+.sell-bage, .buy-bage {
+    font-size: 12px;
+    color: #3a1e1b;
+    line-height:12px;
+}
+.buy-bage {
+    color: #133713;
+}

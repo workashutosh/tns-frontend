@@ -1,0 +1,823 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.5, maximum-scale=1.0, user-scalable=no" />
+    <title>mcxfuture | Educating Stock</title>
+    <link rel="icon" href="../../Content/img/crazy-logo.jpg" type="image/png" />
+    <!-- themefy CSS -->
+    <link rel="stylesheet" href="../../Content/vendors/themefy_icon/themify-icons.css" />
+    <link rel="stylesheet" href="../../Content/vendors/font_awesome/css/all.min.css" />
+    <!-- text editor css -->
+    <link rel="stylesheet" href="../../Content/vendors/material_icon/material-icons.css" />
+    <!-- plugins CSS -->
+    <link rel="stylesheet" href="../../Content/css/plugins.css" />
+    <!-- Media CSS -->
+    <link rel="stylesheet" href="../../Content/css/media.css" />
+    <style>
+    </style>
+</head>
+<body class="crm_body_bg">
+
+
+    <div id="userprofile" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content" style="border:1px solid #2f8aa2">
+                <div class="modal-header">
+                    <table class="table">
+                        <tr>
+                            <td>
+                                <b>User Profile</b>
+                            </td>
+                            <td>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-body" style="text-align:center">
+                    <table id="userprofiledata" width="100%" class="table table-bordered table-striped">
+                    </table>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" data-dismiss="modal" onclick="closesellmodel()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="sidebar vertical-scroll  ps-container ps-theme-default ps-active-y">
+        <div class="logo side-logo">
+            <a href="index.html"><img src="../../Content/img/crazy-logo.jpg" alt=""></a>
+            <div class="sidebar_close_icon d-lg-none">
+                <i class="ti-close"></i>
+            </div>
+        </div>
+        <ul id="sidebar_menu">
+
+            <!--<li class="mm-active">
+            <a class="has-arrow" href="/home/dashboard" aria-expanded="false">
+                <!-- <i class="fas fa-th"></i>
+                <div class="icon_menu">
+                    <img src="~../../Content/img/menu-icon/dashboard.svg" alt="">
+                </div>
+                <span>DASHBOARD</span>
+                </a>
+                </li> -->
+
+            <li class="">
+                <a class="has-arrow" href="/home/tradedetails" aria-expanded="false">
+                    <div class="icon_menu">
+                        <img src="../../Content/img/menu-icon/3.svg" alt="">
+                    </div>
+                    <span>TRADES</span>
+                </a>
+            </li>
+            <li class="">
+                <a class="has-arrow" href="/home/accounts" aria-expanded="false">
+
+                    <div class="icon_menu">
+                        <img src="../../Content/img/menu-icon/4.svg" alt="">
+                    </div>
+                    <span>ACCOUNT</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+
+
+    <section class="main_content dashboard_part">
+        <!-- menu -->
+        <div class="container-fluid">
+            <div class="row">
+
+            </div>
+        </div>
+        <div class="mobile-nav">
+            <a href="marketwatchapp.html" id="marketwatchapp"><i class="fas fa-rupee-sign"></i><b>Wachlist</b> </a>
+            <a href="tradedetailsapp.html" id="tradedetailsapp"><i class="ti-book"></i><b>Trades</b> </a>
+            <a href="portfolioapp.html" id="portfolioapp"><i class="ti-briefcase"></i> <b>Portfolio</b></a>
+            <a href="accounts.html" id="accounts"><i class="ti-user"></i> <b>Account</b></a>
+        </div>
+        <!--/ menu  -->
+
+
+        <link href="../../Content/css/tabcss.css" rel="stylesheet" />
+
+
+        <div class="main_content_iner ">
+            <div class="container-fluid">
+                <div class="white_card card_height_100 mb_30 QA_section minus-mx-15 acount-src">
+                    <div class="white_card_header mb-0">
+                        <div class="box_header m-0">
+                            <div class="main-title">
+                                <h3 class="m-0">Portfolio</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="port-foilio">
+
+                        <div class="tile" id="tile-1">
+
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs nav-justified" role="tablist">
+                                <div class="slider"></div>
+
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="profile-tab" data-toggle="tab" href="#Activetab" role="tab" aria-controls="profile" aria-selected="false">Active</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="contact-tab" data-toggle="tab" href="#Closedtab" role="tab" aria-controls="contact" aria-selected="false">Closed</a>
+                                </li>
+                            </ul>
+
+                            <!-- Tab panes -->
+                            <div class="tab-content">
+
+                                <div class="tab-pane active fadein" id="Activetab" role="tabpanel" aria-labelledby="profile-tab">
+                                    <div class="table-responsive disp1">
+                                        <div class="container-fluid">
+                                            <div class="row">
+
+                                                <div class="col-lg-12">
+                                                    <div class="bg-white p-10">
+                                                        <table class="table lager-table" cellpadding="5">
+                                                            <tr>
+                                                                <td align="center">
+                                                                    Ledger Balance <strong id="userbalance">0</strong>
+                                                                </td>
+                                                                <td align="center">
+                                                                    Margin Available <strong id="marginavl">0</strong>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td align="center">
+                                                                    Active P/L <strong id="activepl">0</strong>
+                                                                </td>
+                                                                <td align="center">
+                                                                    M2M (Equity) <strong id="m2m">0</strong>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+
+                                                    <div id="activeorder" class="active-order">
+                                                    </div>
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade closedtab" id="Closedtab" role="tabpanel" aria-labelledby="contact-tab">
+                                    <div class="table-responsive disp1">
+                                        <div class="col-md-12">
+                                            <div class="bg-white p-10">
+                                                <table class="table lager-table" cellpadding="5">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td align="center">
+                                                                Ledger Balance <strong id="closeuserbalance">0</strong>
+                                                            </td>
+                                                            <td align="center">
+                                                                Net Profit/Loss <strong id="closenetpl">0</strong>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div id="closedorder" class="container-fluid active-order">
+
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="../../Content/js/jquery-3.4.1.min.js"></script>
+
+        <script>
+            $("#tile-1 .nav-tabs a").click(function () {
+                var position = $(this).parent().position();
+                var width = $(this).parent().width();
+                $("#tile-1 .slider").css({ "left": + position.left, "width": width });
+            });
+            var actWidth = $("#tile-1 .nav-tabs").find(".active").parent("li").width();
+            var actPosition = $("#tile-1 .nav-tabs .active").position();
+            $("#tile-1 .slider").css({ "left": + actPosition.left, "width": actWidth });
+
+
+            $(document).ready(function () {
+
+                getuserbalance();
+                getactiveorder();
+                getclosedorder();
+                //WebSocketTest();
+            });
+
+
+            function getuserbalance() {
+                var userid = localStorage.getItem("userid");
+                $.ajax({
+                    url: "https://app.tradewingss.com/api/getledgerbalance/?uid=" + userid,
+                    type: "get",
+                    success: function (response) {
+                        response = parseInt(response);
+                        $("#userbalance").html(response);
+                        $("#closeuserbalance").html(response);
+
+                        var activepl = $("#activepl").html();
+                        var newm2m = Math.round($("#userbalance").html()) - Math.round(activepl);
+                        var creditlimit = localStorage.getItem("CreditLimit");
+                        var m2m = Math.round($("#userbalance").html()) + 0 + Math.round(creditlimit);
+                        $("#m2m").html(parseInt(m2m));
+                        $("#marginavl").html(parseInt(m2m) - 0);
+                          $("#m2m").html(newm2m);
+                        $("#userbalancemodel").html(response);
+                    }
+                });
+
+                $.ajax({
+                    url: "https://app.tradewingss.com/api/getnetpl/?UserId=" + userid,
+                    type: "post",
+                    success: function (response) {
+                        var data = JSON.parse(response);
+                        $("#closenetpl").html(parseInt(data.P_L));
+                    }
+                });
+            }
+
+            var totalmarginused = 0;
+            function getactiveorder() {
+                var uid = localStorage.getItem("userid");
+                $.ajax({
+                    url: "https://app.tradewingss.com/api/getconsolidatedtrade/?uid=" + uid,
+                    type: "get",
+                    success: function (response) {
+                        var data = JSON.parse(response);
+
+                        if (data.length != 0) {
+                            var pendingorderdata = "";
+                            var tokens = "";
+                            $.each(data, function (i, item) {
+                                var OrderId = data[i].Id;
+                                var OrderCategory = data[i].OrderCategory;
+                                var TokenNo = data[i].TokenNo;
+                                tokens += TokenNo + ",";
+                                var OrderType = data[i].OrderType;
+                                var lot = data[i].Lot;
+                                var selectedlotsize = data[i].selectedlotsize;
+                                var OrderDate = data[i].OrderDate;
+                                var OrderTime = data[i].OrderTime;
+                                var ScriptName = data[i].ScriptName;
+                                var ActionType = data[i].ActionType;
+                                var OrderPrice = data[i].OrderPrice;
+                                OrderPrice = parseFloat(OrderPrice).toFixed(2);
+                                //let op = OrderPrice;
+                                //OrderPrice = op.tofixed(2);
+                                var MarginUsed = data[i].MarginUsed;
+                                totalmarginused += Math.round(MarginUsed);
+                                var HoldingMarginReq = data[i].HoldingMarginReq;
+                                var OrderStatus = data[i].OrderStatus;
+                                pendingorderdata += "<div class='act-box'>";
+                                pendingorderdata += "<table width='100%'>";
+
+                                pendingorderdata += "<tr>";
+                                pendingorderdata += "<td colspan='2' align='left'><span class='scrip-name'><strong>" + ScriptName + "</strong></span></td>";
+                                if (OrderCategory == "SELL") {
+                                    pendingorderdata += "<td align='right'><b><span id='ordercat" + TokenNo + "' class='color-bluest m-red-m'>" + OrderCategory + "</span>&nbsp;&nbsp;&nbsp;<span></b><strong class='color-bluest m-red-m'>" + lot + " @ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+
+                                } else {
+                                    pendingorderdata += "<td align='right'><b><span id='ordercat" + TokenNo + "'class='color-bluest m-green-m'>" + OrderCategory + "</span>&nbsp;&nbsp;&nbsp;<span></b><strong class='color-bluest m-green-m'>" + lot + " @ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+
+                                }
+
+                                pendingorderdata += "</tr>";
+
+                                pendingorderdata += "<tr>";
+                                pendingorderdata += "<td colspan='2'><span  style=''>Margin : <strong class='color-bluest'>" + MarginUsed + "</strong></span></td> <td colspan='2' align='right'><span style=''><strong class='color-bluest ' id='diffpric" + TokenNo + "'>0</strong></span></td>";
+                                pendingorderdata += "</tr>";
+
+                                pendingorderdata += "<tr>";
+                                pendingorderdata += "<td  colspan='2' align='left'></td>";
+                                pendingorderdata += "<td  colspan='2' align='right'>CMP : <span class='color-bluest' id='bid" + TokenNo + "' ><strong></strong></span></td>";
+                                pendingorderdata += "</tr>";
+
+                                pendingorderdata += "</table>";
+                                pendingorderdata += "</div>";
+
+
+
+                            });
+                            $("#activeorder").html(pendingorderdata);
+                            tokens = tokens.slice(0, -1);
+                            WebSocketTest(tokens);
+                        }
+
+                    }
+                });
+            }
+
+
+            function getclosedorder() {
+                var uid = localStorage.getItem("userid");
+                $.ajax({
+                    url: "https://app.tradewingss.com/api/getuserclosedorders/?UserId=" + uid,
+                    type: "post",
+                    success: function (response) {
+                        var data = JSON.parse(response);
+
+                        if (data.length != 0) {
+                            var closeordata = "";
+                            var tokens = "";
+                            $.each(data, function (i, item) {
+                                var OrderId = data[i].Id;
+                                var ScriptName = data[i].ScriptName;
+                                var Lot = data[i].Lot;
+                                var P_L = data[i].P_L;
+                                var OrderPrice = data[i].OrderPrice;
+                                var BroughtBy = data[i].BroughtBy;
+                                closeordata += "<div class='act-box'>";
+                                closeordata += "<table width='100%'>";
+
+                                closeordata += "<tr>";
+                                closeordata += "<td align='left'><span class='scrip-name'>" + ScriptName + "</span></td>";
+                                closeordata += "<td align='right'><span>Qty: <strong class='color-bluest'>" + Lot + "</strong></span></td>";
+                                closeordata += "</tr>";
+
+                                closeordata += "<tr>";
+                                closeordata += "<td align='left'><span >AvgSell : <strong class='color-bluest'>" + OrderPrice + "</strong></span></td> <td align='right'><span style=''>AvgBuy : <strong class='color-bluest'>" + BroughtBy + "</strong></span></td>";
+                                closeordata += "</tr>";
+
+                                closeordata += "<tr>";
+                                if (parseInt(P_L) < 0) {
+                                    closeordata += "<td colspan='2' align='left'>Profit/Loss : <strong class='m-red-m'>" + parseInt(P_L) + "</strong></td>";
+                                } else {
+                                    closeordata += "<td colspan='2' align='left'>Profit/Loss : <strong class='m-green-m'>+" + parseInt(P_L) + "</strong></td>";
+                                }
+
+                                closeordata += "</tr>";
+
+                                closeordata += "</table>";
+                                closeordata += "</div>";
+
+                            });
+                            $("#closedorder").html(closeordata);
+                            tokens = tokens.slice(0, -1);
+                            // WebSocketTest(tokens);
+                        }
+
+                    }
+                });
+            }
+
+
+
+
+
+            var uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+            //var uri = "wss://103.220.223.27/api/webapiwebsoc";
+            var websocket = new WebSocket(uri);
+            function readvalues() {
+
+                //$.ajax({
+                //    url: "http://103.220.223.27/api/getdata?tokenno=61744647",
+                //    type: "get",
+                //    success: function (response) {
+                //        console.log("ipx",response);
+                //    }
+                //});
+                var ws;
+
+                //Initialize socket
+
+                if (websocket.readyState == WebSocket.CLOSED) {
+                    websocket.onopen = function () {
+                        websocket.send(true);
+                        console.log("open");
+                    };
+                }
+                else {
+                    websocket.onopen = function () {
+                        websocket.send(true);
+                        console.log("open");
+                    };
+                }
+                //Open socket and send message
+
+                //Socket error handler
+                websocket.onerror = function (event) {
+                    $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+                };
+
+                var totalactivepl = 0;
+                var lotokn = localStorage.getItem("tkn");
+                //Socket message handler  +
+                websocket.onmessage = function (event) {
+                    var datax = JSON.parse(event.data);
+                    var Bid = datax.bid;
+                    var scriptname = datax.instrument_token;
+                    var Ask = datax.ask;
+                    var cmp = 0;
+                    var newamtdeff = 0;
+
+                    var ordercat = $("#ordercat" + scriptname).html();
+                    console.log("ordercat==", ordercat)
+                    if (ordercat == "SELL") {
+                        cmp = Ask;
+                        newamtdeff = (parseFloat($("#oldpr" + scriptname).html()) - parseFloat(cmp)).toFixed(2);
+                        //console.log("newamtdeff1", newamtdeff);
+                    }
+                    else {
+                        cmp = Bid;
+                        newamtdeff = parseFloat(cmp) - parseFloat($("#oldpr" + scriptname).html());
+                       // console.log("newamtdeff2", newamtdeff);
+                    }
+
+                    $("#bid" + scriptname).html("<b>" + cmp + "</b>");
+                    var newval = parseInt($("#sellotsize" + scriptname).html()) * newamtdeff;
+                    newval = parseFloat(newval).toFixed(2);
+                    totalactivepl += newval;
+                    if (parseInt(newval) < 0) {
+                        $("#diffpric" + scriptname).addClass("m-red-m");
+                    } else {
+                        $("#diffpric" + scriptname).addClass("m-green-m");
+                    }
+                    $("#diffpric" + scriptname).html(parseInt(newval));
+
+                    calcm2m(lotokn);
+
+                     var newmaginavailable = Math.round(userbalance) - Math.round(totalact);
+                      $("#marginavl").html(totalact);
+                     $("#marginavl1").html(totalact);
+                     $("#activepl").html(totalactivepl);
+                     $("#activepl1").html(totalactivepl);
+                      console.log("dataxs", datax);
+                };
+            }
+
+            function calcm2m(token) {
+                var totalactivepl = 0;
+                var tokarr = token.split(',');
+                for (var x = 0; x < tokarr.length; x++) {
+                    var tokn = tokarr[x];
+                    var acpl = $("#diffpric" + tokn).html();
+                    totalactivepl += parseFloat(acpl);
+                }
+                totalactivepl = parseFloat(totalactivepl).toFixed(2);
+                $("#activepl").html(parseInt(totalactivepl));
+                $("#activepl1").html(parseInt(totalactivepl));
+                var userbalance = $("#userbalance").html();
+                var creditlimit = localStorage.getItem("CreditLimit");
+                var m2m = (parseFloat(userbalance) + parseFloat(totalactivepl) + parseFloat(creditlimit)).toFixed(2);
+                $("#m2m").html(parseInt(parseInt(m2m)));
+                var newmaginavailable = (parseFloat(m2m - totalmarginused) + parseFloat(creditlimit)).toFixed(2);
+                $("#marginavl").html(parseInt(newmaginavailable));
+            }
+
+            function WebSocketTest(token) {
+                localStorage.setItem("tkn", token);
+                readvalues();
+            }
+
+
+            var mcxdata = [];
+
+            //
+        </script>
+
+    </section>
+
+    <div id="back-top" style="display: none;">
+        <a title="Go to Top" href="#">
+            <i class="ti-angle-up"></i>
+        </a>
+    </div>
+
+    <iframe style="display:none" id="IframeAdm" name="IFrameAdm" width="100%" height="100%" border="none" src="/Home/Autosqarapartialview"></iframe>
+    <iframe style="display:none" id="Iframeptoa" name="IFrameAdm" width="100%" height="100%" border="none" src="/Home/AutosqaraPendingToActive"></iframe>
+
+
+    <!-- popper js -->
+    <!-- bootstarp js -->
+    <script src="../../Content/js/bootstrap.min.js"></script>
+    <script src="../../Content/js/jquery-3.4.1.min.js"></script>
+    <script>
+
+        function logout() {
+            localStorage.removeItem("userid");
+            //location.href = "/login/index";
+        }
+
+        $(document).ready(function () {
+
+            var locationname = location.pathname
+            if (locationname == "/home/marketwatchapp") {
+                $("#marketwatchapp").addClass("active");
+            } else if (locationname == "/home/tradedetailsapp") {
+                $("#tradedetailsapp").addClass("active");
+            } else if (locationname == "/home/portfolioapp") {
+                $("#portfolioapp").addClass("active");
+            } else if (locationname == "/home/accounts") {
+                $("#accounts").addClass("active");
+            }
+            var userid = localStorage.getItem("userid");
+            if (userid == null) {
+                //location.href = "/login/index";
+            }
+            logincheck();
+            userprofile();
+
+            var ismcxtrade = localStorage.getItem("IsMCXTrade");
+            if (ismcxtrade == "true") {
+                var data = "<li id='mcxmenu'>";
+                data += "<a class='has-arrow' href = '/home/mcxfuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='../../Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN MCX</span>";
+                data += " </a>";
+                data += " </li >";
+                $("#sidebar_menu").append(data);
+
+            }
+
+            var isnsetrade = localStorage.getItem("IsNSETrade");
+            if (isnsetrade == "true") {
+                var data = "<li id='nsemenu'>";
+                data += "<a class='has-arrow' href = '/home/nsefuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='../../Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN NSE</span>";
+                data += " </a>";
+                data += " </li >";
+                $("#sidebar_menu").append(data);
+            }
+
+            var iscdstrade = localStorage.getItem("IsCDSTrade");
+            if (iscdstrade == "true") {
+                var data = "<li id='cdsmenu'>";
+                data += "<a class='has-arrow' href = '/home/cdsfuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='../../Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN OPTION</span>";
+                data += " </a>";
+                data += " </li >";
+
+                $("#sidebar_menu").append(data);
+            }
+
+            var usrnam = localStorage.getItem("ClientName");
+            $("#username").html(usrnam);
+            $("#usernameh1").html(usrnam);
+        });
+
+        function getdeviceid() {
+            let machineId = localStorage.getItem('MachineId');
+            if (!machineId) {
+                machineId = crypto.randomUUID();
+                localStorage.setItem('MachineId', machineId);
+            }
+            return machineId;
+        }
+
+        function logincheck() {
+            var userid = localStorage.getItem("userid");
+            $.ajax({
+                url: "https://app.tradewingss.com/api/refreshdata/?userid=" + userid,
+                type: "get",
+                success: function (response) {
+                    if (response == "false") {
+                        alert("Login has been Expired.");
+                        logout();
+                        return;
+                    }
+                    else if (response == "Bloked") {
+                        alert("Account has been Bloked. Please contact to Admin");
+                        logout();
+                        return;
+                    }
+                    var data = JSON.parse(response);
+                    //Check ValidTill
+                    console.log("refdata", data)
+                    var Password_ = data.Password_;
+                    var oldpassword = localStorage.getItem("oldpassword");
+                    if (oldpassword != Password_) {
+                        alert("Your Password has been Changed. Please login again");
+                        logout();
+                        return;
+                    }
+                    if (data.IsMCXTrade == "false") {
+                        $("#mcxmenu").hide();
+                        $("#mcxtabmenu").hide();
+
+                    } else {
+                        $("#mcxmenu").show();
+                        $("#mcxtabmenu").show();
+                    }
+                    if (data.IsNSETrade == "false") {
+                        $("#nsemenu").hide();
+                        $("#nsetabmenu").hide();
+                    } else {
+                        $("#nsemenu").show();
+                        $("#nsetabmenu").show();
+                    }
+                    if (data.IsCDSTrade == "false") {
+                        $("#cdsmenu").hide();
+                        $("#cdstabmenu").hide();
+                    } else {
+                        $("#cdsmenu").show();
+                        $("#cdstabmenu").show();
+                    }
+
+                    localStorage.setItem("trademcxunits", data.TradeMCXUnits);
+                    localStorage.setItem("tradeequityunits", data.TradeEquityUnits);
+                    localStorage.setItem("tradecdsunits", data.TradeCDSUnits);
+                    localStorage.setItem("profittradestoptime", data.profittradestoptime);
+
+                    localStorage.setItem("userid", data.UserId);
+                    localStorage.setItem("ClientName", data.ClientName);
+                    localStorage.setItem("Refid", data.Refid);
+                    localStorage.setItem("MobileNo", data.MobileNo);
+                    localStorage.setItem("EmailId", data.EmailId);
+                    localStorage.setItem("IsMCXTrade", data.IsMCXTrade);
+                    localStorage.setItem("IsNSETrade", data.IsNSETrade);
+                    localStorage.setItem("IsCDSTrade", data.IsCDSTrade);
+                    localStorage.setItem("CreditLimit", data.CreditLimit);
+                    localStorage.setItem("LedgerBalance", data.LedgerBalance);
+                    localStorage.setItem("TotalActive", data.TotalActive);
+                    localStorage.setItem("TotalPending", data.TotalPending);
+                    localStorage.setItem("TotalClosed", data.TotalClosed);
+                    localStorage.setItem("AllowOrdersCurrentBid", data.AllowOrdersCurrentBid);
+                    localStorage.setItem("AllowFreshEntryHighAndBelow", data.AllowFreshEntryHighAndBelow);
+                    localStorage.setItem("AllowOrdersHighLow", data.AllowOrdersHighLow);
+                    localStorage.setItem("AutoCloseTradesLossesLimit", data.AutoCloseTradesLossesLimit);
+                    localStorage.setItem("auto_close_all_active_trades_when_the_losses_reach", data.auto_close_all_active_trades_when_the_losses_reach);
+
+                    //MCX Brokerage
+                    localStorage.setItem("Mcx_Brokerage_Type", data.Mcx_Brokerage_Type);
+                    localStorage.setItem("MCX_brokerage_per_crore", data.MCX_brokerage_per_crore);
+                    localStorage.setItem("BULLDEX_brokerage", data.BULLDEX_brokerage);
+                    localStorage.setItem("GOLD_brokerage", data.GOLD_brokerage);
+                    localStorage.setItem("SILVER_brokerage", data.SILVER_brokerage);
+                    localStorage.setItem("CRUDEOIL_brokerage", data.CRUDEOIL_brokerage);
+                    localStorage.setItem("COPPER_brokerage", data.COPPER_brokerage);
+                    localStorage.setItem("NICKEL_brokerage", data.NICKEL_brokerage);
+                    localStorage.setItem("ZINC_brokerage", data.ZINC_brokerage);
+                    localStorage.setItem("LEAD_brokerage", data.LEAD_brokerage)
+                    localStorage.setItem("NATURALGAS_brokerage", data.NATURALGAS_brokerage);
+                    localStorage.setItem("ALUMINIUM_brokerage", data.ALUMINIUM_brokerage);
+                    localStorage.setItem("MENTHAOIL_brokerage", data.MENTHAOIL_brokerage);
+                    localStorage.setItem("COTTON_brokerage", data.COTTON_brokerage);
+                    localStorage.setItem("CPO_brokerage", data.CPO_brokerage);
+                    localStorage.setItem("GOLDM_brokerage", data.GOLDM_brokerage);
+                    localStorage.setItem("SILVERMINI_brokerage", data.SILVERMINI_brokerage);
+                    localStorage.setItem("SILVERMIC_brokerage", data.SILVERMIC_brokerage);
+
+                    //MCX Intrday
+                    localStorage.setItem("Mcx_Exposure_Type", data.Mcx_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_MCX", data.Intraday_Exposure_Margin_MCX);
+                    localStorage.setItem("Holding_Exposure_Margin_MCX", data.Holding_Exposure_Margin_MCX);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Intraday", data.MCX_Exposure_Lot_wise_BULLDEX_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Holding", data.MCX_Exposure_Lot_wise_BULLDEX_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Intraday", data.MCX_Exposure_Lot_wise_GOLD_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Holding", data.MCX_Exposure_Lot_wise_GOLD_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Intraday", data.MCX_Exposure_Lot_wise_SILVER_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Holding", data.MCX_Exposure_Lot_wise_SILVER_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Intraday", data.MCX_Exposure_Lot_wise_CRUDEOIL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Holding", data.MCX_Exposure_Lot_wise_CRUDEOIL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Intraday", data.MCX_Exposure_Lot_wise_COPPER_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Holding", data.MCX_Exposure_Lot_wise_COPPER_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Intraday", data.MCX_Exposure_Lot_wise_NICKEL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Holding", data.MCX_Exposure_Lot_wise_NICKEL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Intraday", data.MCX_Exposure_Lot_wise_ZINC_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Holding", data.MCX_Exposure_Lot_wise_ZINC_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Intraday", data.MCX_Exposure_Lot_wise_LEAD_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Holding", data.MCX_Exposure_Lot_wise_LEAD_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Intraday", data.MCX_Exposure_Lot_wise_NATURALGAS_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Holding", data.MCX_Exposure_Lot_wise_NATURALGAS_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Intraday", data.MCX_Exposure_Lot_wise_ALUMINIUM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Holding", data.MCX_Exposure_Lot_wise_ALUMINIUM_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Intraday", data.MCX_Exposure_Lot_wise_MENTHAOIL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Holding", data.MCX_Exposure_Lot_wise_MENTHAOIL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Intraday", data.MCX_Exposure_Lot_wise_COTTON_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Holding", data.MCX_Exposure_Lot_wise_COTTON_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Intraday", data.MCX_Exposure_Lot_wise_CPO_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Holding", data.MCX_Exposure_Lot_wise_CPO_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Intraday", data.MCX_Exposure_Lot_wise_GOLDM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Holding", data.MCX_Exposure_Lot_wise_GOLDM_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Intraday", data.MCX_Exposure_Lot_wise_SILVERM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Holding", data.MCX_Exposure_Lot_wise_SILVERM_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Intraday", data.MCX_Exposure_Lot_wise_SILVERMIC_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Holding", data.MCX_Exposure_Lot_wise_SILVERMIC_Holding);
+
+                    //NSE
+
+                    localStorage.setItem("NSE_Brokerage_Type", data.NSE_Brokerage_Type);
+                    localStorage.setItem("Equity_brokerage_per_crore", data.Equity_brokerage_per_crore);
+
+                    localStorage.setItem("NSE_Exposure_Type", data.NSE_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_Equity", data.Intraday_Exposure_Margin_EQUITY);
+                    localStorage.setItem("Holding_Exposure_Margin_Equity", data.Holding_Exposure_Margin_EQUITY);
+
+                    //CDS
+                    localStorage.setItem("CDS_Brokerage_Type", data.CDS_Brokerage_Type);
+                    localStorage.setItem("CDS_brokerage_per_crore", data.CDS_brokerage_per_crore);
+
+                    localStorage.setItem("CDS_Exposure_Type", data.CDS_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_CDS", data.Intraday_Exposure_Margin_CDS);
+                    localStorage.setItem("Holding_Exposure_Margin_CDS", data.Holding_Exposure_Margin_CDS);
+
+                    var LedgerBalance = localStorage.getItem("LedgerBalance");
+                    var TotalActive = localStorage.getItem("TotalActive");
+                    var TotalPending = localStorage.getItem("TotalPending");
+                    var TotalClosed = localStorage.getItem("TotalClosed");
+                    var username = localStorage.getItem("ClientName");
+                    LedgerBalance = parseFloat(LedgerBalance).toFixed(2);
+                    $("#ldgb").html(LedgerBalance);
+                    $("#ta").html(TotalActive);
+                    $("#tp").html(TotalPending);
+                    $("#tc").html(TotalClosed);
+                    $("#usernamess").html(username);
+                }
+            });
+        }
+
+        function checktrademethod(exchangetype) {
+            if (exchangetype == "MCX") {
+                return localStorage.getItem("trademcxunits");
+            }
+            if (exchangetype == "NSE") {
+                return localStorage.getItem("tradeequityunits");
+            }
+            if (exchangetype == "OPT") {
+                return localStorage.getItem("tradecdsunits");
+            }
+        }
+
+        function userprofile() {
+            logincheck();
+            var userid = localStorage.getItem("userid");
+            $.ajax({
+                url: "https://app.tradewingss.com/api/userprofile/?userid=" + userid,
+                type: "get",
+                success: function (response) {
+                    var data = JSON.parse(response);
+                    var usrbalnce = "";
+                    $.each(data, function (i, item) {
+                        var FirstName = data[i].FirstName;
+                        var LastName = data[i].LastName;
+                        var UserName = data[i].UserName;
+                        var CreditLimit = data[i].CreditLimit;
+                        var LedgerBalance = data[i].LedgerBalance;
+                        var MobileNo = data[i].MobileNo;
+                        var EmailId = data[i].EmailId;
+                        var AadharNo = data[i].AadharNo;
+                        var PanNo = data[i].PanNo;
+                        var City = data[i].City;
+                        var Address = data[i].Address;
+
+                        usrbalnce += "<tr><td>First Name</td><td   align='left'>" + FirstName + "</td></tr>";
+                        usrbalnce += "<tr><td>Last Name</td><td  align='left'>" + LastName + "</td></tr>";
+                        usrbalnce += "<tr><td>User Name</td><td   align='left'>" + UserName + "</td></tr>";
+                        usrbalnce += "<tr><td>Credit Limit</td><td   align='left'>" + CreditLimit + "</td></tr>";
+                        usrbalnce += "<tr><td>Ledger Balance</td><td   align='left'>" + LedgerBalance + "</td></tr>";
+                        usrbalnce += "<tr><td>Mobile No</td><td   align='left'>" + MobileNo + "</td></tr>";
+                        usrbalnce += "<tr><td>Email Id</td><td   align='left'>" + EmailId + "</td></tr>";
+                        usrbalnce += "<tr><td>Aadhar No</td><td   align='left'>" + AadharNo + "</td></tr>";
+                        usrbalnce += "<tr><td>PanNo.</td><td   align='left'>" + PanNo + "</td></tr>";
+                        usrbalnce += "<tr><td>City</td><td   align='left'>" + City + "</td></tr>";
+                        usrbalnce += "<tr><td>Address</td><td   align='left'>" + Address + "</td></tr>";
+
+                    });
+                    $("#userprofiledata").html(usrbalnce);
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

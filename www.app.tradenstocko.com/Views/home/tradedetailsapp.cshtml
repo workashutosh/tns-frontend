@@ -1,0 +1,2164 @@
+﻿
+@{
+    ViewBag.Title = "tradedetails";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="preload" href="~/Content/css/tabcss.css" as="style" />
+<link href="~/Content/css/tabcss.css" rel="stylesheet" />
+<style>
+.smfont{
+    font-size:12px;
+}
+    #loader {
+        position: absolute;
+        left: 40%;
+        z-index: 1;
+        margin-top:50%;
+        top: 50%;
+    }
+
+    @@-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @@-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @@keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #myDiv {
+        display: none;
+        text-align: center;
+    }
+</style>
+<style>
+    /* Compact layout for active trade cards */
+    .compact-card {
+        padding: 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 10px;
+    }
+    .compact-card table td {
+        padding: 4px 6px !important;
+        vertical-align: middle;
+    }
+    .compact-card .smfont { font-size: 11px; }
+    .compact-card .close-trade { padding: 4px 8px; font-size: 12px; }
+    .compact-card .btn-warning, .compact-card .btn-danger { padding: 6px 10px; font-size: 12px; }
+    .compact-card .color-dark-blue,strong.color-dark-blue { font-weight: 600; }
+</style>
+
+<div id="pass-enter" class="modal fade pass-enter" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+                <h4>Please enter your password to close all pending orders <span id="exchtypelbl"></span></h4>
+                <div class="form-group floating-label-group mb-4">
+                    <input type="password" id="passwordforclose" class="custom-input" autocomplete="off" autofocus="" required="">
+                    <label class="floating-label">Password</label>
+                </div>
+                <button id="btncancelall" class="login-btn submit-btn mb-4" onclick="canceleall()">Submit</button>
+                <button class="login-btn donot-btn close" data-dismiss="modal">Don’t close my trades</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="allactivetrades" class="modal fade pass-enter" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+                <h4>Please enter your password to close all active trades <span id="activeexchtypelbl"></span></h4>
+                <div class="form-group floating-label-group mb-4">
+                    <input type="password" id="activepasswordforclose" class="custom-input" autocomplete="off" autofocus="" required="">
+                    <label class="floating-label">Password</label>
+                </div>
+                <button class="login-btn submit-btn mb-4"  id="btncloseall"  onclick="closeall()">Submit</button>
+                <button class="login-btn donot-btn close"  data-dismiss="modal">Don’t close my trades</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="closeorder" class="modal fade place-popup" role="dialog">
+    <div class="modal-dialog p-order-close">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Close Order</h4>
+                <button type="button" class="close" data-dismiss="modal">
+                    X&nbsp;&nbsp;&nbsp;&nbsp;
+                </button>
+            </div>
+            <div class="modal-body" style="text-align:center">
+
+
+                <div class="tab-content mb-2" style="background-color:#f4f4f4">
+                    <div id="sellordervalueprice" class="tab-pane fadein active">
+
+                    </div>
+                </div>
+                <table width="100%" id="sellordervalue" class="modal-t">
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="sltpcloseorder" class="modal fade place-popup" role="dialog">
+    <div class="modal-dialog p-order-close">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Place SL/TP Order</h4>
+                <button type="button" class="close" data-dismiss="modal">
+                    X&nbsp;&nbsp;&nbsp;&nbsp;
+                </button>
+            </div>
+            <div class="modal-body" style="text-align:center">
+
+
+                <div class="tab-content mb-2" style="background-color:#f4f4f4">
+                    <div class="tab-pane fadein active">
+                        <table class="table table-bordered" align="center">
+                            <tr>
+                                <td>
+                                    <b style="color:#000">SL</b>
+                                </td>
+                                <td>
+                                    <input type="number" id="txtslvalue" placeholder="Enter The Stop Loss Value" class="form-control" />
+                                    <input type="hidden" id="tradeid" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <b style="color:#000">TP</b>
+                                </td>
+                                <td>
+                                    <input type="number" id="txttpvalue" placeholder="Enter Target Price Value" class="form-control" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" style="text-align:center">
+                                    <input type="button" class="btn-danger" value="SUBMIT" onclick="savesltporder()"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <table width="100%" id="sltpsellordervalue" class="modal-t">
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="main_content_iner">
+    
+    <div class="container-fluid p-0 " id="loaderarea">
+        
+        <div class="white_card card_height_100 mb_30 QA_section">
+            <div class="white_card_header mb-0">
+                <div class="box_header m-0">
+                    <div class="main-title">
+                        <h3 class="m-0">TRADES</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="white_card_body trade-details pt-0 ">
+                <div class="tile" id="tile-1">
+
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs nav-justified mb-2" role="tablist">
+                        <div class="slider"></div>
+                        <li class="nav-item">
+                            <a class="nav-link active" id="home-tab" data-toggle="tab" href="#Pendingtab" role="tab" aria-controls="home" aria-selected="true">Pending</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="profile-tab" data-toggle="tab" href="#Activetab" role="tab" aria-controls="profile" aria-selected="false">Active</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="contact-tab" data-toggle="tab" href="#Closedtab" role="tab" aria-controls="contact" aria-selected="false">Closed</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="sltp-tab" data-toggle="tab" href="#sltptab" role="tab" aria-controls="contact" aria-selected="false">SL/TP</a>
+                        </li>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div class="tab-pane fadein show " id="Pendingtab" role="tabpanel" aria-labelledby="home-tab">
+                            <div class="two-p-btn">
+                                <ul>
+                                    <li><a href="#pass-enter" data-toggle="modal" class="btn btn-danger w-100" onclick="setforcancel('MCX')">Cancel Pending <br />Orders MCX</a></li>
+                                    <li><a href="#pass-enter" data-toggle="modal" class="btn btn-danger w-100" onclick="setforcancel('NSE')">Cancel Pending <br />Orders Equity</a></li>
+                                    @*<li><a href="#pass-enter" data-toggle="modal" class="btn btn-danger w-100" onclick="setforcancel('CDS')">Cancel Pending <br />Orders CDS</a></li>*@
+
+
+                                    @*<li><a href="#" class="btn btn-closeall w-100">Cancel Pending <br />Orders CDS</a></li>*@
+
+                                </ul>
+                            </div>
+                            <div class="table-responsive disp1">
+                                <div id="pendingorder" class="container-fluid" style="content-visibility:auto">
+
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="tab-pane fadein" id="Activetab" role="tabpanel" aria-labelledby="profile-tab">
+                            <div class="two-p-btn">
+                                <ul>
+                                    <li><a href="#allactivetrades" data-toggle="modal" onclick="setforclose('MCX')" class="btn btn-danger w-100">Close Active Trades <br />MCX</a></li>
+                                    <li><a href="#allactivetrades" data-toggle="modal" onclick="setforclose('NSE')" class="btn btn-danger w-100">Close Active Trades <br />Equity</a></li>
+                                    @*<li><a href="#allactivetrades" data-toggle="modal" onclick="setforclose('CDS')" class="btn btn-danger w-100">Close Active Trades <br />CDS</a></li>*@
+
+                                </ul>
+                            </div>
+                            <div class="bg-white p-10" style="background-color: #000 !important;">
+                                <table class="table lager-table" cellpadding="5">
+                                    <tr>
+                                        <td align="center" style="color: #fff;">
+                                            Active P/L <strong id="activepl" style="color: #fff;">0</strong>
+                                        </td>
+                                        <td align="center" style="color: #fff;">
+                                            Margin Available <strong id="marginavl" style="color: #fff;">0</strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="table-responsive disp1">
+                                <div id="activeorder" class="container-fluid" style="content-visibility:auto">
+
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="tab-pane fadein" id="Closedtab" role="tabpanel" aria-labelledby="contact-tab">
+                            <div class="table-responsive disp1">
+
+                                <div id="closedorder" class="container-fluid" style="content-visibility:auto">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fadein" id="sltptab" role="tabpanel" aria-labelledby="sltp-tab">
+                            <div class="table-responsive disp1">
+
+                                <div id="sltporder" class="container-fluid" style="content-visibility:auto">
+
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="loader">
+                <img src="~/Content/img/loading.gif" width="50" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/Content/js/jquery-3.4.1.min.js"></script>
+
+<script>
+    var closetradedata;
+    var _starttime = "";
+    var _endttime = "";
+    function setforclose(exchtype) {
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "/api/getmarkettime/?Exchange=" + exchtype+"&refid=" + refid,
+            type: "get",
+            success: function (resp) {
+                var data = resp.split('|');
+                var starttime = data[0] + ":00";
+                var endttime = data[1] + ":00";
+                _starttime = starttime;
+                _endttime = endttime;
+                //check 
+
+                var today = new Date();
+                if (today.getDay() == 6 || today.getDay() == 0) {
+                    swal("Market not open.");
+                    setTimeout(function () { location.reload(); }, 1000);
+                    //return;
+                }
+                else {
+                    var date = new Date();
+                    var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                    //current
+                    var currenttime_sec = ctime.split(':');
+                    var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                    //_starttime
+                    var Startcurrenttime_sec = _starttime.split(':');
+                    var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+
+                    //_endtime
+                    var Endcurrenttime_sec = _endttime.split(':');
+                    var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                    if (currentseconds >= startseconds && currentseconds <= endseconds) {
+
+                    }
+                    else {
+                        swal("Market not open.");
+                        setTimeout(function () { location.reload(); }, 1000);
+                    }
+                }
+            }
+        });
+
+
+
+        //readvalues("test");
+        $("#activeexchtypelbl").html(exchtype);
+        //filter data for close trade
+        closetradedata = tradearr.filter(a => a.SymbolType == exchtype);
+        closetradedata.forEach((val, indx) => {
+            var tid = "partialbid" + val.OrderId + val.TokenNo;
+            var cmp = $("#" + tid).html();
+            closetradedata[indx].CMP = cmp;
+        });
+        closetradedata.forEach((val, indx) => {
+            console.log("val", val);
+            var tid = "partialbid" + val.OrderId + val.TokenNo;
+            var cmp = $("#" + tid).html();
+            closetradedata[indx].CMP = cmp;
+        });
+        
+    }
+
+     function savesltporder()
+    {
+        var tradeid = $("#tradeid").val();
+        var slval = $("#txtslvalue").val();
+        var tpval = $("#txttpvalue").val();
+        var senddata = { "TradeId": tradeid, "SL": slval, "TP": tpval}
+        $.ajax({
+            url: "/api/savesltp/",
+            type: "post",
+            data: senddata,
+            success: function (resp) {
+                if (resp.toString() == "True") {
+                    swal({
+                        title: "Success!",
+                        text: "Sl/TP Order Placed.",
+                        type: "success"
+                    }).then(function () {
+                        location.reload();
+                    });
+                }
+            }
+        });
+    }
+
+    function setforcancel(exchtype)
+        {
+            var refid = localStorage.getItem("Refid");
+            $.ajax({
+                url: "/api/getmarkettime/?Exchange=" + exchtype+"&refid=" + refid,
+                type: "get",
+                success: function (resp) {
+                    var data = resp.split('|');
+                    var starttime = data[0] + ":00";
+                    var endttime = data[1] + ":00";
+                    _starttime = starttime;
+                    _endttime = endttime;
+
+                }
+            });
+
+            $("#exchtypelbl").html(exchtype);
+       }
+
+    
+    function closeall() {
+
+        $("#btncloseall").attr("disabled", true);
+
+        var userid = localStorage.getItem("userid");
+       
+        var newdata = "";
+        closetradedata.forEach(val => {
+            if (val.CMP == "0" || val.CMP == "") {
+                alert("Can't Close Trade");
+                return;
+            }
+            // finaldata.idcmp.push({ "orderid": val.OrderId,"cmp": val.CMP });
+            newdata += "{orderid: " + val.OrderId + ",cmp: " + val.CMP + "},";
+        });
+        newdata = newdata.substring(0, newdata.length - 1);
+        var finaldata = {
+            "userid": userid,
+            "idcmp": "[" + newdata + "]"
+        }
+        console.log("finaldata", finaldata)
+
+        var exchtype = $("#activeexchtypelbl").html();
+        var passwordforclose = $("#activepasswordforclose").val();
+        var userpass = localStorage.getItem("oldpassword");
+        var refid = localStorage.getItem("Refid");
+
+        if (passwordforclose == userpass) {
+            $.ajax({
+                url: "/api/getmarkettime/?Exchange=" + exchtype + "&refid=" + refid,
+                type: "get",
+                success: function (resp) {
+                    var data = resp.split('|');
+                    var starttime = data[0] + ":00";
+                    var endttime = data[1] + ":00";
+                    _starttime = starttime;
+                    _endttime = endttime;
+
+                    var today = new Date();
+                    if (today.getDay() == 6 || today.getDay() == 0) {
+                        //  swal("Market not open.");
+                        //setTimeout(function () { location.reload(); }, 1000);
+                        //return;
+                    }
+                    else {
+                        var date = new Date();
+                        var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                        //current
+                        var currenttime_sec = ctime.split(':');
+                        var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                        //_starttime
+                        var Startcurrenttime_sec = _starttime.split(':');
+                        var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+                        //_endtime
+                        var Endcurrenttime_sec = _endttime.split(':');
+                        var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                        if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                        }
+                        else {
+                             //  swal("Market not open.");
+                            // setTimeout(function () { location.reload(); }, 1000);
+                            // return;
+                        }
+                    }
+                    var jsonObject = JSON.stringify(finaldata);
+
+                    var qs = confirm("Do you want to close all " + exchtype + " trades");
+                    if (qs == true) {
+                        $.ajax({
+                            url: "/api/closealltradesbyapp/",
+                            type: "post",
+                            data: finaldata,
+                            success: function (resp) {
+                                var pjson = JSON.parse(resp);
+                                swal("Success", pjson.ResponseMessage);
+                                $("#btncloseall").attr("disabled", false);
+
+                                setTimeout(function () { location.reload(); }, 2000);
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        else {
+            swal("Invalid Password");
+        }
+    }
+    function canceleall()
+    {
+        $("#btncancelall").attr("disabled", true);
+      
+            //Check Time
+
+            var exchtype = $("#exchtypelbl").html();
+            var userid = localStorage.getItem("userid");
+            var passwordforclose = $("#passwordforclose").val();
+            var userpass = localStorage.getItem("oldpassword");
+            var refid = localStorage.getItem("Refid");
+
+            if (passwordforclose == userpass)
+            {
+                $.ajax({
+                    url: "/api/getmarkettime/?Exchange=" + exchtype + "&refid=" + refid,
+                    type: "get",
+                    success: function (resp) {
+                        var data = resp.split('|');
+                        var starttime = data[0] + ":00";
+                        var endttime = data[1] + ":00";
+                        _starttime = starttime;
+                        _endttime = endttime;
+
+                        var today = new Date();
+                        if (today.getDay() == 6 || today.getDay() == 0) {
+                          //  swal("Market not open.");
+                            //setTimeout(function () { location.reload(); }, 1000);
+                            //return;
+                        }
+                        else {
+                            var date = new Date();
+                            var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                            //current
+                            var currenttime_sec = ctime.split(':');
+                            var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                            //_starttime
+                            var Startcurrenttime_sec = _starttime.split(':');
+                            var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+                            //_endtime
+                            var Endcurrenttime_sec = _endttime.split(':');
+                            var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                            if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                            }
+                            else {
+                              //  swal("Market not open.");
+                               // setTimeout(function () { location.reload(); }, 1000);
+                               // return;
+                            }
+                        }
+
+                        var qs = confirm("Do you want to cancel all " + exchtype+" orders");
+                        if (qs == true)
+                        {
+                            $.ajax({
+                                url: "/api/canceleallorderfromapp/?UserId=" + userid + "&SymbolType=" + exchtype,
+                                type: "get",
+                                success: function (resp) {
+                                    var pjson = JSON.parse(resp);
+                                    swal("Success", pjson.ResponseMessage);
+                                    $("#btncancelall").attr("disabled", false);
+
+                                    setTimeout(function () { location.reload(); }, 2000);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+            else
+            {
+                swal("Invalid Password");
+            }
+        }
+
+
+
+    $("#tile-1 .nav-tabs a").click(function () {
+        var position = $(this).parent().position();
+        var width = $(this).parent().width();
+        $("#tile-1 .slider").css({ "left": + position.left, "width": width });
+    });
+    var actWidth = $("#tile-1 .nav-tabs").find(".active").parent("li").width();
+    var actPosition = $("#tile-1 .nav-tabs .active").position();
+    $("#tile-1 .slider").css({ "left": + actPosition.left, "width": actWidth });
+
+    $('#loader').show();
+    $("#loaderarea").css("opacity", "0.3");
+
+    var _starttime = "";
+    var _endttime = "";
+    $(window).on('load', function () {
+        //   var ss = localStorage.getItem("");
+        //logincheck();
+      //  getallorders();
+        setTimeout(function() {
+            calculateMarginAndPL(); // Calculate margin and P/L on load with delay
+        }, 1000);
+        getpendingorder();
+        getactiveorder();
+        getclosedorder();
+        getsltporder();
+        $("#Pendingtab").removeClass("active");
+        $("#Closedtab").removeClass("active");
+        $("#home-tab").removeClass("active");
+        $("#contact-tab").removeClass("active");
+
+        $("#profile-tab").addClass("active");
+        $("#Activetab").addClass("active");
+
+        $("#tile-1 .nav-tabs a").click(function () {
+            var position = $(this).parent().position();
+            var width = $(this).parent().width();
+            $("#tile-1 .slider").css({ "left": + position.left, "width": width });
+        });
+        var actWidth = $("#tile-1 .nav-tabs").find(".active").parent("li").width();
+        var actPosition = $("#tile-1 .nav-tabs .active").position();
+        $("#tile-1 .slider").css({ "left": + actPosition.left, "width": actWidth });
+
+        if (localStorage.getItem("navigatetoclose") != null && localStorage.getItem("navigatetoclose") != undefined) {
+            var navigatetoclose = localStorage.getItem("navigatetoclose");
+            if (navigatetoclose == "true") {
+                $("#profile-tab").removeClass("active");
+                $("#Activetab").removeClass("active");
+                $("#Closedtab").addClass("active");
+                $("#Pendingtab").removeClass("active");
+                $("#contact-tab").addClass("active");
+                $("#home-tab").removeClass("active");
+                $("#tile-1 .nav-tabs a").click(function () {
+                    var position = $(this).parent().position();
+                    var width = $(this).parent().width();
+                    $("#tile-1 .slider").css({ "left": + position.left, "width": width });
+                });
+                var actWidth = $("#tile-1 .nav-tabs").find(".active").parent("li").width();
+                var actPosition = $("#tile-1 .nav-tabs .active").position();
+                $("#tile-1 .slider").css({ "left": + actPosition.left, "width": actWidth });
+                localStorage.removeItem("navigatetoclose");
+            }      }
+        //WebSocketTest();
+        readvalues("");
+    });
+
+
+    function getallorders() {
+
+        $('#loader').show();
+        $("#loaderarea").css("opacity", "0.1");
+
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getallorders/?uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var pendingorderdata = "";
+                var activeorderdata = "";
+                var closedorderdata = "";
+                $.each(data, function (i, item)
+                {
+                    var OrderStatus = data[i].OrderStatus;
+                    var OrderType = data[i].OrderType;
+
+                    if (OrderStatus == "Active") {
+                        var OrderCategory = data[i].OrderCategory;
+                        var TokenNo = data[i].TokenNo;
+                        var OrderId = data[i].Id;
+                        ordid.push(OrderId);
+
+                        var selectedlotsize = data[i].selectedlotsize;
+                        var OrderType = data[i].OrderType;
+                        var OrderNo = data[i].OrderNo;
+                        var lot = data[i].Lot;
+                        var OrderTime = data[i].OrderTime;
+                        var odt = data[i].OrderDate;
+                        var SymbolType = data[i].SymbolType;
+                        var OrderDate = data[i].OrderDate + " " + OrderTime;
+                        var ScriptName = data[i].ScriptName + "";
+                        var screxp = ScriptName.split('_');
+                        ScriptName = screxp[0];
+                        var newexp = screxp[1];
+                        var ActionType = data[i].ActionType;
+                        var OrderPrice = data[i].OrderPrice;
+                        var MarginUsed = data[i].MarginUsed;
+                        var HoldingMarginReq = data[i].HoldingMarginReq;
+                        var OrderStatus = data[i].OrderStatus;
+                        var dinword = new Date(odt);
+                        var dateinword = dinword.getDate() + " " + dinword.toLocaleString('en-us', { month: 'short' }) + ", " + OrderTime;
+                        tradearr.push({ "OrderId": OrderId, "TokenNo": TokenNo, "SymbolType": SymbolType, "CMP": "0" });
+
+                        activeorderdata += "<div class='col-lg-12 trade-box-m act-t-box'>";
+                        activeorderdata += "<table width='100%'>";
+                        activeorderdata += "<tr>";
+                        if (OrderCategory == "SELL") {
+                            activeorderdata += "<td align='left'><span class='trade-red mr-1'>" + OrderCategory + " X " + lot + "</span> <span class='trade-green'>" + OrderType + "</span> </td>";
+                        }
+                        else {
+                            activeorderdata += "<td align='left'><span class='trade-green mr-1'>" + OrderCategory + " X " + lot + "</span> <span class='trade-green'>" + OrderType + "</span> </td>";
+                        }
+
+                        activeorderdata += "<td align='left'>";
+                        activeorderdata += "";
+                        activeorderdata += "</td>";
+
+                        activeorderdata += "<td align='right'>";
+                        activeorderdata += "<span>" + dateinword + "</span>";
+                        activeorderdata += "</td>";
+                        activeorderdata += "</tr>";
+
+                        activeorderdata += "<tr>";
+                        activeorderdata += "<td colspan='2' align='left'><span class='color-dark-blue'><strong>" + ScriptName + "</strong></span><br><span class='smfont'>" + newexp + "</span></td>";
+                        activeorderdata += "<td align='right'><span ><strong class='color-dark-blue'>" + OrderPrice + "</strong></span></td>";
+                        activeorderdata += "</tr>";
+
+                        activeorderdata += "<tr>";
+                        activeorderdata += "<td  colspan='2' align='left'><span>" + ActionType + "</span><span style='display:none' id='partialbid" + OrderId + TokenNo + "'>0</span><span style='display:none' id='partialordercat" + OrderId + TokenNo + "'>" + OrderCategory + "</span></td>";
+                        activeorderdata += "<td align='right'><a onclick=closeorder('" + TokenNo + "','" + selectedlotsize + "','" + OrderPrice + "','" + OrderNo + "','" + OrderCategory + "','" + lot + "','" + SymbolType + "','" + ScriptName + "','" + OrderTime + "','" + odt + "') href='#' class='close-trade btn-danger'>CLOSE TRADE</a></td>";
+                        activeorderdata += "</tr>";
+
+
+                        activeorderdata += "<tr>";
+                        activeorderdata += "<td  colspan='2' align='left' class='pb-3'><span'>Margin Used: <strong>" + parseInt(MarginUsed) + "</strong></span></td>";
+                        activeorderdata += "<td align='right' class='pb-3'><span'>Holding Margin: <strong>" + parseInt(HoldingMarginReq) + "</strong></span></td>";
+                        activeorderdata += "</tr>";
+
+                        activeorderdata += "</table>";
+                        activeorderdata += "</div>";
+                        return;
+                    }
+                    if (OrderStatus == "Closed" ) {
+                        var OrderCategory = data[i].OrderCategory;
+                        var OrderType = data[i].OrderType;
+                        var OrderDate = data[i].OrderDate;
+                        var Lot = data[i].Lot;
+                        var OrderTime = data[i].OrderTime;
+                        var ClosedTime = data[i].ClosedTime;
+                        var ScriptName = data[i].ScriptName + "";
+                        var screxp = ScriptName.split('_');
+                        ScriptName = screxp[0];
+                        var newexp = screxp[1];
+                        var ActionType = data[i].ActionType;
+                        var OrderPrice = data[i].OrderPrice;
+                        var MarginUsed = data[i].MarginUsed;
+                        var HoldingMarginReq = data[i].HoldingMarginReq;
+                        var OrderStatus = data[i].OrderStatus;
+
+                        var BroughtBy = data[i].BroughtBy;
+                        var P_L = data[i].P_L;
+                        var Brokerage = data[i].Brokerage;
+                        var ClosedAt = data[i].ClosedAt;
+                        var OrderTypeClose = data[i].OrderTypeClose;
+
+                        var lefthdr = ActionType;
+                        var righthdr = data[i].ActionByClose;;
+                        //if (OrderCategory == "BUY") {
+                        //    righthdr = "Sold";
+                        //} else {
+                        //    lefthdr = "Sold";
+                        //    righthdr = "Bought";
+                        //}
+
+
+
+                        closedorderdata += "<div class='col-lg-12 trade-box-m trade-close-box'>";
+                        closedorderdata += "<table width='100%' cellspacing='2'>";
+                        closedorderdata += "<tr>";
+                        closedorderdata += "<td align='left'><strong>" + ScriptName + "</strong><br><span class='smfont'>" + newexp + "</span></td>";
+                        closedorderdata += "<td align='right'>";
+                        closedorderdata += "";
+                        closedorderdata += "</td>";
+
+                        closedorderdata += "<td align='right'>";
+                        if (parseInt(P_L) < 0) {
+                            closedorderdata += "<span class='trade-red b-radius-5 mr-2'>" + parseInt(P_L) + "/" + parseInt(Brokerage) + "</span><span class='trade-red b-radius-5'>QTY:&nbsp;" + Lot + "</span>";
+                        } else {
+                            closedorderdata += "<span class='trade-green b-radius-5 mr-2'>" + parseInt(P_L) + "/" + parseInt(Brokerage) + "</span><span class='trade-green b-radius-5'>QTY:&nbsp;" + Lot + "</span>";
+
+                        }
+
+                        closedorderdata += "</td>";
+                        closedorderdata += "</tr>";
+
+                        closedorderdata += "<tr>";
+                        if (OrderCategory == "SELL") {
+                            closedorderdata += "<td  colspan='2' align='left'><span>" + lefthdr + " : <span class='trade-red'>" + OrderPrice + "</span></span></td>";
+                            closedorderdata += "<td align='right'><span>" + righthdr + " : <span class='trade-green'>" + BroughtBy + "</span></span></td>";
+
+                        } else {
+                            closedorderdata += "<td  colspan='2' align='left'><span>" + lefthdr + " : <span class='trade-green'>" + OrderPrice + "</span></span></td>";
+                            closedorderdata += "<td align='right'><span>" + righthdr + " : <span class='trade-red'>" + BroughtBy + "</span></span></td>";
+                        }
+
+                        closedorderdata += "</tr>";
+
+                        closedorderdata += "<tr>";
+                        closedorderdata += "<td colspan='2' align='left' class='pb-3'><span><strong>" + OrderDate + ", " + OrderTime + "</strong>&nbsp;<span class='trade-green'>" + OrderType + "</span></span></span></td>";
+                        closedorderdata += "<td align='right' class='pb-3'><span><strong>" + ClosedAt + ", " + ClosedTime + "</strong>&nbsp;<span class='trade-green'>" + OrderTypeClose + "</span></span></span></td>";
+                        closedorderdata += "</tr>";
+
+                        closedorderdata += "</table>";
+                        closedorderdata += "</div>";
+                        return;
+
+                    }
+                    if (OrderStatus == "Pending" || OrderStatus == "Cancel" || (OrderStatus == "Active" && OrderType =="Limit"))
+                    {
+                        var SymbolType = data[i].SymbolType;
+                        var orderid = data[i].Id;
+                        var TradeMCXUnits1 = checktrademethod(SymbolType);
+
+                        var isstoplossorder = data[i].isstoplossorder;
+                        var st = "";
+                        if (isstoplossorder == 'true') {
+                            st = "Stop";
+                        }
+                        var OrderCategory = st + data[i].OrderCategory;
+                        var lot = data[i].Lot;
+                        var Lotsize = "";
+                        var tradetype = "";
+                        var actuallotsize = data[i].selectedlotsize;
+                        if (TradeMCXUnits1 == "true") {
+                            Lotsize = 1;
+                            tradetype = "Units";
+                        }
+                        else {
+                            Lotsize = data[i].selectedlotsize;
+                            tradetype = "Lots";
+                        }
+                        var OrderDate = data[i].OrderDate;
+                        var TokenNo = data[i].TokenNo;
+                        var OrderTime = data[i].OrderTime;
+                        var ScriptName = data[i].ScriptName;
+                        var screxp = ScriptName.split('_');
+                        ScriptName = screxp[0];
+                        var newexp = screxp[1];
+
+                        var ActionType = data[i].ActionType;
+                        var OrderPrice = data[i].OrderPrice;
+                        var SymbolType = data[i].SymbolType;
+                        var Id = data[i].Id;
+                        var MarginUsed = data[i].MarginUsed;
+                        var HoldingMarginReq = data[i].HoldingMarginReq;
+                        pendingorderdata += "<div class='trade-box-m pen-box'>";
+                        pendingorderdata += "<table width='100%'>";
+                        pendingorderdata += "<tr>";
+                        if (OrderCategory == "SELL") {
+                            pendingorderdata += "<td colspan='2' align='left'><span class='trade-red mr-1'>" + OrderCategory + " X " + lot + "</span></td>";
+                        } else {
+                            pendingorderdata += "<td colspan='2' align='left'><span class='trade-green mr-1'>" + OrderCategory + " X " + lot + "</span></td>";
+                        }
+                        pendingorderdata += "<td align='right'>";
+                        pendingorderdata += "<span class='o-pen-color o-pen-blue'>" + OrderType + "</span>";
+                        pendingorderdata += "</td>";
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2' align='left'><span><b>" + ScriptName + "</b></span><br><span class='smfont'>" + newexp + "</span></td>";
+                        pendingorderdata += "<td align='right'><span><b>" + OrderPrice + "</b></span></td>";
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2' align='left'><span>" + ActionType + "</span></td>";
+                        pendingorderdata += "<td align='right'>";
+                        pendingorderdata += "<span>" + OrderDate + " " + OrderTime + "</span>";
+                        pendingorderdata += "</td>";
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2' align='left' class='pb-3'><span class='color-light-blue'>Margin Req: <strong>" + parseInt(MarginUsed) + "</strong></span></td>";
+                        if (OrderStatus == "Pending") {
+
+                            pendingorderdata += "<td align='right'>  <a onclick=editorder('" + orderid + "','" + TokenNo + "','" + ScriptName + "','" + Lotsize + "','" + actuallotsize + "','" + OrderCategory + "','" + SymbolType + "','" + tradetype + "') href='#' style='padding:5px;'><svg  style='color:#fff' width='28px' height='28px' viewBox='-2.4 -2.4 28.80 28.80' fill='none' xmlns='http://www.w3.org/2000/svg'><g id='SVGRepo_bgCarrier' stroke-width='0'><rect x='-2.4' y='-2.4' width='28.80' height='28.80' rx='0' fill='#fff' strokewidth='0'></rect></g><g id='SVGRepo_tracerCarrier' stroke-linecap='round' stroke-linejoin='round'></g><g id='SVGRepo_iconCarrier'> <g id='Edit / Edit_Pencil_Line_01'> <path id='Vector' d='M4 20.0001H20M4 20.0001V16.0001L12 8.00012M4 20.0001L8 20.0001L16 12.0001M12 8.00012L14.8686 5.13146L14.8704 5.12976C15.2652 4.73488 15.463 4.53709 15.691 4.46301C15.8919 4.39775 16.1082 4.39775 16.3091 4.46301C16.5369 4.53704 16.7345 4.7346 17.1288 5.12892L18.8686 6.86872C19.2646 7.26474 19.4627 7.46284 19.5369 7.69117C19.6022 7.89201 19.6021 8.10835 19.5369 8.3092C19.4628 8.53736 19.265 8.73516 18.8695 9.13061L18.8686 9.13146L16 12.0001M12 8.00012L16 12.0001' stroke='#fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'></path> </g> </g></svg></a>  <a href='#' onclick=cancelonder('" + Id + "','" + SymbolType + "') ><svg fill='#fff' width='23px' height='23px' viewBox='0 0 32 32' version='1.1' xmlns='http://www.w3.org/2000/svg'><g id='SVGRepo_bgCarrier' stroke-width='0'></g><g id='SVGRepo_tracerCarrier' stroke-linecap='round' stroke-linejoin='round'></g><g id='SVGRepo_iconCarrier'> <title>trash-bin</title> <path d='M2.016 8q0 0.832 0.576 1.44t1.408 0.576v16q0 2.496 1.76 4.224t4.256 1.76h12q2.464 0 4.224-1.76t1.76-4.224v-16q0.832 0 1.408-0.576t0.608-1.44-0.608-1.408-1.408-0.576h-5.984q0-2.496-1.76-4.256t-4.256-1.76-4.256 1.76-1.728 4.256h-6.016q-0.832 0-1.408 0.576t-0.576 1.408zM8 26.016v-16h16v16q0 0.832-0.576 1.408t-1.408 0.576h-12q-0.832 0-1.44-0.576t-0.576-1.408zM10.016 26.016h1.984v-14.016h-1.984v14.016zM14.016 26.016h4v-14.016h-4v14.016zM14.016 6.016q0-0.832 0.576-1.408t1.408-0.608 1.408 0.608 0.608 1.408h-4zM20 26.016h2.016v-14.016h-2.016v14.016z'></path> </g></svg></a></td>";
+
+
+
+                        } else if (OrderStatus == "Active") {
+                            pendingorderdata += "<td align='right' class='pb-3'><a style='background-color:black;color:white' class='cancel-order'>COMPLETE</a></td>";
+                        }
+                        else {
+                            pendingorderdata += "<td align='right' class='pb-3'><a style='background-color:black;color:white' class='cancel-order'>CANCELED</a></td>";
+                        }
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "</table>";
+                        pendingorderdata += "</div>";
+                        return;
+                    }
+                });
+                $("#closedorder").html(closedorderdata);
+                $("#activeorder").html(activeorderdata);
+                $("#pendingorder").html(pendingorderdata);
+            },
+            complete: function () {
+                $('#loader').hide();
+                $("#loaderarea").css("opacity", "1");
+            }
+        });
+    }
+
+    function cancelonder(Id, ordertype) {
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "/api/getmarkettime/?Exchange=" + ordertype + "&refid=" + refid,
+            type: "get",
+            success: function (resp) {
+                var data = resp.split('|');
+                var starttime = data[0] + ":00";
+                var endttime = data[1] + ":00";
+                _starttime = starttime;
+                _endttime = endttime;
+
+                var today = new Date();
+                if (today.getDay() == 6 || today.getDay() == 0) {
+                    swal("Market not open.");
+                    setTimeout(function () { location.reload(); }, 1000);
+                    //return;
+                }
+                else {
+                    var date = new Date();
+                    var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                    //current
+                    var currenttime_sec = ctime.split(':');
+                    var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                    //_starttime
+                    var Startcurrenttime_sec = _starttime.split(':');
+                    var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+                    //_endtime
+                    var Endcurrenttime_sec = _endttime.split(':');
+                    var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                    if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                    }
+                    else {
+                        swal("Market not open.");
+                        setTimeout(function () { location.reload(); }, 1000);
+                        return;
+                    }
+                }
+                var qs = confirm("Do you want cancel this order");
+                if (qs == true) {
+                    $.ajax({
+                        url: "/api/deleteorder/?orderid=" + Id,
+                        type: "get",
+                        success: function (resp) {
+                            if (resp == "success") {
+                                // swal("Success", "Order Canceled");
+                                location.reload();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+   var ordid = [];
+
+    var tradearr = [];
+
+
+    function getpendingorder() {
+
+        $('#loader').show();
+        $("#loaderarea").css("opacity", "0.1");
+
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getorders/?orderstatus=Pending&uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var pendingorderdata = "";
+                $.each(data, function (i, item) {
+                    var SymbolType = data[i].SymbolType;
+                    var TradeMCXUnits1 = checktrademethod(SymbolType);
+
+                    var isstoplossorder = data[i].isstoplossorder;
+                    var st = "";
+                    if (isstoplossorder == 'true') {
+                        st = "Stop";
+                    }
+                    var OrderCategory = st + data[i].OrderCategory;
+                    var lot = data[i].Lot;
+                    var Lotsize = "";
+                    var tradetype = "";
+                    var actuallotsize = data[i].selectedlotsize;
+                    if (TradeMCXUnits1 == "true") {
+                        Lotsize = 1;
+                        tradetype = "Units";
+                    }
+                    else {
+                        Lotsize = data[i].selectedlotsize;
+                        tradetype = "Lots";
+                    }
+                    var OrderType = data[i].OrderType;
+                    var lot = data[i].Lot;
+                    var OrderDate = data[i].OrderDate;
+                    var OrderTime = data[i].OrderTime;
+                    var ScriptName = data[i].ScriptName;
+                    var ActionType = data[i].ActionType;
+                    var OrderPrice = data[i].OrderPrice;
+                    var TokenNo = data[i].TokenNo;
+                    
+                    var Id = data[i].Id;
+                    var MarginUsed = data[i].MarginUsed;
+                    var HoldingMarginReq = data[i].HoldingMarginReq;
+                    var OrderStatus = data[i].OrderStatus;
+                    pendingorderdata += "<div class='trade-box-m pen-box'>";
+                    pendingorderdata += "<table width='100%'>";
+                    pendingorderdata += "<tr>";
+                    if (OrderCategory == "SELL") {
+                        pendingorderdata += "<td colspan='2' align='left'><span class='trade-red mr-1'>" + OrderCategory + " X " + lot + "</span></td>";
+                    } else {
+                        pendingorderdata += "<td colspan='2' align='left'><span class='trade-green mr-1'>" + OrderCategory + " X " + lot + "</span></td>";
+                    }
+                    pendingorderdata += "<td align='right'>";
+                    pendingorderdata += "<span class='o-pen-color o-pen-blue'>" + OrderType + "</span>";
+                    pendingorderdata += "</td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left'><span><b>" + ScriptName + "</b></span></td>";
+                    pendingorderdata += "<td align='right'><span><b>" + OrderPrice + "</b></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left'><span>" + ActionType + "</span></td>";
+                    pendingorderdata += "<td align='right'>";
+                    pendingorderdata += "<span>" + OrderDate + " " + OrderTime + "</span>";
+                    pendingorderdata += "</td>";
+                    pendingorderdata += "</tr>";
+
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left' class='pb-3'><span class='color-light-blue'>Margin Req: <strong>" + parseInt(MarginUsed) + "</strong></span></td>";
+                    if (OrderStatus == "Pending") {
+
+                        pendingorderdata += "<td align='right'>  <a onclick=editorder('" + Id + "','" + TokenNo + "','" + ScriptName + "','" + Lotsize + "','" + actuallotsize + "','" + OrderCategory + "','" + SymbolType + "','" + tradetype + "') href='#' style='padding:5px;'><svg  style='color:#fff' width='28px' height='28px' viewBox='-2.4 -2.4 28.80 28.80' fill='none' xmlns='http://www.w3.org/2000/svg'><g id='SVGRepo_bgCarrier' stroke-width='0'><rect x='-2.4' y='-2.4' width='28.80' height='28.80' rx='0' fill='' strokewidth='0'></rect></g><g id='SVGRepo_tracerCarrier' stroke-linecap='round' stroke-linejoin='round'></g><g id='SVGRepo_iconCarrier'> <g id='Edit / Edit_Pencil_Line_01'> <path id='Vector' d='M4 20.0001H20M4 20.0001V16.0001L12 8.00012M4 20.0001L8 20.0001L16 12.0001M12 8.00012L14.8686 5.13146L14.8704 5.12976C15.2652 4.73488 15.463 4.53709 15.691 4.46301C15.8919 4.39775 16.1082 4.39775 16.3091 4.46301C16.5369 4.53704 16.7345 4.7346 17.1288 5.12892L18.8686 6.86872C19.2646 7.26474 19.4627 7.46284 19.5369 7.69117C19.6022 7.89201 19.6021 8.10835 19.5369 8.3092C19.4628 8.53736 19.265 8.73516 18.8695 9.13061L18.8686 9.13146L16 12.0001M12 8.00012L16 12.0001' stroke='#fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'></path> </g> </g></svg></a>  <a href='#' onclick=cancelonder('" + Id + "','" + SymbolType + "') ><svg fill='#fff' width='23px' height='23px' viewBox='0 0 32 32' version='1.1' xmlns='http://www.w3.org/2000/svg'><g id='SVGRepo_bgCarrier' stroke-width='0'></g><g id='SVGRepo_tracerCarrier' stroke-linecap='round' stroke-linejoin='round'></g><g id='SVGRepo_iconCarrier'> <title>trash-bin</title> <path d='M2.016 8q0 0.832 0.576 1.44t1.408 0.576v16q0 2.496 1.76 4.224t4.256 1.76h12q2.464 0 4.224-1.76t1.76-4.224v-16q0.832 0 1.408-0.576t0.608-1.44-0.608-1.408-1.408-0.576h-5.984q0-2.496-1.76-4.256t-4.256-1.76-4.256 1.76-1.728 4.256h-6.016q-0.832 0-1.408 0.576t-0.576 1.408zM8 26.016v-16h16v16q0 0.832-0.576 1.408t-1.408 0.576h-12q-0.832 0-1.44-0.576t-0.576-1.408zM10.016 26.016h1.984v-14.016h-1.984v14.016zM14.016 26.016h4v-14.016h-4v14.016zM14.016 6.016q0-0.832 0.576-1.408t1.408-0.608 1.408 0.608 0.608 1.408h-4zM20 26.016h2.016v-14.016h-2.016v14.016z'></path> </g></svg></a></td>";
+
+                    } else if (OrderStatus == "Active") {
+
+
+                        pendingorderdata += "<td align='right' class='pb-3'><a style='background-color:black;color:white' class='cancel-order'>COMPLETE</a></td>";
+                    }
+                    else {
+                        pendingorderdata += "<td align='right' class='pb-3'><a style='background-color:black;color:white' class='cancel-order'>CANCELED</a></td>";
+                    }
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "</table>";
+                    pendingorderdata += "</div>";
+
+                });
+                $("#pendingorder").html(pendingorderdata);
+            },
+            complete: function () {
+                $('#loader').hide();
+                $("#loaderarea").css("opacity", "1");
+            }
+        });
+    }
+    var activeorderlist = [];
+        function getactiveorder() {
+        readvalues("");
+        $('#loader').show();
+        $("#loaderarea").css("opacity", "0.1");
+
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getorders/?orderstatus=Active&uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                activeorderlist = data;
+                var pendingorderdata = "";
+                $.each(data, function (i, item) {
+                    var OrderCategory = data[i].OrderCategory;
+                    var TokenNo = data[i].TokenNo;
+                    var OrderId = data[i].Id;
+                    ordid.push(OrderId);
+                    
+                    var selectedlotsize = data[i].selectedlotsize;
+                    var OrderType = data[i].OrderType;
+                    var OrderNo = data[i].OrderNo;
+                    var lot = data[i].Lot;
+                    var OrderTime = data[i].OrderTime;
+                    var odt = data[i].OrderDate;
+                    var SymbolType = data[i].SymbolType;
+                    var OrderDate = data[i].OrderDate + " " + OrderTime;
+                    var ScriptName = data[i].ScriptName + "";
+                    var screxp = ScriptName.split('_');
+                    ScriptName = screxp[0];
+                    var newexp = screxp[1];
+                    var ActionType = data[i].ActionType;
+                    var OrderPrice = data[i].OrderPrice;
+                    var MarginUsed = data[i].MarginUsed;
+                    var HoldingMarginReq = data[i].HoldingMarginReq;
+                    var OrderStatus = data[i].OrderStatus;
+                    var dinword = new Date(odt);
+                    var dateinword = dinword.getDate() + " " + dinword.toLocaleString('en-us', { month: 'short' }) + ", " + OrderTime;
+                    tradearr.push({ "OrderId": OrderId, "TokenNo": TokenNo, "SymbolType": SymbolType, "CMP": "0" });
+                    pendingorderdata += "<div class='col-lg-12 trade-box-m act-t-box compact-card'>";
+                    pendingorderdata += "<table width='100%'>";
+                    pendingorderdata += "<tr>";
+                    if (OrderCategory == "SELL") {
+                        pendingorderdata += "<td align='left'><span class='trade-red mr-1'>" + OrderCategory + " X " + lot + "</span> <span class='trade-green'>" + OrderType + "</span> </td>";
+                    }
+                    else
+                    {
+                        pendingorderdata += "<td align='left'><span class='trade-green mr-1'>" + OrderCategory + " X " + lot + "</span> <span class='trade-green'>" + OrderType + "</span> </td>";
+                    }
+                  
+                    pendingorderdata += "<td align='left'>";
+                    pendingorderdata += "";
+                    pendingorderdata += "</td>";
+
+                    pendingorderdata += "<td align='right'>";
+                    pendingorderdata += "<span>" + dateinword + "</span>";
+                    pendingorderdata += "</td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left'><span class='color-dark-blue'><strong>" + ScriptName + "</strong></span><br><span class='smfont'>" + newexp+"</span></td>";
+                    pendingorderdata += "<td align='right'><span ><strong class='color-dark-blue'>" + OrderPrice + "</strong></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td  align='left'><span>" + ActionType + "</span><span style='display:none' id='partialbid" + OrderId + TokenNo + "'>0</span><span style='display:none' id='partialordercat" + OrderId + TokenNo + "'>" + OrderCategory + "</span><span style='display:none' id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none' id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                    pendingorderdata += "<td align='left'>CMP: <span class='color-dark-blue' id='livecmp" + TokenNo + "'><strong>0</strong></span></td>";
+                    pendingorderdata += "<td align='right'>P/L: <strong class='color-dark-blue' id='diffpric" + TokenNo + "'>0</strong></td>";
+                    pendingorderdata += "</tr>";
+                    
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td align='left'><a onclick=sltpcloseorder('" + OrderId+"','" + TokenNo + "','" + selectedlotsize + "','" + OrderPrice + "','" + OrderNo + "','" + OrderCategory + "','" + lot + "','" + SymbolType + "','" + ScriptName + "','" + OrderTime + "','" + odt + "')  data-toggle='modal' data-target='#sltpcloseorder' href='#' style='background-color:#ffc107' class='close-trade btn-warning'>SL/TP</a></td>";
+                    pendingorderdata += "<td colspan='2' align='right'><a onclick=closeorder('" + TokenNo + "','" + selectedlotsize + "','" + OrderPrice + "','" + OrderNo + "','" + OrderCategory + "','" + lot + "','" + SymbolType + "','" + ScriptName + "','" + OrderTime + "','" + odt + "') href='#' class='close-trade btn-danger'>CLOSE TRADE</a></td>";
+                    pendingorderdata += "</tr>";
+
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td  colspan='2' align='left' class='pb-3'><span'>Margin Used: <strong>" + parseInt(MarginUsed)+ "</strong></span></td>";
+                    pendingorderdata += "<td align='right' class='pb-3'><span'>Holding Margin: <strong>" + parseInt(HoldingMarginReq) + "</strong></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "</table>";
+                    pendingorderdata += "</div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'><span style='background-color:lightgreen;padding:10px'>" + OrderCategory + "</span><span style='background-color:tomato;padding:10px;'>" + OrderType + "</span></div><div  align='right'>" + OrderDate + " " + OrderTime + "</div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'><b>" + ScriptName + "</b></div><div align='right'>" + OrderPrice + "</div>";
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'>" + ActionType + "</div><div align='right'><span style='padding:10px;border-radius:10px;background-color:red;color:white'>Close Now</span></div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'>Margin Used :" + MarginUsed + "</div><div align='right'>HoldingMarginReq : " + HoldingMarginReq + "</div>";
+                    //pendingorderdata += "</div>";
+
+                });
+                $("#activeorder").html(pendingorderdata);
+                // Update margin and P/L after loading active orders
+                calculateMarginAndPL();
+            },
+            complete: function () {
+                $('#loader').hide();
+                $("#loaderarea").css("opacity", "1");
+            }
+        });
+    }
+
+
+    function getclosedorder() {
+        $('#loader').show();
+        $("#loaderarea").css("opacity", "0.1");
+
+        var uid = localStorage.getItem("userid");
+        $("#closedorder").html('');
+        $.ajax({
+            url: "/api/getorders/?orderstatus=Closed&uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var pendingorderdata = "";
+                $.each(data, function (i, item) {
+                    var OrderCategory = data[i].OrderCategory;
+                    var OrderType = data[i].OrderType;
+                    var OrderDate = data[i].OrderDate;
+                    var Lot = data[i].Lot;
+                    var OrderTime = data[i].OrderTime;
+                    var ClosedTime = data[i].ClosedTime;
+                    var ScriptName = data[i].ScriptName+"";
+                    var screxp = ScriptName.split('_');
+                    ScriptName = screxp[0];
+                    var newexp = screxp[1];
+                    var ActionType = data[i].ActionType;
+                    var OrderPrice = data[i].OrderPrice;
+                    var MarginUsed = data[i].MarginUsed;
+                    var HoldingMarginReq = data[i].HoldingMarginReq;
+                    var OrderStatus = data[i].OrderStatus;
+
+                    var BroughtBy = data[i].BroughtBy;
+                    var P_L = data[i].P_L;
+                    var Brokerage = data[i].Brokerage;
+                    var ClosedAt = data[i].ClosedAt;
+                    var OrderTypeClose = data[i].OrderTypeClose;
+
+                    var lefthdr = ActionType;
+                    var righthdr = data[i].ActionByClose;;
+                    //if (OrderCategory == "BUY") {
+                    //    righthdr = "Sold";
+                    //} else {
+                    //    lefthdr = "Sold";
+                    //    righthdr = "Bought";
+                    //}
+
+
+
+                    pendingorderdata += "<div class='col-lg-12 trade-box-m trade-close-box'>";
+                    pendingorderdata += "<table width='100%' cellspacing='2'>";
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td align='left'><strong>" + ScriptName + "</strong><br><span class='smfont'>" + newexp +"</span></td>";
+                    pendingorderdata += "<td align='right'>";
+                    pendingorderdata += "";
+                    pendingorderdata += "</td>";
+
+                    pendingorderdata += "<td align='right'>";
+                    if (parseInt(P_L) < 0) {
+                        pendingorderdata += "<span class='trade-red b-radius-5 mr-2'>" + parseInt(P_L) + "/" + parseInt(Brokerage) + "</span><span class='trade-red b-radius-5'>QTY:&nbsp;" + Lot + "</span>";
+                    } else {
+                        pendingorderdata += "<span class='trade-green b-radius-5 mr-2'>" + parseInt(P_L) + "/" + parseInt(Brokerage) + "</span><span class='trade-green b-radius-5'>QTY:&nbsp;" + Lot + "</span>";
+
+                    }
+                   
+                    pendingorderdata += "</td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    if (OrderCategory == "SELL") {
+                        pendingorderdata += "<td  colspan='2' align='left'><span>" + lefthdr + " : <span class='trade-red'>" + OrderPrice + "</span></span></td>";
+                        pendingorderdata += "<td align='right'><span>" + righthdr + " : <span class='trade-green'>" + BroughtBy + "</span></span></td>";
+
+                    } else {
+                        pendingorderdata += "<td  colspan='2' align='left'><span>" + lefthdr + " : <span class='trade-green'>" + OrderPrice + "</span></span></td>";
+                        pendingorderdata += "<td align='right'><span>" + righthdr + " : <span class='trade-red'>" + BroughtBy + "</span></span></td>";
+                    }
+                   
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left' class='pb-3'><span><strong>" + OrderDate + ", " + OrderTime + "</strong>&nbsp;<span class='trade-green'>" + OrderType + "</span></span></span></td>";
+                    pendingorderdata += "<td align='right' class='pb-3'><span><strong>" + ClosedAt + ", " + ClosedTime + "</strong>&nbsp;<span class='trade-green'>" + OrderTypeClose + "</span></span></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "</table>";
+                    pendingorderdata += "</div>";
+                });
+                $("#closedorder").html(pendingorderdata);
+            },
+            complete: function () {
+                $('#loader').hide();
+                $("#loaderarea").css("opacity", "1");
+            }
+        });
+    }
+
+
+
+        function getsltporder() {
+        $('#loader').show();
+        $("#loaderarea").css("opacity", "0.1");
+
+        var uid = localStorage.getItem("userid");
+        $("#sltporder").html('');
+        $.ajax({
+            url: "/api/getsltp/?UserId=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var pendingorderdata = "";
+                $.each(data, function (i, item) {
+                    var id = data[i].id;
+                    var TradeId = data[i].TradeId;
+                    var DateTime = data[i].DateTime;
+                    var SL = data[i].SL;
+                    var TP = data[i].TP;
+                    var Status = data[i].Status;
+                    var ScriptName = data[i].ScriptName + "";
+                    var screxp = ScriptName.split('_');
+                    ScriptName = screxp[0];
+                    var newexp = screxp[1];
+                    var ClosedAt = data[i].ClosedAt;
+                    var ClosedTime = data[i].ClosedTime;
+                    var OrderCategory = data[i].OrderCategory;
+                   
+                    pendingorderdata += "<div class='col-lg-12 trade-box-m trade-close-box'>";
+                    pendingorderdata += "<table width='100%' cellspacing='2'>";
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td align='left'><strong>" + ScriptName + "</strong><br><span class='smfont'>" + newexp + "</span></td>";
+                    pendingorderdata += "<td align='right'>";
+                    pendingorderdata += "";
+                    pendingorderdata += "</td>";
+
+                    pendingorderdata += "<td align='right'>";
+                    pendingorderdata += "<span class='trade-green b-radius-5 mr-2'>" + OrderCategory + "</span>";
+                    pendingorderdata += "</td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left' class='pb-3'><span><strong>" + DateTime + "</strong>&nbsp;</span></td>";
+                    pendingorderdata += "<td align='right' class='pb-3'><span class='trade-red'><strong>SL:" + SL + "</strong>&nbsp;<span class='trade-green'>TP:" + TP + "</span></span></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left' class='pb-3'><span class='trade-green b-radius-5'>&nbsp;" + Status + "</span></td>";
+                    pendingorderdata += "<td align='right' class='pb-3'><a onclick=deletesltp('" + TradeId + "') href='#' class='close-trade btn-danger'>DELETE</a>  </td>";
+                    pendingorderdata += "</tr>";
+
+
+                    pendingorderdata += "</table>";
+                    pendingorderdata += "</div>";
+                });
+                $("#sltporder").html(pendingorderdata);
+            },
+            complete: function () {
+                $('#loader').hide();
+                $("#loaderarea").css("opacity", "1");
+            }
+        });
+    }
+
+    //MCX Zerodha Code
+
+    var globalfinalclosevalue = "";
+
+    function checkmarketdata() {
+        var token = localStorage.getItem("token");
+        console.log(token);
+        $.ajax({
+            url: "/api/getsinglemarketdata/?token=" + token,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var symbolname = data.symbolname;
+                var instrument_token = data.instrument_token;
+                var last_price = data.last_price;
+
+                var tradingsymbol = data.tradingsymbol;
+                var average_price = data.average_price;
+                var volume = data.volume;
+                var open_ = data.open_;
+                var high_ = data.high_;
+                var low_ = data.low_;
+                var close_ = data.close_;
+                var change = data.change;
+                var oi = data.oi;
+                var buy = data.buy;
+                var sell = data.sell;
+                // alert(sell);
+                //var closevalue = parseInt(globaltradeprice) - parseInt(sell);
+                var closevalue = 0;
+                var cmp = "0";
+                if (globalOrderCategory == "SELL") {
+                    cmp = sell;
+                    closevalue = parseFloat(globaltradeprice) - parseFloat(sell);
+                }
+                else {
+                    cmp = buy;
+                    closevalue = parseFloat(buy) - parseFloat(globaltradeprice);
+                }
+                globalfinalclosevalue = closevalue;
+                //alert(closevalue);
+                var final_lp = Math.round(closevalue * globallotsize * globallotqty, 1);
+                //console.log("buy:" + buy + " sell:" + sell);
+                //console.log(closevalue + "*" + globallotsize + "=" + final_lp);
+                if (final_lp < 0) {
+                    var data = "<button id='btntrade1' class='btn-danger btn form-control' data-dismiss='modal'  onclick=finalclose('" + final_lp + "','" + cmp + "','" + globalordertype + "','btntrade1')> Close order in loss " + final_lp + "</button>";
+                    $("#sellordervalueprice").html(data);
+                }
+                else {
+                    var data = "<button  id='btntrade2' class='btn-success btn form-control' data-dismiss='modal' onclick=finalclose('" + final_lp + "','" + cmp + "','" + globalordertype + "','btntrade2')> Close order in profit " + final_lp + "</button>";
+                    $("#sellordervalueprice").html(data);
+                }
+                $("#bid" + instrument_token).html(buy);
+                $("#bidx" + instrument_token).html(buy);
+                $("#bidxx" + instrument_token).html(buy);
+                $("#bidy" + instrument_token).html(buy);
+                $("#ask" + instrument_token).html(sell);
+                $("#askx" + instrument_token).html(sell);
+                $("#askxx" + instrument_token).html(sell);
+                $("#ltp" + instrument_token).html(last_price);
+                $("#ltpx" + instrument_token).html(last_price);
+                $("#ltpxx" + instrument_token).html(last_price);
+                $("#chg" + instrument_token).html(parseFloat(Math.round(change, 2)));
+                $("#chgx" + instrument_token).html(parseFloat(Math.round(change, 2)));
+                $("#chgxx" + instrument_token).html(parseFloat(Math.round(change, 2)));
+                $("#high" + instrument_token).html(high_);
+                $("#highx" + instrument_token).html(high_);
+                $("#highxx" + instrument_token).html(high_);
+                $("#low" + instrument_token).html(low_);
+                $("#lowx" + instrument_token).html(low_);
+                $("#lowxx" + instrument_token).html(low_);
+                $("#opn" + instrument_token).html(open_);
+                $("#opnx" + instrument_token).html(open_);
+                $("#opnxx" + instrument_token).html(open_);
+                $("#cls" + instrument_token).html(close_);
+                $("#clsx" + instrument_token).html(close_);
+                $("#clsxx" + instrument_token).html(close_);
+                $("#ol" + instrument_token).html(oi);
+                $("#olx" + instrument_token).html(oi);
+                $("#olxx" + instrument_token).html(oi);
+                $("#vol" + instrument_token).html(volume);
+                $("#volx" + instrument_token).html(volume);
+                $("#volxx" + instrument_token).html(volume);
+
+                //rendermarketorder();
+            }
+        });
+    }
+
+    function deletesltp(id) {
+        var senddata = { "TradeId": id };
+        $.ajax({
+            url: "/api/deletesltp/",
+            type: "post",
+            data: senddata,
+            success: function (response) {
+                if (response == "True") {
+                    swal({
+                        title: "Success!",
+                        text: "Sl/TP Order Deleted.",
+                        type: "success"
+                    }).then(function () {
+                        getsltporder();
+                    });
+                }
+            }
+        });
+    }
+
+
+
+
+    function editorder(edit_orderid, edit_token, edit_symbolname, edit_lotsize, edit_actuallotsize, edit_edittype, markettype, edit_tradetype) {
+        localStorage.setItem("edit_orderid", edit_orderid);
+        localStorage.setItem("edit_token", edit_token);
+        localStorage.setItem("edit_symbolname", edit_symbolname);
+        localStorage.setItem("edit_lotsize", edit_lotsize);
+        localStorage.setItem("edit_actuallotsize", edit_actuallotsize);
+        localStorage.setItem("edit_edittype", edit_edittype);
+        localStorage.setItem("edit_tradetype", edit_tradetype);
+        localStorage.setItem("edit_markettype", markettype);
+        localStorage.setItem("isedit", "true");
+        location.href = "/home/marketwatchapp";
+    }
+
+
+
+
+    var uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    //var uri = "wss://103.220.223.27/api/webapiwebsoc";
+    var websocket = new WebSocket(uri);
+    function readvalues(token) {
+
+        //$.ajax({
+        //    url: "http://103.220.223.27/api/getdata?tokenno=61744647",
+        //    type: "get",
+        //    success: function (response) {
+        //        console.log("ipx",response);
+        //    }
+        //});
+        var ws;
+
+        //Initialize socket
+
+        if (websocket.readyState == WebSocket.CLOSED) {
+            websocket.onopen = function () {
+                websocket.send(token);
+                console.log("open");
+            };
+        }
+        else {
+            websocket.onopen = function () {
+                websocket.send(token);
+                console.log("open");
+            };
+        }
+
+        //Open socket and send message
+
+        //Socket error handler
+        websocket.onerror = function (event) {
+            $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+        };
+        var tknx = localStorage.getItem("tkn");
+
+        //Socket message handler  +
+        websocket.onmessage = function (event) {
+            //  var datax = JSON.parse(event.data);
+            if (event.data != "" && event.data != "true")
+            {
+                var result = JSON.parse(event.data);
+                var scriptname = result.instrument_token;
+                var cmp = "0";
+
+                if (result.bid == "0") {
+                    result.bid = result.last_price;
+                }
+                if (result.ask == "0") {
+                    result.ask = result.last_price;
+                }
+
+                for (var ri = 0; ri < ordid.length; ri++) {
+                    var orderindx = ordid[ri];
+                    var ordercat = $("#partialordercat" + orderindx + scriptname).html();
+                    if (ordercat == "SELL") {
+                        cmp = result.ask;
+                    }
+                    else {
+                        cmp = result.bid;
+                    }
+                    $("#partialbid" + orderindx + scriptname).html(cmp);
+                }
+                
+                // Calculate and display P/L for each trade
+                var newamtdeff = 0;
+                var livecmp = 0;
+                var ordercat = $("#partialordercat" + ordid[0] + scriptname).html();
+                
+                if (ordercat == "SELL") {
+                    livecmp = result.ask;
+                    newamtdeff = (parseFloat($("#oldpr" + scriptname).html()) - parseFloat(livecmp)).toFixed(2);
+                }
+                else {
+                    livecmp = result.bid;
+                    newamtdeff = parseFloat(livecmp) - parseFloat($("#oldpr" + scriptname).html());
+                }
+                
+                $("#livecmp" + scriptname).html("<strong>" + livecmp + "</strong>");
+                var newval = parseInt($("#sellotsize" + scriptname).html()) * newamtdeff;
+                newval = parseFloat(newval).toFixed(2);
+                
+                if (parseInt(newval) < 0) {
+                    $("#diffpric" + scriptname).css("color", "#dc3545"); // Red for loss
+                } else if (parseInt(newval) > 0) {
+                    $("#diffpric" + scriptname).css("color", "#28a745"); // Green for profit
+                } else {
+                    $("#diffpric" + scriptname).css("color", "#fff"); // White for zero
+                }
+                $("#diffpric" + scriptname).html(parseInt(newval));
+                
+                // Update total Active P/L
+                calcActivePL();
+
+                if (token == result.instrument_token) {
+                    var buy = result.ask;
+                    var sell = result.bid;
+
+                    if (globalOrderCategory == "SELL") {
+                        cmp = buy;
+                        closevalue = parseFloat(globaltradeprice) - parseFloat(cmp);
+                    }
+                    else {
+                        cmp = sell;
+                        closevalue = parseFloat(cmp) - parseFloat(globaltradeprice);
+                    }
+                    globalfinalclosevalue = closevalue;
+                    //alert(closevalue);
+                    var final_lp = Math.round(closevalue * globallotsize * globallotqty, 1);
+                   // console.log("buy:" + buy + " sell:" + sell);
+                   // console.log(closevalue + "*" + globallotsize + "=" + final_lp);
+                    if (final_lp < 0) {
+                        // OLD CODE: Missing button ID, missing id attribute, missing data-dismiss modal
+                        //var data = "<button class='btn-danger btn form-control'  onclick=finalclose('" + final_lp + "','" + cmp + "','" + globalordertype + "')> Close order in loss " + final_lp + "</button>";
+                        // FIXED CODE: Added button id='btntrade1', added 4th parameter to finalclose(), added data-dismiss='modal'
+                        var data = "<button id='btntrade1' class='btn-danger btn form-control' data-dismiss='modal' onclick=finalclose('" + final_lp + "','" + cmp + "','" + globalordertype + "','btntrade1')> Close order in loss " + final_lp + "</button>";
+                        $("#sellordervalueprice").html(data);
+                    }
+                    else {
+                        // OLD CODE: Missing button ID, missing id attribute, missing data-dismiss modal
+                        //var data = "<button class='btn-success btn form-control'  onclick=finalclose('" + final_lp + "','" + cmp + "','" + globalordertype + "')> Close order in profit " + final_lp + "</button>";
+                        // FIXED CODE: Added button id='btntrade2', added 4th parameter to finalclose(), added data-dismiss='modal'
+                        var data = "<button id='btntrade2' class='btn-success btn form-control' data-dismiss='modal' onclick=finalclose('" + final_lp + "','" + cmp + "','" + globalordertype + "','btntrade2')> Close order in profit " + final_lp + "</button>";
+                        $("#sellordervalueprice").html(data);
+                    }
+
+                    $("#bid" + result.instrument_token).html(result.bid);
+                    $("#bidx" + result.instrument_token).html(result.bid);
+                    $("#bidxm" + result.instrument_token).html(result.bid);
+                    $("#bidxx" + result.instrument_token).html(result.bid);
+                    $("#bidy" + result.instrument_token).html(result.bid);
+                    $("#ask" + result.instrument_token).html(result.ask);
+                    $("#askx" + result.instrument_token).html(result.ask);
+                    $("#askxm" + result.instrument_token).html(result.ask);
+                    $("#askxx" + result.instrument_token).html(result.ask);
+                    $("#ltp" + result.instrument_token).html(result.last_price);
+                    $("#ltpx" + result.instrument_token).html(result.last_price);
+                    $("#ltpxm" + result.instrument_token).html(result.last_price);
+                    $("#ltpxx" + result.instrument_token).html(result.last_price);
+                    $("#chg" + result.instrument_token).html(parseFloat(Math.round(result.change, 2)));
+                    $("#chgx" + result.instrument_token).html(parseFloat(Math.round(result.change, 2)));
+                    $("#chgxm" + result.instrument_token).html(parseFloat(Math.round(result.change, 2)));
+                    $("#chgxx" + result.instrument_token).html(parseFloat(Math.round(result.change, 2)));
+                    $("#high" + result.instrument_token).html(result.high_);
+                    $("#highx" + result.instrument_token).html(result.high_);
+                    $("#highxm" + result.instrument_token).html(result.high_);
+                    $("#highxx" + result.instrument_token).html(result.high_);
+                    $("#low" + result.instrument_token).html(result.low_);
+                    $("#lowx" + result.instrument_token).html(result.low_);
+                    $("#lowxm" + result.instrument_token).html(result.low_);
+                    $("#lowxx" + result.instrument_token).html(result.low_);
+                    $("#opn" + result.instrument_token).html(result.open_);
+                    $("#opnx" + result.instrument_token).html(result.open_);
+                    $("#opnxm" + result.instrument_token).html(result.open_);
+                    $("#opnxx" + result.instrument_token).html(result.open_);
+                    $("#cls" + result.instrument_token).html(result.close_);
+                    $("#clsx" + result.instrument_token).html(result.close_);
+                    $("#clsxm" + result.instrument_token).html(result.close_);
+                    $("#clsxx" + result.instrument_token).html(result.close_);
+                    $("#ol" + result.instrument_token).html(result.oi);
+                    $("#olx" + result.instrument_token).html(result.oi);
+                    $("#olxm" + result.instrument_token).html(result.oi);
+                    $("#olxx" + result.instrument_token).html(result.oi);
+                    $("#vol" + result.instrument_token).html(result.volume);
+                    $("#volx" + result.instrument_token).html(result.volume);
+                    $("#volxm" + result.instrument_token).html(result.volume);
+                    $("#volxx" + result.instrument_token).html(result.volume);
+    
+                }
+            //  console.log("dataxs", datax);
+            }
+        };
+    }
+   
+    function finalclose(pl, ctp, type, id) {
+        
+      
+
+        $("#"+id).attr("disabled", true);
+
+
+        var datecheck = new Date();
+        //  alert(datecheck.get)
+        var d = "";
+        var m = "";
+        if (datecheck.getDate() <= 9) {
+            d = "0" + datecheck.getDate();
+        }
+        else {
+            d = datecheck.getDate();
+        }
+        if ((datecheck.getMonth() + 1) <= 9) {
+            m = "0" + (datecheck.getMonth() + 1);
+        }
+        else {
+            m = datecheck.getMonth() + 1;
+        }
+        var cdate = datecheck.getFullYear() + "/" + m + "/" + d;
+        var minutecount = localStorage.getItem("profittradestoptime");
+        if ((pl > 0) && (cdate == globaldatefortrade)) {
+
+            min = minutecount;
+            var minm = addtime(globaltimeforclose, minutecount);
+            var ctime = datecheck.getHours() + ":" + datecheck.getMinutes() + ":" + datecheck.getSeconds();
+            //current
+            var currenttime_sec = ctime.split(':');
+            var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+            //_starttime
+            var Startcurrenttime_sec = minm.split(':');
+            var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60;
+            if (currentseconds <= startseconds) {
+                alert("SCALPING NOT ALLOWED! Please Try after Sometime.")
+                //alert("SERVER ISSUES! Please Try after Sometime. " + minutecount+" Minutes")
+                return;
+            }
+        }
+
+        $('#loader').show();
+        $("#loaderarea").css("opacity", "0.1");
+
+        if (ctp == 0 || ctp == "") {
+            alert("Market closed! Please after Some time");
+            location.reload();
+            return;
+        }
+
+        $('#closeorder').hide();
+      
+        var clientname = localStorage.getItem("ClientName");
+        var uid = localStorage.getItem("userid");
+        var tradeprice = 0;
+        var ctpprice = 0;
+        var finalbrokerage = 0;
+        var brokerage = 0;
+        if (type == "NSE") {
+            var broktype = localStorage.getItem("NSE_Brokerage_Type");
+            brokerage = localStorage.getItem("Equity_brokerage_per_crore");
+            if (broktype == "per_lot") {
+                finalbrokerage = parseInt(globallotqty) * parseInt(brokerage);
+            }
+            else {
+                tradeprice = parseInt(globaltradeprice) * parseInt(globallotsize) * parseInt(globallotqty);
+                ctpprice = parseInt(ctp) * parseInt(globallotsize) * parseInt(globallotqty);;
+                finalbrokerage = (parseInt(tradeprice) + parseInt(ctpprice)) * parseInt(brokerage) / 10000000;
+            }
+        }
+        else if (type == "OPT") {
+            var broktype = localStorage.getItem("CDS_Brokerage_Type");
+            brokerage = localStorage.getItem("CDS_brokerage_per_crore");
+            if (broktype == "per_lot") {
+                finalbrokerage = parseInt(globallotqty) * parseInt(brokerage);
+            }
+            else {
+                tradeprice = parseInt(globaltradeprice) * parseInt(globallotsize) * parseInt(globallotqty);
+                ctpprice = parseInt(ctp) * parseInt(globallotsize) * parseInt(globallotqty);;
+                finalbrokerage = (parseInt(tradeprice) + parseInt(ctpprice)) * parseInt(brokerage) / 10000000;
+            }
+        }
+        else if (type == "MCX") {
+            var broktype = localStorage.getItem("Mcx_Brokerage_Type");
+            brokerage = localStorage.getItem("MCX_brokerage_per_crore");
+            if (broktype == "per_lot") {
+                var symbolname = globalscriptname;//GOLD22AUGFUT
+                var symarr = symbolname.split("_");
+                var similersym = setsymbol(symarr[0] + "".toString().trim());
+               
+                brokerage = localStorage.getItem(similersym + "_brokerage");
+                finalbrokerage = parseInt(globallotqty) * parseInt(brokerage);
+            }
+            else {
+                tradeprice = parseInt(globaltradeprice) * parseInt(globallotsize) * parseInt(globallotqty);
+                ctpprice = parseInt(ctp) * parseInt(globallotsize) * parseInt(globallotqty);;
+                finalbrokerage = (parseInt(tradeprice) + parseInt(ctpprice)) * parseInt(brokerage) / 10000000;
+            }
+        }
+
+
+        //string lp,string brokerage,string BroughtBy,string ClosedAt,string orderno
+        var datee = new Date();
+        var finaldate = datee.getFullYear() + "-" + (datee.getMonth() + 1) + "-" + datee.getDate();
+        var tokenno = globatokenno;
+        $.ajax({
+            url: "/api/updateorder/?lp=" + pl + "&brokerage=" + finalbrokerage + "&BroughtBy=" + ctp + "&ClosedAt=" + finaldate + "&orderno=" + globalorderno + "&uid=" + uid + "&ordertype=" + globalOrderCategory + "&tokenno=" + tokenno,
+            type: "get",
+            success: function (response) {
+                //   swal("Success", "Order Closed Successfully");
+                if (response == "true") {
+                    var msg = globalscriptname + " trades of " + globallotqty + " lots has been closed successfully at P/L " + pl
+                    swal({
+                        title: "Trade Closed!",
+                        text: msg,
+                        type: "success"
+                    }).then(function () {
+                        $("#" + id).attr("disabled", false);
+
+                        location.reload();
+                    });
+                } else {
+                    swal({
+                        title: "Error!",
+                        text: "You can not close this trade.",
+                        type: "error"
+                    }).then(function () {
+                        $("#" + id).attr("disabled", false);
+                        location.reload();
+                    });
+                }
+            },
+            complete: function () {
+                $('#loader').hide();
+                $("#loaderarea").css("opacity", "1");
+            }
+        });
+    }
+
+    var globallotsize = 0;
+    var globaltradeprice = 0;
+    var globalorderno = "";
+    var globalOrderCategory = "";
+    var globalordertype = "";
+    var globallotqty = 0;
+    var globalscriptname = "";
+    var min = 0;
+    function addtime(time, hour) {
+        let times = time.split(":");
+        //clear here more than 24 hours
+        min = min % 60;
+        times[0] = (parseInt(times[0])) + parseInt(min / 60);
+        times[1] = parseInt(times[1]) + min % 60;
+        //here control if hour and minutes reach max
+        if (times[1] >= 60) { times[1] = 0; times[0]++ };
+        times[0] >= 24 ? times[0] -= 24 : null;
+
+        //here control if less than 10 then put 0 frond them
+        times[0] < 10 ? times[0] = "0" + times[0] : null;
+        times[1] < 10 ? times[1] = "0" + times[1] : null;
+
+        return times.join(":");
+    }
+
+    var globaltimeforclose = "";
+    var globaldatefortrade = "";
+    var globatokenno = "";
+    function closeorder(token, selectedlotsize, tradeprice, orderno, OrderCategory, lotqty, ordtype, scriptname, OrderTime, Orderdate) {
+        $("#sellordervalueprice").html("");
+        $("#sellordervalue").html("");
+        var data_filter = activeorderlist.filter(element => element.TokenNo == token)
+        const minDate = new Date(
+            Math.min(
+                ...data_filter.map(element => {
+                    var wewtime = element.OrderDate + " " + element.OrderTimeFull;
+                    return new Date(wewtime);
+                }),
+            ),
+        );
+        var ndate = minDate;
+        var mm = ((ndate.getMonth() + 1) > 9) ? (ndate.getMonth() + 1) : "0" + (ndate.getMonth() + 1);
+        var dd = ((ndate.getDate()) > 9) ? (ndate.getDate()) : "0" + (ndate.getDate());
+        var nordDate = ndate.getFullYear() + "/" + mm + "/" + dd;
+
+        var mt = ((ndate.getMinutes()) > 9) ? (ndate.getMinutes()) : "0" + (ndate.getMinutes());
+        var ss = ((ndate.getSeconds()) > 9) ? (ndate.getSeconds()) : "0" + (ndate.getSeconds());
+        var hr = ((ndate.getHours()) > 9) ? (ndate.getHours()) : "0" + (ndate.getHours());
+
+        var nordTime = hr + ":" + mt + ":" + ss;
+
+
+
+        var data_filtern = data_filter.filter(element => (element.OrderDate == nordDate) && (element.OrderTimeFull == nordTime));
+
+        var checkprevtrd = checkprevtrade();
+        if (checkprevtrd == "true") {
+            data_filtern.forEach(ele => {
+                token = ele["TokenNo"];
+                selectedlotsize = ele["selectedlotsize"];
+                tradeprice = ele["OrderPrice"];
+                orderno = ele["OrderNo"];
+                OrderCategory = ele["OrderCategory"];
+                lotqty = ele["Lot"];
+                ordtype = ele["SymbolType"];
+                scriptname = ele["ScriptName"];
+                OrderTime = ele["OrderTime"];
+                Orderdate = ele["OrderDate"];
+                $("#closeorder").modal('show');
+            })
+        } else {
+            $("#closeorder").modal('show');
+        }
+
+
+
+
+
+
+
+
+        globaltimeforclose = OrderTime;
+        globaldatefortrade = Orderdate;
+
+        globatokenno = token;
+       
+        readvalues(token);
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "/api/getmarkettime/?Exchange=" + ordtype + "&refid=" + refid,
+            type: "get",
+            success: function (resp) {
+                var data = resp.split('|');
+                var starttime = data[0] + ":00";
+                var endttime = data[1] + ":00";
+                _starttime = starttime;
+                _endttime = endttime;
+
+                var today = new Date();
+                if (today.getDay() == 6 || today.getDay() == 0) {
+                    swal("Market not open.");
+                    setTimeout(function () { location.reload(); }, 1000);
+                    //return;
+                }
+                else {
+                    var date = new Date();
+                    var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                    //current
+                    var currenttime_sec = ctime.split(':');
+                    var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                    //_starttime
+                    var Startcurrenttime_sec = _starttime.split(':');
+                    var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+                    //_endtime
+                    var Endcurrenttime_sec = _endttime.split(':');
+                    var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                    if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                    }
+                    else {
+                        swal("Market not open.");
+                        setTimeout(function () { location.reload(); }, 1000);
+                        return;
+                    }
+                }
+            }
+        });
+
+
+        globallotsize = selectedlotsize;
+        globaltradeprice = tradeprice;
+        globalorderno = orderno;
+        globalOrderCategory = OrderCategory;
+        globallotqty = lotqty;
+        globalscriptname = scriptname;
+        globalordertype = ordtype;
+        var data = "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Bid <span id='bid" + token + "'> " + 0 + "</span></td>";
+        data += "<td>Ask <span id='ask" + token + "'> " + 0 + "</span></td>";
+        data += "<td>Ltp <span id='ltp" + token + "'> " + 0 + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>High <span id='high" + token + "'>" + 0 + "</span></td>";
+        data += "<td>Low <span id='low" + token + "'> " + 0 + "</span></td>";
+        data += "<td>Open <span id='opn" + token + "'> " + 0 + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Close <span id='cls" + token + "'> " + 0 + "</span></td>";
+        data += "<td>OL <span id='ol" + token + "'> " + 0 + "</span></td>";
+        data += "<td>Vol <span id='vol" + token + "'> " + 0 + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Change <span id='chg" + token + "'>" + 0 + "</span></td>";
+        data += "</tr>";
+        $("#sellordervalue").html(data);
+        
+    }
+
+
+    function sltpcloseorder(tradeid,token, selectedlotsize, tradeprice, orderno, OrderCategory, lotqty, ordtype, scriptname, OrderTime, Orderdate) {
+        $("#tradeid").val(tradeid);
+        $("#sltpsellordervalueprice").html("");
+        $("#sltpsellordervalue").html("");
+        var data_filter = activeorderlist.filter(element => element.TokenNo == token)
+        const minDate = new Date(
+            Math.min(
+                ...data_filter.map(element => {
+                    var wewtime = element.OrderDate + " " + element.OrderTimeFull;
+                    return new Date(wewtime);
+                }),
+            ),
+        );
+        var ndate = minDate;
+        var mm = ((ndate.getMonth() + 1) > 9) ? (ndate.getMonth() + 1) : "0" + (ndate.getMonth() + 1);
+        var dd = ((ndate.getDate()) > 9) ? (ndate.getDate()) : "0" + (ndate.getDate());
+        var nordDate = ndate.getFullYear() + "/" + mm + "/" + dd;
+
+        var mt = ((ndate.getMinutes()) > 9) ? (ndate.getMinutes()) : "0" + (ndate.getMinutes());
+        var ss = ((ndate.getSeconds()) > 9) ? (ndate.getSeconds()) : "0" + (ndate.getSeconds());
+        var hr = ((ndate.getHours()) > 9) ? (ndate.getHours()) : "0" + (ndate.getHours());
+
+        var nordTime = hr + ":" + mt + ":" + ss;
+
+
+
+        var data_filtern = data_filter.filter(element => (element.OrderDate == nordDate) && (element.OrderTimeFull == nordTime));
+
+        $("#slspcloseorder").modal('show');
+
+
+
+
+        globaltimeforclose = OrderTime;
+        globaldatefortrade = Orderdate;
+
+        globatokenno = token;
+
+        readvalues(token);
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "/api/getmarkettime/?Exchange=" + ordtype + "&refid=" + refid,
+            type: "get",
+            success: function (resp) {
+                var data = resp.split('|');
+                var starttime = data[0] + ":00";
+                var endttime = data[1] + ":00";
+                _starttime = starttime;
+                _endttime = endttime;
+
+                var today = new Date();
+                if (today.getDay() == 6 || today.getDay() == 0) {
+                    swal("Market not open.");
+                    setTimeout(function () { location.reload(); }, 1000);
+                    //return;
+                }
+                else {
+                    var date = new Date();
+                    var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                    //current
+                    var currenttime_sec = ctime.split(':');
+                    var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                    //_starttime
+                    var Startcurrenttime_sec = _starttime.split(':');
+                    var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+                    //_endtime
+                    var Endcurrenttime_sec = _endttime.split(':');
+                    var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                    if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                    }
+                    else {
+                        swal("Market not open.");
+                        setTimeout(function () { location.reload(); }, 1000);
+                        return;
+                    }
+                }
+            }
+        });
+
+
+        globallotsize = selectedlotsize;
+        globaltradeprice = tradeprice;
+        globalorderno = orderno;
+        globalOrderCategory = OrderCategory;
+        globallotqty = lotqty;
+        globalscriptname = scriptname;
+        globalordertype = ordtype;
+        var data = "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Bid <span id='bid" + token + "'> " + 0 + "</span></td>";
+        data += "<td>Ask <span id='ask" + token + "'> " + 0 + "</span></td>";
+        data += "<td>Ltp <span id='ltp" + token + "'> " + 0 + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>High <span id='high" + token + "'>" + 0 + "</span></td>";
+        data += "<td>Low <span id='low" + token + "'> " + 0 + "</span></td>";
+        data += "<td>Open <span id='opn" + token + "'> " + 0 + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Close <span id='cls" + token + "'> " + 0 + "</span></td>";
+        data += "<td>OL <span id='ol" + token + "'> " + 0 + "</span></td>";
+        data += "<td>Vol <span id='vol" + token + "'> " + 0 + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Change <span id='chg" + token + "'>" + 0 + "</span></td>";
+        data += "</tr>";
+        $("#sltpsellordervalue").html(data);
+
+    }
+
+    var mcxdata = [];
+    function checkmcx(token, scriptname) {
+        // alert(token);
+        // alert(scriptname);
+        var data = "<tr style='padding:5px;box-shadow:1px 1px 10px #f4f4f4;'>";
+        data += "<td>" + scriptname + "</td>";
+        data += "<td align='center' ><span id='bid" + token + "' data-toggle='modal' data-target='#placeordersell' onclick='setorder(" + token + ")' class='btn-default btn form-control' style='background-color:#FDA390;border-radius:10px;border:1px solid white;padding:5px;box-shadow:1px 1px 10px #f4f4f4'>0</span></td>";
+        data += "<td align='center' ><span id='ask" + token + "'  data-toggle='modal' data-target='#placeorderbuy' class='btn-default btn form-control' style='background-color:#D5F9BB;border-radius:10px;border:1px solid white;padding:5px;box-shadow:1px 1px 10px #f4f4f4'>0<span></td>";
+        data += "<td  id='ltp" + token + "'>" + 0 + "</td>";
+        data += "<td  id='chg" + token + "'>" + 0 + "</td>";
+        data += "<td  id='high" + token + "'>" + 0 + "</td>";
+        data += "<td  id='low" + token + "'>" + 0 + "</td>";
+        data += "<td  id='opn" + token + "'>" + 0 + "</td>";
+        data += "<td  id='cls" + token + "'>" + 0 + "</td>";
+        data += "<td  id='ol" + token + "'>" + 0 + "</td>";
+        data += "<td  id='vol" + token + "'>" + 0 + "</td>";
+        data += "</tr>";
+        $("#mcxlivedata").append(data);
+        //alert(data);
+        // console.log(mcxdata);
+        // alert(token);
+        mcxdata.push(token);
+        var x = "";
+        for (var i = 0; i < mcxdata.length; i++) {
+            x += mcxdata[i] + ",";
+        }
+        x = x.slice(0, -1);
+        console.log(x);
+        // localStorage.setItem("mcx", x);
+       
+    }
+    
+    // Function to get Margin Available from ledger balance with color coding
+    function calculateMarginAndPL() {
+        var userid = localStorage.getItem("userid");
+        console.log("Getting margin available for userid:", userid);
+        
+        // Check if elements exist
+        if ($("#marginavl").length === 0) {
+            console.error("Element #marginavl not found!");
+            return;
+        }
+        
+        // Get ledger balance and display as Margin Available
+        $.ajax({
+            url: "/api/getledgerbalance/?uid=" + userid,
+            type: "get",
+            success: function (balance) {
+                console.log("Ledger balance response:", balance);
+                var userbalance = parseInt(balance);
+                console.log("Setting marginavl to:", userbalance);
+                
+                // Set color based on balance value
+                if (userbalance > 0) {
+                    $("#marginavl").html(userbalance).css("color", "#28a745"); // Green for positive
+                } else if (userbalance < 0) {
+                    $("#marginavl").html(userbalance).css("color", "#dc3545"); // Red for negative
+                } else {
+                    $("#marginavl").html(userbalance).css("color", "#fff"); // White for zero
+                }
+                
+                console.log("marginavl after setting:", $("#marginavl").html());
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching ledger balance:", error);
+                $("#marginavl").html("0").css("color", "#fff");
+            }
+        });
+        
+        // Update Active P/L color based on current value
+        updateActivePLColor();
+    }
+    
+    // Function to update Active P/L color based on its value
+    function updateActivePLColor() {
+        var currentPL = parseFloat($("#activepl").text()) || 0;
+        console.log("Current P/L value:", currentPL);
+        
+        if (currentPL > 0) {
+            $("#activepl").css("color", "#28a745"); // Green for profit
+        } else if (currentPL < 0) {
+            $("#activepl").css("color", "#dc3545"); // Red for loss
+        } else {
+            $("#activepl").css("color", "#fff"); // White for zero
+        }
+    }
+    
+    // Function to calculate total Active P/L from all individual trades
+    function calcActivePL() {
+        var totalactivepl = 0;
+        
+        // Loop through all order IDs and sum up their P/L
+        for (var i = 0; i < activeorderlist.length; i++) {
+            var tokenNo = activeorderlist[i].TokenNo;
+            var plValue = parseFloat($("#diffpric" + tokenNo).html()) || 0;
+            totalactivepl += plValue;
+        }
+        
+        totalactivepl = parseFloat(totalactivepl).toFixed(2);
+        $("#activepl").html(parseInt(totalactivepl));
+        
+        // Update color based on value
+        if (totalactivepl > 0) {
+            $("#activepl").css("color", "#28a745"); // Green for profit
+        } else if (totalactivepl < 0) {
+            $("#activepl").css("color", "#dc3545"); // Red for loss
+        } else {
+            $("#activepl").css("color", "#fff"); // White for zero
+        }
+    }
+    //
+</script>

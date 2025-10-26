@@ -1,0 +1,1786 @@
+﻿
+@{
+    ViewBag.Title = "nsefuture";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+
+
+    #loader {
+        position: absolute;
+        left: 50%;
+        z-index: 1;
+        top: 50%;
+        top: 50%;
+    }
+
+    @@-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Add animation to "page content" */
+    .animate-bottom {
+        position: relative;
+        -webkit-animation-name: animatebottom;
+        -webkit-animation-duration: 1s;
+        animation-name: animatebottom;
+        animation-duration: 1s
+    }
+
+    @@-webkit-keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0px;
+            opacity: 1
+        }
+    }
+
+    @@keyframes animatebottom {
+        from {
+            bottom: -100px;
+            opacity: 0
+        }
+
+        to {
+            bottom: 0;
+            opacity: 1
+        }
+    }
+
+    #myDiv {
+        display: none;
+        text-align: center;
+    }
+</style>
+
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+
+        <!-- Modal content-->
+        <div class="modal-content ser-popup">
+            <div class="head-search">
+                <input list="tokenlst" onkeyup="searchsymbl()" class="custom-input" type="text" placeholder="Search & add" id="searchsybmolkey" />
+                <button type="button" class="ser-icon" value="Search">
+                    <svg width="22px" height="22px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g id="Interface / Search_Magnifying_Glass"> <path id="Vector" d="M15 15L21 21M10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10C17 13.866 13.866 17 10 17Z" stroke="#e5e0e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g> </g></svg>
+
+                </button>
+                <div class="filter-icon">
+                    <svg onclick="getsymbolsbysearch()" width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g id="Edit / Add_Plus_Square"> <path id="Vector" d="M8 12H12M12 12H16M12 12V16M12 12V8M4 16.8002V7.2002C4 6.08009 4 5.51962 4.21799 5.0918C4.40973 4.71547 4.71547 4.40973 5.0918 4.21799C5.51962 4 6.08009 4 7.2002 4H16.8002C17.9203 4 18.4801 4 18.9079 4.21799C19.2842 4.40973 19.5905 4.71547 19.7822 5.0918C20.0002 5.51962 20.0002 6.07967 20.0002 7.19978V16.7998C20.0002 17.9199 20.0002 18.48 19.7822 18.9078C19.5905 19.2841 19.2842 19.5905 18.9079 19.7822C18.4805 20 17.9215 20 16.8036 20H7.19691C6.07899 20 5.5192 20 5.0918 19.7822C4.71547 19.5905 4.40973 19.2842 4.21799 18.9079C4 18.4801 4 17.9203 4 16.8002Z" stroke="#0c2438" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g> </g></svg>
+                </div>
+            </div>
+            <div class="modal-body">
+                <table class="table" id="myTable">
+                    <tbody id="mcxdata">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<div id="placeordersell" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="text-white">Place Sell Order</h4>
+                <button type="button" class="close text-white" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body" style="text-align:center">
+                <table class="table table-bordered">
+                    <tr>
+                        <td>
+                            <b>Ledger Balance :</b> <span id="userbalance">0</span>
+                        </td>
+                        <td>
+                            <b>Margin Available  :</b> <span id="marginavl">0</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <b>Active P/L :</b> <span id="activepl">0</span>
+                        </td>
+                        <td>
+                            <b>M2M (Equity) :</b> <span id="m2m">0</span>
+                        </td>
+                    </tr>
+                </table>
+
+                <div id="activeorder" style="background-color: white; display:none;">
+                </div>
+
+
+                <table class="table">
+                    <tr>
+                        <td align="center">
+                            <h4 style="text-align:center;" id="sellscriptname"></h4>
+                            <h6 style="text-align:center;margin-top:10px;" id="sellscriplotsize"></h6>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="#" style="margin-top: 10px; margin-bottom: 10px; margin-bottom: 10px;padding:10px" onclick="openchart()"> <b>Open Chart<br /></b> </a><br />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center">
+                            <ul class="nav-pills">
+                                <li class="active" style="text-align:center">
+                                    <a data-toggle="pill" href="#home" id="tabhome" class="btn2 active" onclick="tabchange('tabhome','tabmenu1','home','menu1')"><i class="fa fa-check" aria-hidden="true"></i> Market</a>
+                                </li>
+                                <li style="text-align:center">
+                                    <a data-toggle="pill" href="#menu1" id="tabmenu1" class="btn2" onclick="tabchange('tabmenu1','tabhome','menu1','home')"><i class="ti-alarm-clock"></i> Order</a>
+                                </li>
+
+
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="tab-content">
+                    <div id="home" class="tab-pane fadein">
+
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <div class="form-group floating-label-group">
+                                        <input type="number" value="1" id="lotsellorder" onkeyup="textchange()" class="custom-input" autocomplete="off" autofocus required />
+                                        <label class="floating-label" id="lbltradetpesell1"></label>
+                                        <span id="mrgval" style="padding:10px;"></span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button id="btnpopuptrade1" class="btn-danger btn form-control" data-dismiss="modal" onclick="saveorder('SELL')">Place Sell Order @@ <span id="sellordervalueprice"></span></button>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                    <div id="menu1" class="tab-pane fadein">
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <div class="form-group floating-label-group">
+                                        <input type="number" value="1" id="selllotsize_limitorder" class="custom-input" autocomplete="off" autofocus required />
+                                        <label class="floating-label" id="lbltradetpesell2"></label>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="form-group floating-label-group">
+                                        <input type="number" id="sellprice_limitorder" class="custom-input" autocomplete="off" autofocus required />
+                                        <label class="floating-label">Price</label>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center">
+                                    @*<input type="checkbox" style="padding:10px;margin-bottom:10px;font-size:16px;color:red;font-weight:bold" id="sellcheckbox_stoploss" />As Stoploss Order*@
+                                    <button id="btnpopuptrade2" class="btn-danger btn form-control" data-dismiss="modal" onclick="savependingorder('SELL')">Place Sell Order</button>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+
+                <table class="modal-t" width="100%" id="sellordervalue">
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="placeorderbuy" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="text-white">Place Buy Order</h4>
+                <button type="button" class="close text-white" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-body" style="text-align:center">
+                <table class="table table-bordered">
+                    <tr>
+                        <td>
+                            <b>Ledger Balance :</b> <span id="userbalance1">0</span>
+                        </td>
+                        <td>
+                            <b>Margin Available :</b> <span id="marginavl1">0</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <b>Active P/L :</b> <span id="activepl1">0</span>
+                        </td>
+                        <td>
+                            <b>M2M (Equity) :</b> <span id="m2m1">0</span>
+                        </td>
+                    </tr>
+                </table>
+
+
+                <table class="table">
+                    <tr>
+                        <td align="center">
+                            <h4 style="text-align:center;" id="buyscriptname"></h4>
+                            <h6 style="text-align:center;margin-top:10px;" id="buyscriplotsize"></h6>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <a href="#" style="margin-top: 10px; margin-bottom: 10px; margin-bottom: 10px;padding:10px" onclick="openchart()"> <b>Open Chart<br /></b> </a><br />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center">
+                            <ul class="nav-pills">
+                                <li class="active" style="text-align:center">
+                                    <a data-toggle="pill" href="#homex" id="tabhomex" class="btn2 active" onclick="tabchange('tabhomex','tabmenu1x','homex','menu1x')"><i class="fa fa-check" aria-hidden="true"></i> Market</a>
+                                </li>
+
+                                <li style="text-align:center">
+                                    <a data-toggle="pill" href="#menu1x" id="tabmenu1x" onclick="tabchange('tabmenu1x','tabhomex','menu1x','homex')" class="btn2"><i class="ti-alarm-clock"></i> Order</a>
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="tab-content">
+                    <div id="homex" class="tab-pane fadein">
+
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <div class="form-group floating-label-group">
+                                        <input type="number" value="1" id="lotbuyorder" onkeyup="textchange1()" class="custom-input" autocomplete="off" autofocus required />
+                                        <label class="floating-label" id="lbltradetpebuy1"></label>
+                                        <span id="mrgval1" style="padding:10px;"></span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <button id="btnpopuptrade3" class="btn-success btn form-control" data-dismiss="modal" onclick="saveorder('BUY')">Place Buy Order @@ <span id="buyordervalueprice"></span></button>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                    <div id="menu1x" class="tab-pane fadein">
+                        <table class="table">
+                            <tr>
+                                <td>
+                                    <div class="form-group floating-label-group">
+                                        <input type="number" value="1" id="buylotsize_limitorder" class="custom-input" autocomplete="off" autofocus required />
+                                        <label class="floating-label" id="lbltradetpebuy2"></label>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="form-group floating-label-group">
+                                        <input type="number" id="buyprice_limitorder" class="custom-input" autocomplete="off" autofocus required />
+                                        <label class="floating-label">Price</label>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    @*<input type="checkbox" style="padding:10px;margin-bottom:10px;font-size:16px;color:red;font-weight:bold" id="buycheckbox_stoploss" />As Stoploss Order*@
+                                    <button id="btnpopuptrade4" class="btn-success btn form-control" data-dismiss="modal" onclick="savependingorder('BUY')">Place Buy Order</button>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+
+                <table class="modal-t" width="100%" id="buyordervalue">
+                </table>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+<div id="myModalchart" class="ser-popup raise-comp noti-popup modal fade" role="dialog">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-header">
+            <h4>History chart of The Day</h4>
+            <button type="button" class="close" data-dismiss="modal">×</button>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content ser-popup">
+            <iframe src="/home/historychart" id="iframechart" allowfullscreen width="100%" style="height:80vh"></iframe>
+        </div>
+
+    </div>
+</div>
+
+
+<div class="main_content_iner ">
+    <div id="loader">
+        <img src="~/Content/img/loading.gif" width="50" />
+    </div>
+    <div class="container-fluid p-0" id="loaderarea">
+        <div class="row ">
+            <div class="col-lg-12">
+                <div class="white_card card_height_100 mb_30 QA_section">
+                    <div class="white_card_header">
+                        <div class="box_header m-0">
+                            <div class="main-title">
+                                <h3 class="m-0">NSE-FUTURES</h3>
+                            </div>
+                            <div class="header_more_tool">
+                                <div class="dropdown">
+                                    <div class="pull-right">
+                                        <svg data-toggle="modal" data-target="#myModal" width="45px" height="45px" viewBox="-2.4 -2.4 28.80 28.80" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"><rect x="-2.4" y="-2.4" width="29" height="28.50" rx="14.4" fill="#ffffff" strokewidth="0"></rect></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g id="Edit / Add_Plus_Circle"> <path id="Vector" d="M8 12H12M12 12H16M12 12V16M12 12V8M12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21Z" stroke="#0c2438" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g> </g></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="white_card_body">
+                        <div class="QA_table table-responsive disp1">
+                            <!-- table-responsive -->
+                            <table class="table table-hover table-borderd">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">ScriptName</th>
+                                        <th scope="col">BID</th>
+                                        <th scope="col">ASK</th>
+                                        <th scope="col">LTP</th>
+                                        <th scope="col">CHG</th>
+                                        <th scope="col">HIGH</th>
+                                        <th scope="col">LOW</th>
+                                        <th scope="col">OPEN</th>
+                                        <th scope="col">CLOSE</th>
+                                        <th scope="col">OL</th>
+                                        <th scope="col">VOLUME</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mcxlivedata">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="disp2" id="mobileviewdata">
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/Content/js/jquery-3.4.1.min.js"></script>
+<script>
+
+    function tabchange(senderid, removeid, targetid, hideid) {
+        $("#" + senderid).addClass('active');
+        $("#" + removeid).removeClass('active');
+        $("#" + targetid).show();
+        $("#" + hideid).hide();
+    }
+    var _starttime = "";
+    var _endttime = "";
+
+    $(window).on('load', function () {
+
+        setInterval(function () { readvalues(""); }, 1000);
+
+        $('#loader').hide();
+        tabchange('tabhomex', 'tabmenu1x', 'homex', 'menu1x');
+        tabchange('tabhome', 'tabmenu1', 'home', 'menu1')
+
+        $('#placeorderbuy').on("hide.bs.modal", function () {
+            $("#buyordervalue").html("");
+            $("#lotsellorder").val("1");
+            $("#selllotsize_limitorder").val("1")
+            $("#sellprice_limitorder").val("")
+            $("#lotbuyorder").val("1");
+            $("#buylotsize_limitorder").val("1");
+            $("#buyprice_limitorder").val("");
+        })
+
+        $('#placeordersell').on("hide.bs.modal", function () {
+            $("#sellordervalue").html("");
+            $("#lotsellorder").val("1");
+            $("#selllotsize_limitorder").val("1")
+            $("#sellprice_limitorder").val("")
+            $("#lotbuyorder").val("1");
+            $("#buylotsize_limitorder").val("1");
+            $("#buyprice_limitorder").val("");
+        })
+
+        getactiveorder();
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "/api/getmarkettime/?Exchange=NSE&refid=" + refid,
+            type: "get",
+            success: function (resp) {
+                var data = resp.split('|');
+                var starttime = data[0] + ":00";
+                var endttime = data[1] + ":00";
+                _starttime = starttime;
+                _endttime = endttime;
+                loadeditmodal();
+            }
+        });
+
+        getsymbols();
+        getuserbalance();
+
+        // WebSocketTest();
+    });
+
+    function getuserbalance() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getledgerbalance/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                response = parseFloat(response).toFixed(2);
+                $("#userbalance").html(parseInt(response));
+                $("#userbalance1").html(parseInt(response));
+                var activepl = $("#activepl").html();
+                var newm2m = Math.round($("#userbalance").html()) - Math.round(activepl);
+                var creditlimit = localStorage.getItem("CreditLimit");
+                var m2m = Math.round($("#userbalance").html()) + 0 + Math.round(creditlimit);
+                $("#m2m").html(parseInt(m2m));
+                $("#m2m1").html(parseInt(m2m));
+                $("#marginavl").html(parseInt(m2m) - 0);
+                $("#marginavl1").html(parseInt(m2m) - 0);
+
+                //  $("#m2m").html(newm2m);
+                $("#userbalancemodel").html(parseInt(response));
+                $("#userbalancemodel1").html(parseInt(response));
+            }
+        });
+
+
+    }
+
+    var totalmarginused = 0;
+    var globaltokensval = "";
+    var prevActiveorderarr = [];
+    function getactiveorder() {
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getconsolidatedtrade/?uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                if (data.length == 0) {
+                    return;
+                }
+                prevActiveorderarr = data;
+
+                var pendingorderdata = "";
+                var tokens = "";
+                $.each(data, function (i, item) {
+                    var OrderId = data[i].Id;
+                    var OrderCategory = data[i].OrderCategory;
+                    var TokenNo = data[i].TokenNo;
+                    tokens += TokenNo + ",";
+                    var OrderType = data[i].OrderType;
+                    var lot = data[i].Lot;
+                    var selectedlotsize = data[i].selectedlotsize;
+                    var OrderDate = data[i].OrderDate;
+                    var OrderTime = data[i].OrderTime;
+                    var ScriptName = data[i].ScriptName;
+                    var ActionType = data[i].ActionType;
+                    var OrderPrice = data[i].OrderPrice;
+                    var MarginUsed = data[i].MarginUsed;
+                    totalmarginused += Math.round(MarginUsed);
+                    var HoldingMarginReq = data[i].HoldingMarginReq;
+                    var OrderStatus = data[i].OrderStatus;
+                    pendingorderdata += "<div class='col-lg-12' style='margin-top:5px;border-top:1px dashed gray;border-radius:4px;padding:5px;background-color:white;'>";
+                    pendingorderdata += "<table width='100%'>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left'><span  style=''><b>" + ScriptName + "</b></span></td>";
+                    pendingorderdata += "<td align='right'><span style='color:red'><b id='ordercat" + TokenNo + "'>" + OrderCategory + "</b></span>&nbsp;&nbsp;&nbsp;<span  style='color:red'><b>" + lot + " @@ " + OrderPrice + "</b></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2'><span  style=''><b>Margin :" + MarginUsed + "</b></span></td> <td colspan='2' align='right'><span style=''><b id='diffpric" + TokenNo + "'>0</b></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td  colspan='2' align='left'></td>";
+                    pendingorderdata += "<td  colspan='2' align='right'>CMP :<span id='bidamt" + TokenNo + "' style=''><b></b></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "</table>";
+                    pendingorderdata += "</div>";
+                });
+                $("#activeorder").html(pendingorderdata);
+                tokens = tokens.slice(0, -1);
+                localStorage.setItem("tkn", tokens);
+                readvalues(tokens);
+            }
+        });
+    }
+
+    function searchsymbl() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("searchsybmolkey");
+        filter = input.value.toUpperCase();
+        if (filter.length > 2 || filter.length == 0) {
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0];
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().includes(filter)) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+    }
+
+    function getsymbolsbysearch() {
+        var refid = localStorage.getItem("Refid");
+        $("#mcxdata").html("");
+        var searchdata = $("#searchsybmolkey").val();
+        $.ajax({
+            url: "/api/getMCXsymbols/?extype=NSE&refid=" + refid + "&searchkey=" + searchdata,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var mcxdata = "";
+                $.each(data, function (i, item) {
+                    var name = data[i].name;
+                    var instrument_token = data[i].instrument_token;
+                    var exchange_token = data[i].exchange_token;
+                    var tradingsymbol = data[i].tradingsymbol;
+                    var expiry = data[i].expiry;
+                    var segment = data[i].segment;
+                    var last_price = data[i].last_price;
+                    var lot_size = data[i].lot_size; lot_size
+
+                    mcxdata += "<tr><td style='padding:10px;border-bottom:1px solid #f4f4f4'>";
+                    mcxdata += "<h5><b>" + name + "</b></h5>";
+                    mcxdata += "<p><b>Expiry: " + expiry + "</b></p>";
+                    mcxdata += "<p><b>Lot Size: " + lot_size + "</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>";
+                    mcxdata += "</td><td style='padding:10px;border-bottom:1px solid #f4f4f4'><input type='checkbox' id=" + instrument_token + " onclick=checkmcx('" + instrument_token + "','" + tradingsymbol + "','" + lot_size + "')></td></tr>";
+                });
+                $("#mcxdata").html(mcxdata);
+                rendermarketorder();
+            }
+        });
+    }
+
+    function getsymbols() {
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "/api/getMCXsymbols/?extype=NSE&refid=" + refid + "&searchkey=null",
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var mcxdata = "";
+                var tokenlist = "";
+                $.each(data, function (i, item) {
+                    var name = data[i].name;
+                    var instrument_token = data[i].instrument_token;
+                    var exchange_token = data[i].exchange_token;
+                    var tradingsymbol = data[i].tradingsymbol;
+                    var expiry = data[i].expiry;
+                    var segment = data[i].segment;
+                    var last_price = data[i].last_price;
+                    var lot_size = data[i].lot_size; lot_size
+                    tokenlist += "<option value='" + tradingsymbol + "'/>";
+                    mcxdata += "<tr><td style='padding:10px;border-bottom:1px solid #f4f4f4'>";
+                    mcxdata += "<h5><b>" + name + "</b></h5>";
+                    mcxdata += "<p><b>Expiry: " + expiry + "</b></p>";
+                    mcxdata += "<p><b>Lot Size: " + lot_size + "</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>";
+                    mcxdata += "</td><td style='padding:10px;border-bottom:1px solid #f4f4f4'><input type='checkbox' id=" + instrument_token + " onclick=checkmcx('" + instrument_token + "','" + tradingsymbol + "','" + lot_size + "')></td></tr>";
+                });
+                $("#tokenlst").append(tokenlist);
+                $("#mcxdata").html(mcxdata);
+                rendermarketorder();
+            }
+        });
+    }
+    //MCX Zerodha Code
+    function checkmarketdatawithcmp() {
+        var uid = localStorage.getItem("userid");
+        var token = localStorage.getItem("token");
+        $.ajax({
+            url: "/api/getactiveorderwithcmp/?uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var totalactivepl = 0;
+                $.each(data, function (i, item) {
+                    var id = data[i].id;
+                    var tokenno = data[i].tokenno;
+                    var last_price = data[i].OrderCategory;
+                    var OrderCategory = data[i].orderprice;
+                    var LotQty = data[i].LotQty;
+                    var selectedLotSize = data[i].selectedLotSize;
+                    var bid = data[i].bid;
+                    console.log(tokenno + " " + selectedLotSize);
+                    var ask = data[i].ask;
+                    var pl = data[i].pl;
+                    var diffval = data[i].diffval;
+                    var cmp = data[i].cmp;
+                    totalactivepl += parseFloat(pl);
+                    $("#diffpric" + id).html(diffval);
+                    var userbalance = $("#userbalance").html();
+                    var creditlimit = localStorage.getItem("CreditLimit");
+                    var m2m = userbalance - (0 - totalactivepl) + Math.round(creditlimit);
+                    $("#m2m").html(parseInt(m2m));
+                    $("#m2m1").html(parseInt(m2m));
+                    var totalact = Math.round(m2m) - Math.round(totalmarginused);
+                    //   var newmaginavailable = Math.round(userbalance) - Math.round(totalact);
+                    $("#marginavl").html(parseInt(totalact));
+                    $("#marginavl1").html(parseInt(totalact));
+                    $("#bid" + id).html(cmp);
+                });
+                $("#activepl").html(parseInt(totalactivepl))
+                $("#activepl1").html(parseInt(totalactivepl))
+                //rendermarketorder();
+            }
+        });
+    }
+
+    var uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    //var uri = "wss://103.220.223.27/api/webapiwebsoc";
+    var websocket = new WebSocket(uri);
+    function readvalues(token) {
+
+        var ws;
+
+        //Initialize socket
+
+        if (websocket.readyState == WebSocket.CLOSED) {
+            websocket.onopen = function () {
+                websocket.send(token);
+                console.log("open");
+            };
+        }
+        else {
+            websocket.onopen = function () {
+                websocket.send(token);
+                console.log("open");
+            };
+        }
+
+        //Open socket and send message
+
+        //Socket error handler
+        websocket.onerror = function (event) {
+            $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+        };
+        var tknx = localStorage.getItem("tkn");
+
+        //Socket message handler  +
+        websocket.onmessage = function (event) {
+            //  var datax = JSON.parse(event.data);
+            var result = JSON.parse(event.data);
+            $("#btnpopuptrade1").attr("disabled", false);
+            $("#btnpopuptrade2").attr("disabled", false);
+            $("#btnpopuptrade3").attr("disabled", false);
+            $("#btnpopuptrade4").attr("disabled", false);
+
+            if (result.bid == "0") {
+                result.bid = result.last_price;
+            }
+            if (result.ask == "0") {
+                result.ask = result.last_price;
+            }
+
+            var cdate = new Date();
+            if (cdate.getDay() != 6 && true) {
+                $("#bid" + result.instrument_token).html(result.bid);
+                $("#ask" + result.instrument_token).html(result.ask);
+            }
+            // $("#bid" + result.instrument_token).html(result.bid);
+            $("#bidx" + result.instrument_token).html(result.bid);
+            $("#bidxm" + result.instrument_token).html(result.bid);
+            $("#bidxx" + result.instrument_token).html(result.bid);
+            $("#bidy" + result.instrument_token).html(result.ask);
+            //$("#ask" + result.instrument_token).html(result.ask);
+            $("#askx" + result.instrument_token).html(result.ask);
+            $("#askxm" + result.instrument_token).html(result.ask);
+            $("#askxx" + result.instrument_token).html(result.ask);
+            $("#ltp" + result.instrument_token).html(result.last_price);
+            $("#ltpx" + result.instrument_token).html(result.last_price);
+            $("#ltpxm" + result.instrument_token).html(result.last_price);
+            $("#ltpxx" + result.instrument_token).html(result.last_price);
+            $("#chg" + result.instrument_token).html(parseFloat(result.change).toFixed(2));
+            $("#chgx" + result.instrument_token).html(parseFloat(result.change).toFixed(2));
+            $("#chgxm" + result.instrument_token).html(parseFloat(result.change).toFixed(2));
+            $("#chgxx" + result.instrument_token).html(parseFloat(result.change).toFixed(2));
+            $("#high" + result.instrument_token).html(result.high_);
+            $("#highx" + result.instrument_token).html(result.high_);
+            $("#highxm" + result.instrument_token).html(result.high_);
+            $("#highxx" + result.instrument_token).html(result.high_);
+            $("#low" + result.instrument_token).html(result.low_);
+            $("#lowx" + result.instrument_token).html(result.low_);
+            $("#lowxm" + result.instrument_token).html(result.low_);
+            $("#lowxx" + result.instrument_token).html(result.low_);
+            $("#opn" + result.instrument_token).html(result.open_);
+            $("#opnx" + result.instrument_token).html(result.open_);
+            $("#opnxm" + result.instrument_token).html(result.open_);
+            $("#opnxx" + result.instrument_token).html(result.open_);
+            $("#cls" + result.instrument_token).html(result.close_);
+            $("#clsx" + result.instrument_token).html(result.close_);
+            $("#clsxm" + result.instrument_token).html(result.close_);
+            $("#clsxx" + result.instrument_token).html(result.close_);
+            $("#ol" + result.instrument_token).html(result.oi);
+            $("#olx" + result.instrument_token).html(result.oi);
+            $("#olxm" + result.instrument_token).html(result.oi);
+            $("#olxx" + result.instrument_token).html(result.oi);
+            $("#vol" + result.instrument_token).html(result.volume);
+            $("#volx" + result.instrument_token).html(result.volume);
+            $("#volxm" + result.instrument_token).html(result.volume);
+            $("#volxx" + result.instrument_token).html(result.volume);
+
+            console.log("tkn", token);
+
+            var Bid = result.bid;
+            var scriptname = result.instrument_token;
+            var Ask = result.ask;
+            var cmp = 0;
+            var newamtdeff = 0;
+
+            var ordercat = $("#ordercat" + scriptname).html();
+            if (ordercat == "SELL") {
+                var oldr = $("#oldpr" + scriptname).html();
+                if (oldr != "undefined") {
+                    cmp = Ask;
+                    newamtdeff = (parseFloat($("#oldpr" + scriptname).html()) - parseFloat(cmp)).toFixed(2);
+                    console.log("newamtdeff1", newamtdeff);
+                }
+            }
+            else {
+                var oldr = $("#oldpr" + scriptname).html();
+                if (oldr != "undefined") {
+                    cmp = Bid;
+                    newamtdeff = parseFloat(cmp) - parseFloat($("#oldpr" + scriptname).html());
+                    console.log("newamtdeff2", newamtdeff);
+                }
+            }
+
+            $("#bidamt" + scriptname).html("<b>" + cmp + "</b>");
+            var newval = parseInt($("#sellotsize" + scriptname).html()) * newamtdeff;
+            newval = parseFloat(newval).toFixed(2);
+            $("#diffpric" + scriptname).html(newval);
+
+            calcm2m(tknx);
+
+        };
+    }
+
+    function calcm2m(token) {
+        var totalactivepl = 0;
+        var tokarr = token.split(',');
+
+        for (var x = 0; x < tokarr.length; x++) {
+            var tokn = tokarr[x];
+            var acpl = $("#diffpric" + tokn).html();
+
+            if (acpl != undefined) {
+                console.log("calcm2m", acpl);
+                totalactivepl += parseFloat(acpl);
+            }
+
+        }
+        totalactivepl = parseFloat(totalactivepl).toFixed(2);
+        $("#activepl").html(parseInt(totalactivepl));
+        $("#activepl1").html(parseInt(totalactivepl));
+        var userbalance = $("#userbalance").html();
+        var creditlimit = localStorage.getItem("CreditLimit");
+        var m2m = (parseFloat(userbalance) + parseFloat(totalactivepl) + parseFloat(creditlimit)).toFixed(2);
+        $("#m2m").html(parseInt(m2m));
+        $("#m2m1").html(parseInt(m2m));
+
+        var newmaginavailable = parseFloat(m2m - totalmarginused).toFixed(2) + parseFloat(creditlimit);
+        $("#marginavl").html(parseInt(newmaginavailable));
+        $("#marginavl1").html(parseInt(newmaginavailable));
+    }
+
+
+    function textchange() {
+
+        var token = localStorage.getItem("selected_token");
+        var scriptname = localStorage.getItem("selected_script");
+        var selectedlotsize = localStorage.getItem("selectedlotsize");
+        var Intraday_Exposure_Margin_Equity = localStorage.getItem("Intraday_Exposure_Margin_Equity");
+        var Holding_Exposure_Margin_Equity = localStorage.getItem("Holding_Exposure_Margin_Equity")
+        var orderprice = $("#bidx" + token).text();
+        var enterdlot = $("#lotsellorder").val();
+
+        var finallotsize = (parseInt(enterdlot) * parseInt(selectedlotsize));
+        var marginvalue = 0;
+
+        var NSE_Exposure_Type = localStorage.getItem("NSE_Exposure_Type");
+        if (NSE_Exposure_Type == "per_lot") {
+            marginvalue = parseInt(enterdlot) * parseInt(Intraday_Exposure_Margin_Equity);
+            // holdmarginvalue = parseInt(enterdlot) * parseInt(Holding_Exposure_Margin_Equity);
+        }
+        else {
+            marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_Equity);
+            // holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_Equity);
+        }
+
+        $("#mrgval").html("Margin Value :" + Math.round(marginvalue, 1));
+
+        //  var holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_Equity);
+    }
+
+    function textchange1() {
+
+        var token = localStorage.getItem("selected_token");
+        var scriptname = localStorage.getItem("selected_script");
+        var selectedlotsize = localStorage.getItem("selectedlotsize");
+        var Intraday_Exposure_Margin_Equity = localStorage.getItem("Intraday_Exposure_Margin_Equity");
+        var Holding_Exposure_Margin_Equity = localStorage.getItem("Holding_Exposure_Margin_Equity")
+        var orderprice = $("#bidy" + token).text();
+        var enterdlot = $("#lotbuyorder").val();
+
+        var finallotsize = (parseInt(enterdlot) * parseInt(selectedlotsize));
+        var marginvalue = 0;
+        var NSE_Exposure_Type = localStorage.getItem("NSE_Exposure_Type");
+        if (NSE_Exposure_Type == "per_lot") {
+            marginvalue = parseInt(enterdlot) * parseInt(Intraday_Exposure_Margin_Equity);
+            //holdmarginvalue = parseInt(enterdlot) * parseInt(Holding_Exposure_Margin_Equity);
+        }
+        else {
+            marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_Equity);
+            //  holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_Equity);
+        }
+
+        $("#mrgval1").html("Margin Value :" + Math.round(marginvalue, 1));
+        // var holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_Equity);
+    }
+
+    function closesellmodel() {
+        $("#sellordervalue").html('');
+
+    }
+    //1. Margin = purchase price * lot size / exposure(Coming from backend)
+    //2. Holding Margin: - (OrderPrice * Lot Size) /Hold Percentage ;(10 is coming from backend)
+    function savependingorder(ordercat) {
+        var token = localStorage.getItem("selected_token");
+
+        var scriptname = localStorage.getItem("selected_script");
+        var selectedlotsize = localStorage.getItem("selectedlotsize");
+        var Intraday_Exposure_Margin_Equity = localStorage.getItem("Intraday_Exposure_Margin_Equity");
+        var Holding_Exposure_Margin_Equity = localStorage.getItem("Holding_Exposure_Margin_Equity")
+        var orderprice = "0";
+        var enterdlot = "0";
+        var isstoplossorder = "";
+        //Check backend condition
+        var bidval = $("#bid" + token).html();
+        var askval = $("#ask" + token).html();
+
+        if (bidval == 0 || askval == 0) {
+            swal({
+                title: "ATTENTATION",
+                text: "SORRY! Try After Sometime.",
+                type: "error"
+            }).then(function () {
+                location.reload();
+            });
+            return;
+        }
+
+
+        if (ordercat == "SELL") {
+            var sellcheckbox = $("#sellcheckbox_stoploss").is(':checked');
+            enterdlot = $("#selllotsize_limitorder").val();
+            orderprice = $("#sellprice_limitorder").val();
+            if (parseFloat(orderprice) > parseFloat(bidval)) {
+                isstoplossorder = "false";
+            }
+            else {
+                isstoplossorder = "true";
+            }
+
+        }
+        else {
+            var buycheckbox = $("#buycheckbox_stoploss").is(':checked');
+            //isstoplossorder = buycheckbox;
+            enterdlot = $("#buylotsize_limitorder").val();
+            orderprice = $("#buyprice_limitorder").val();
+            if (parseFloat(orderprice) > parseFloat(askval)) {
+                isstoplossorder = "true";
+            }
+            else {
+                isstoplossorder = "false";
+            }
+
+        }
+
+
+        var highval = $("#high" + token).html();
+        var lowval = $("#low" + token).html();
+
+        var AllowOrdersCurrentBid = localStorage.getItem("AllowOrdersCurrentBid");
+        var AllowFreshEntryHighAndBelow = localStorage.getItem("AllowFreshEntryHighAndBelow");
+        var AllowOrdersHighLow = localStorage.getItem("AllowOrdersHighLow");
+
+
+
+        //all true
+        if (AllowOrdersCurrentBid == "true" && AllowFreshEntryHighAndBelow == "true" && AllowOrdersHighLow == "true") {
+
+        }
+
+        //all false  || AllowOrdersCurrentBid == "true" && AllowFreshEntryHighAndBelow == "false" && AllowOrdersHighLow == "false"
+
+        if (AllowOrdersCurrentBid == "false" && AllowFreshEntryHighAndBelow == "false" && AllowOrdersHighLow == "false") {
+            swal("Error", "You are not authorized for place orders");
+            return;
+        }
+
+
+        //1=false, 2=true, 3=false  D. 1=false, 2=true, 3=false  = Order above high & below low only
+
+        if (AllowOrdersCurrentBid == "false" && AllowFreshEntryHighAndBelow == "true" && AllowOrdersHighLow == "false") {
+
+            if (parseFloat(orderprice) > parseFloat(lowval) && parseFloat(orderprice) < parseFloat(highval)) {
+                swal("Error", "Order Placed greator than " + highval + " and less " + lowval + ".");
+                return;
+            }
+        }
+
+        //E. 1=true, 2=false, 3=true = Allow Orders between and equal High / will place on all price (high/low and bid/ask)
+
+        if (AllowOrdersCurrentBid == "true" && AllowFreshEntryHighAndBelow == "false" && AllowOrdersHighLow == "true") {
+            if (parseFloat(orderprice) <= parseFloat(lowval) || parseFloat(orderprice) >= parseFloat(highval)) {
+                swal("Error", "Order Placed between " + lowval + " and " + highval + ".");
+                return;
+            }
+        }
+
+
+        // F. 1 = false, 2 = false, 3 = true = Allow Orders between and equal High(high / low but not should in between bid / ask)
+
+        if (AllowOrdersCurrentBid == "false" && AllowFreshEntryHighAndBelow == "false" && AllowOrdersHighLow == "true") {
+            if ((parseFloat(orderprice) <= parseFloat(lowval) || parseFloat(orderprice) >= parseFloat(highval)
+            ) || (parseFloat(orderprice) >= parseFloat(bidval) && parseFloat(orderprice) <= parseFloat(askval))) {
+                swal("Error", "Order Placed between " + askval + " and " + highval + " OR " + lowval + " and " + bidval + ".");
+                return;
+            }
+        }
+
+        //G. 1=false,2=true. 3=true = TRADE WORKING AT ALL CONDITION but will not take b/w (bid/ask)
+
+        if (AllowOrdersCurrentBid == "false" && AllowFreshEntryHighAndBelow == "true" && AllowOrdersHighLow == "true") {
+            if ((parseFloat(orderprice) >= parseFloat(bidval) && parseFloat(orderprice) <= parseFloat(askval))) {
+                swal("Error", "Order should be placed less then " + bidval + " and greater then " + askval + ".");
+                return;
+            }
+        }
+
+        //H. 1=true,2=false,3=false = Order Can Place b/w (bid/ask)
+
+        if (AllowOrdersCurrentBid == "true" && AllowFreshEntryHighAndBelow == "false" && AllowOrdersHighLow == "false") {
+            if ((parseFloat(orderprice) <= parseFloat(bidval) || parseFloat(orderprice) >= parseFloat(askval))) {
+                swal("Error", "Order Placed between " + bidval + " and " + askval + ".");
+                return;
+            }
+        }
+
+
+
+        ////-----------------------------------------------------------------------------------------------------------
+
+        var finallotsize = 0;
+        var marginvalue = 0;
+        var holdmarginvalue = 0;
+        var NSE_Exposure_Type = localStorage.getItem("NSE_Exposure_Type");
+        if (NSE_Exposure_Type == "per_lot")
+        {
+            marginvalue = parseInt(enterdlot) * parseInt(Intraday_Exposure_Margin_Equity);
+            holdmarginvalue = parseInt(enterdlot) * parseInt(Holding_Exposure_Margin_Equity);
+        }
+        else {
+            finallotsize = (parseInt(enterdlot) * parseInt(selectedlotsize));
+            marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_Equity);
+            holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_Equity);
+        }
+
+        var marginavl = $("#marginavl").html();
+
+        var issimilertrade = false;
+        newordersforcheck.forEach((key, index) => {
+            if (key.OrderCategory == ordercat) {
+                issimilertrade = true;
+            }
+        });
+
+
+        if (newordersforcheck.length == 0) {
+            issimilertrade = true;
+        }
+
+        var actualLot = localStorage.getItem("SymbolLotSize");
+        var isedit = localStorage.getItem("isedit");
+        var orderid = "";
+        if (isedit == "true") {
+            orderid = localStorage.getItem("edit_orderid");
+        }
+        else {
+            orderid = "";
+        }
+
+        if (issimilertrade == false) {
+            //No check
+            var datad = {
+                Id: orderid,
+                OrderDate: '',
+                OrderTime: '',
+                actualLot: actualLot,
+                selectedlotsize: selectedlotsize,
+                OrderNo: '',
+                UserId: localStorage.getItem("userid"),
+                UserName: localStorage.getItem("ClientName"),
+                OrderCategory: ordercat,
+                OrderType: 'Limit',
+                isstoplossorder: isstoplossorder,
+                ScriptName: scriptname,
+                TokenNo: token,
+                ActionType: 'Order Placed @@',
+                OrderPrice: orderprice,
+                Lot: enterdlot,
+                MarginUsed: Math.round(marginvalue, 1),
+                HoldingMarginReq: holdmarginvalue,
+                OrderStatus: "Pending",
+                SymbolType: 'NSE',
+                isedit: isedit
+            };
+
+            $('#loader').show();
+            $("#loaderarea").css("opacity", "0.1");
+
+
+            $.ajax({
+                url: "/api/checkbeforetradeForPending/",
+                type: "get",
+                data: datad,
+                success: function (response) {
+                    if (response == "true") {
+                        $.ajax({
+                            url: "/api/saveorders/",
+                            type: "get",
+                            data: datad,
+                            success: function (response) {
+                                //swal("Success", response);
+                                //  alert("Order placed of " + scriptname + " (" + enterdlot + " Lots) at price " + orderprice);
+                                swal({
+                                    title: "Order placed!",
+                                    text: "Order placed of " + scriptname + " (" + enterdlot + " Lots) at price " + orderprice,
+                                    type: "success"
+                                }).then(function () {
+                                    //location.reload();
+                                    //  location.href = "/home/tradedetails";
+                                });
+                            },
+                            complete: function () {
+                                $('#loader').hide();
+                                $("#loaderarea").css("opacity", "1");
+                            }
+
+                        });
+                    }
+                    else {
+                        swal("Error", response);
+                        $('#loader').hide();
+                        $("#loaderarea").css("opacity", "1");
+                    }
+                }
+            });
+
+
+          
+        }
+        else {
+            if (parseInt(marginvalue) <= parseInt(marginavl)) {
+                var datad = {
+                    Id: orderid,
+                    OrderDate: '',
+                    OrderTime: '',
+                    actualLot: actualLot,
+                    selectedlotsize: selectedlotsize,
+                    OrderNo: '',
+                    UserId: localStorage.getItem("userid"),
+                    UserName: localStorage.getItem("ClientName"),
+                    OrderCategory: ordercat,
+                    OrderType: 'Limit',
+                    isstoplossorder: isstoplossorder,
+                    ScriptName: scriptname,
+                    TokenNo: token,
+                    ActionType: 'Order Placed @@',
+                    OrderPrice: orderprice,
+                    Lot: enterdlot,
+                    MarginUsed: Math.round(marginvalue, 1),
+                    HoldingMarginReq: holdmarginvalue,
+                    OrderStatus: "Pending",
+                    SymbolType: 'NSE',
+                    isedit: isedit
+                };
+
+                $('#loader').show();
+                $("#loaderarea").css("opacity", "0.1");
+
+                $.ajax({
+                    url: "/api/checkbeforetradeForPending/",
+                    type: "get",
+                    data: datad,
+                    success: function (response) {
+
+                        if (response == "true") {
+                            $.ajax({
+                                url: "/api/saveorders/",
+                                type: "get",
+                                data: datad,
+                                success: function (response) {
+                                    //swal("Success", response);
+                                    //  alert("Order placed of " + scriptname + " (" + enterdlot + " Lots) at price " + orderprice);
+                                    swal({
+                                        title: "Order placed!",
+                                        text: "Order placed of " + scriptname + " (" + enterdlot + " Lots) at price " + orderprice,
+                                        type: "success"
+                                    }).then(function () {
+                                        // $('#loader').hide();
+                                        // $("#loaderarea").css("opacity", "1");
+                                        //location.reload();
+                                        //  location.href = "/home/tradedetails";
+                                    });
+                                },
+                                complete: function () {
+                                    $('#loader').hide();
+                                    $("#loaderarea").css("opacity", "1");
+                                }
+
+                            });
+                        }
+                        else {
+                            swal("Error", response);
+                            $('#loader').hide();
+                            $("#loaderarea").css("opacity", "1");
+                        }
+                    }
+                });
+
+               
+            } else {
+                swal("Error", "Sorry you cant place the order !Due To Insufficient Margin");
+            }
+        }
+
+
+
+    }
+
+    function saveorder(ordercat, OrderType) {
+        var token = localStorage.getItem("selected_token");
+        var bid = $("#bid" + token).html();
+        var ask = $("#ask" + token).html();
+
+        if (bid == 0 || ask == 0) {
+            swal({
+                title: "ATTENTATION",
+                text: "SORRY! Try After Sometime.",
+                type: "error"
+            }).then(function () {
+                location.reload();
+            });
+            return;
+        }
+        var scriptname = localStorage.getItem("selected_script");
+        var selectedlotsize = localStorage.getItem("selectedlotsize");
+        var Intraday_Exposure_Margin_Equity = localStorage.getItem("Intraday_Exposure_Margin_Equity");
+        var Holding_Exposure_Margin_Equity = localStorage.getItem("Holding_Exposure_Margin_Equity")
+        var orderprice = $("#bidx" + token).text();
+
+        var enterdlot = "0";
+        var actionmsg = "";
+        var btnid = "";
+        if (ordercat == "SELL") {
+            var sellval = $("#bidx" + selectedtoken).html();
+            if (sellval == " 0") {
+                swal({
+                    title: "ATTENTATION",
+                    text: "SORRY! Try After Sometime.",
+                    type: "error"
+                }).then(function () {
+                    location.reload();
+                });
+                return;
+            }
+            btnid = "bidx";
+            actionmsg = "Sold By Trader";
+            enterdlot = $("#lotsellorder").val();
+        } else {
+            var sellval = $("#bid" + selectedtoken).html();
+            if (sellval == " 0") {
+                swal({
+                    title: "ATTENTATION",
+                    text: "SORRY! Try After Sometime.",
+                    type: "error"
+                }).then(function () {
+                    location.reload();
+                });
+                return;
+            }
+            btnid = "bidy";
+            actionmsg = "Bought By Trader";
+            enterdlot = $("#lotbuyorder").val();
+        }
+
+        //check exposure
+        var finallotsize = 0;
+        var marginvalue = 0;
+        var holdmarginvalue = 0;
+        var NSE_Exposure_Type = localStorage.getItem("NSE_Exposure_Type");
+        if (NSE_Exposure_Type == "per_lot") {
+            marginvalue = parseInt(enterdlot) * parseInt(Intraday_Exposure_Margin_Equity);
+            holdmarginvalue = parseInt(enterdlot) * parseInt(Holding_Exposure_Margin_Equity);
+        }
+        else {
+            finallotsize = (parseInt(enterdlot) * parseInt(selectedlotsize));
+            marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_Equity);
+            holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_Equity);
+        }
+
+        var marginavl = $("#marginavl").html();
+
+        var issimilertrade = false;
+        newordersforcheck.forEach((key, index) => {
+            if (key.OrderCategory == ordercat) {
+                issimilertrade = true;
+            }
+        });
+
+
+        if (newordersforcheck.length == 0) {
+            issimilertrade = true;
+        }
+        var actualLot = localStorage.getItem("SymbolLotSize");
+
+        if (issimilertrade == false) {
+            //No check
+            var datad = {
+                Id: '',
+                OrderDate: '',
+                OrderTime: '',
+                actualLot: actualLot,
+                selectedlotsize: selectedlotsize,
+                OrderNo: '',
+                UserId: localStorage.getItem("userid"),
+                UserName: localStorage.getItem("ClientName"),
+                OrderCategory: ordercat,
+                OrderType: 'Market',
+                ScriptName: scriptname,
+                TokenNo: token,
+                ActionType: actionmsg,
+                OrderPrice: $("#" + btnid + token).text(),
+                Lot: enterdlot,
+                MarginUsed: Math.round(marginvalue, 1),
+                HoldingMarginReq: holdmarginvalue,
+                OrderStatus: "Active",
+                SymbolType: 'NSE'
+            };
+            $('#loader').show();
+            $("#loaderarea").css("opacity", "0.1");
+
+            $.ajax({
+                url: "/api/checkbeforetrade/",
+                type: "get",
+                data: datad,
+                success: function (response) {
+                    if (response == "true") {
+                        $('#loader').show();
+                        $("#loaderarea").css("opacity", "0.1");
+
+                        $.ajax({
+                            url: "/api/saveorders/",
+                            type: "get",
+                            data: datad,
+                            success: function (response) {
+                                swal({
+                                    title: "Trade placed!",
+                                    text: "Trade placed of " + scriptname + " (" + enterdlot + " Lots) at price " + $("#" + btnid + token).text(),
+                                    type: "success"
+                                }).then(function () {
+                                    // location.href = "/home/tradedetails";
+                                });
+                            }
+                            ,
+                            complete: function () {
+                                $('#loader').hide();
+                                $("#loaderarea").css("opacity", "1");
+                            }
+
+                        });
+                    } else {
+                        swal("Error", response);
+                    }
+                }
+                ,
+                complete: function () {
+                    $('#loader').hide();
+                    $("#loaderarea").css("opacity", "1");
+                }
+            });
+        }
+        else {
+
+            //Yes Checck
+
+
+            if (parseInt(marginvalue) <= parseInt(marginavl)) {
+                var datad = {
+                    Id: '',
+                    OrderDate: '',
+                    OrderTime: '',
+                    actualLot: actualLot,
+                    selectedlotsize: selectedlotsize,
+                    OrderNo: '',
+                    UserId: localStorage.getItem("userid"),
+                    UserName: localStorage.getItem("ClientName"),
+                    OrderCategory: ordercat,
+                    OrderType: 'Market',
+                    ScriptName: scriptname,
+                    TokenNo: token,
+                    ActionType: actionmsg,
+                    OrderPrice: $("#" + btnid + token).text(),
+                    Lot: enterdlot,
+                    MarginUsed: Math.round(marginvalue, 1),
+                    HoldingMarginReq: holdmarginvalue,
+                    OrderStatus: "Active",
+                    SymbolType: 'NSE'
+                };
+                $('#loader').show();
+                $("#loaderarea").css("opacity", "0.1");
+
+                $.ajax({
+                    url: "/api/checkbeforetrade/",
+                    type: "get",
+                    data: datad,
+                    success: function (response) {
+                        if (response == "true") {
+                            $('#loader').show();
+                            $("#loaderarea").css("opacity", "0.1");
+
+                            $.ajax({
+                                url: "/api/saveorders/",
+                                type: "get",
+                                data: datad,
+                                success: function (response) {
+                                    swal({
+                                        title: "Trade placed!",
+                                        text: "Trade placed of " + scriptname + " (" + enterdlot + " Lots) at price " + $("#" + btnid + token).text(),
+                                        type: "success"
+                                    }).then(function () {
+                                        // location.href = "/home/tradedetails";
+                                    });
+                                }
+                                ,
+                                complete: function () {
+                                    $('#loader').hide();
+                                    $("#loaderarea").css("opacity", "1");
+                                }
+
+                            });
+                        } else {
+                            swal("Error", response);
+                        }
+                    }
+                    ,
+                    complete: function () {
+                        $('#loader').hide();
+                        $("#loaderarea").css("opacity", "1");
+                    }
+                });
+
+            } else {
+                swal("Error", "Sorry you cant place the order !Due To Insufficient Margin");
+            }
+        }
+    }
+
+    var newordersforcheck = [];
+    var selectedtoken = "";
+
+
+    function loadeditmodal() {
+        // $("#bid62246151").click();
+        var isedit = localStorage.getItem("isedit");
+        if (isedit == "true") {
+
+            var tokenno = localStorage.getItem("edit_token");
+            var symbolname = localStorage.getItem("edit_symbolname");
+            var lotsize = localStorage.getItem("edit_lotsize");
+            var actuallotsize = localStorage.getItem("edit_actuallotsize");
+            var type = localStorage.getItem("edit_edittype");
+            var edit_tradetype = localStorage.getItem("edit_tradetype");
+            tradetype = edit_tradetype;
+            if (type == "SELL") {
+                $("#placeordersell").modal('show');
+                $("#tabhome").hide();
+                tabchange('tabmenu1', 'tabhome', 'menu1', 'home')
+                $('#placeordersell').on("hide.bs.modal", function () {
+                    localStorage.setItem("isedit", "false");
+                })
+            } else {
+                $("#placeorderbuy").modal('show');
+                $("#tabhomex").hide();
+                tabchange('tabmenu1x', 'tabhomex', 'menu1x', 'homex');
+                $('#placeorderbuy').on("hide.bs.modal", function () {
+                    localStorage.setItem("isedit", "false");
+                })
+            }
+            setorder(tokenno, symbolname, lotsize, actuallotsize, type);
+
+        }
+    }
+    var globalscriptnamet = "";
+
+
+    function openchart() {
+
+        var iframe = $("#iframechart");
+        iframe.attr("src", "/home/historychart/?instokn=" + selectedtoken + "&tkname=" + globalscriptnamet + "");
+        $("#myModalchart").modal("show");
+    }
+
+
+    function setorder(token, scriptname, lotsize, actuallotsize, type) {
+
+        logincheck();
+        globalscriptnamet = scriptname;
+        $("#btnpopuptrade1").attr("disabled", true);
+        $("#btnpopuptrade2").attr("disabled", true);
+        $("#btnpopuptrade3").attr("disabled", true);
+        $("#btnpopuptrade4").attr("disabled", true);
+
+
+
+        //var isedit = localStorage.getItem("isedit");
+        //if (isedit == "false") {
+        //    localStorage.setItem("isedit", "false");
+        //    localStorage.removeItem("edit_token");
+        //    localStorage.removeItem("edit_symbolname");
+        //    localStorage.removeItem("edit_lotsize");
+        //    localStorage.removeItem("edit_actuallotsize");
+        //    localStorage.removeItem("edit_edittype");
+        //    localStorage.removeItem("edit_tradetype");
+
+
+        //    $("#tabhome").show();
+        //    $("#tabhomex").show();
+        //    tabchange('tabhome', 'tabmenu1', 'home', 'menu1')
+        //    tabchange('tabhomex', 'tabmenu1x', 'homex', 'menu1x')
+        //}
+
+
+        if (checkIsStopTrading() == "true") {
+            swal({
+                title: "ATTENTATION",
+                text: "Trading Not Allowed,Please Contact To Admin.",
+                type: "error"
+            }).then(function () {
+                location.reload();
+            });
+            return;
+        }
+
+
+        selectedtoken = token;
+        var bid = $("#bid" + token).html();
+        var ask = $("#ask" + token).html();
+        newordersforcheck = prevActiveorderarr.filter(x => x.ScriptName == scriptname);
+        localStorage.setItem("SymbolLotSize", actuallotsize);
+        $("#buyscriplotsize").html("[Lot Size: " + actuallotsize + "]");
+        $("#sellscriplotsize").html("[Lot Size: " + actuallotsize + "]");
+
+        $("#lbltradetpesell1").html(tradetype);
+        $("#lbltradetpesell2").html(tradetype);
+        $("#lbltradetpebuy1").html(tradetype);
+        $("#lbltradetpebuy2").html(tradetype);
+
+
+        if (bid == "0" || ask == "0") {
+            swal({
+                title: "ATTENTATION",
+                text: "SORRY! Try After Sometime.",
+                type: "error"
+            }).then(function () {
+                location.reload();
+            });
+            return;
+        }
+        var today = new Date();
+        if (today.getDay() == 6 || today.getDay() == 0) {
+            swal("Market not open.");
+            setTimeout(function () { location.reload(); }, 1000);
+            //return;
+        }
+        else {
+            var date = new Date();
+            var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+            //current
+            var currenttime_sec = ctime.split(':');
+            var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+            //_starttime
+            var Startcurrenttime_sec = _starttime.split(':');
+            var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+
+            //_endtime
+            var Endcurrenttime_sec = _endttime.split(':');
+            var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+            if (currentseconds >= startseconds && currentseconds <= endseconds) {
+
+            }
+            else {
+                swal("Market not open.");
+                setTimeout(function () { location.reload(); }, 1000);
+            }
+        }
+
+
+        localStorage.setItem("selected_token", token);
+        localStorage.setItem("selected_script", scriptname);
+        localStorage.setItem("selectedlotsize", lotsize);
+        var bids = $("#bid" + token).html();
+        var asks = $("#ask" + token).html();
+        if (bids.includes("&nbsp;") || asks.includes("&nbsp;")) {
+            $("#btnpopuptrade1").attr("disabled", true);
+            $("#btnpopuptrade2").attr("disabled", true);
+            $("#btnpopuptrade3").attr("disabled", true);
+            $("#btnpopuptrade4").attr("disabled", true);
+        }
+        else {
+            $("#btnpopuptrade1").attr("disabled", false);
+            $("#btnpopuptrade2").attr("disabled", false);
+            $("#btnpopuptrade3").attr("disabled", false);
+            $("#btnpopuptrade4").attr("disabled", false);
+        }
+        $("#sellscriptname").html(scriptname);
+        $("#sellordervalueprice").html("<span  id='bidx" + token + "'> " + $("#bid" + token).html()  + "</span>");
+        $("#buyscriptname").html(scriptname);
+        $("#buyordervalueprice").html("<span  id='bidy" + token + "'> " + $("#ask" + token).html() + "</span>");
+
+        var data = "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Bid <span id='bid" + token + "'> " + $("#bid" + token).html() + "</span></td>";
+        data += "<td>Ask <span id='ask" + token + "'> " + $("#ask" + token).html() + "</span></td>";
+        data += "<td>Ltp <span id='ltp" + token + "'> " + $("#ltp" + token).html() + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>High <span id='high" + token + "'>" + $("#high" + token).html() + "</span></td>";
+        data += "<td>Low <span  id='low" + token + "'> " + $("#low" + token).html() + "</span></td>";
+        data += "<td>Open <span  id='opn" + token + "'> " + $("#opn" + token).html() + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Close <span id='cls" + token + "'> " + $("#cls" + token).html() + "</span></td>";
+        data += "<td>OL <span id='ol" + token + "'> " + $("#ol" + token).html() + "</span></td>";
+        data += "<td>Vol <span id='vol" + token + "'> " + $("#vol" + token).html() + "</span></td>";
+        data += "</tr>";
+        data += "<tr style='padding:5px;border:1px solid white;'>";
+        data += "<td>Change <span id='chg" + token + "'>" + $("#chg" + token).html() + "</span></td>";
+        data += "</tr>";
+        $("#sellordervalue").html(data);
+
+
+        var data1 = "<tr style='padding:5px;border:1px solid white;'>";
+        data1 += "<td>Bid <span id='bidxx" + token + "'> " + $("#bid" + token).html() + "</span></td>";
+        data1 += "<td>Ask <span id='askxx" + token + "'> " + $("#ask" + token).html() + "</span></td>";
+        data1 += "<td>Ltp <span id='ltpxx" + token + "'> " + $("#ltp" + token).html() + "</span></td>";
+        data1 += "</tr>";
+        data1 += "<tr style='padding:5px;border:1px solid white;'>";
+        data1 += "<td>High <span id='highxx" + token + "'>" + $("#high" + token).html() + "</span></td>";
+        data1 += "<td>Low <span id='lowxx" + token + "'> " + $("#low" + token).html() + "</span></td>";
+        data1 += "<td>Open <span id='opnxx" + token + "'> " + $("#opn" + token).html() + "</span></td>";
+        data1 += "</tr>";
+        data1 += "<tr style='padding:5px;border:1px solid white;'>";
+        data1 += "<td>Close <span id='clsxx" + token + "'> " + $("#cls" + token).html() + "</span></td>";
+        data1 += "<td>OL <span id='olxx" + token + "'> " + $("#ol" + token).html() + "</span></td>";
+        data1 += "<td>Vol <span id='volxx" + token + "'> " + $("#vol" + token).html() + "</span></td>";
+        data1 += "</tr>";
+        data1 += "<tr style='padding:5px;border:1px solid white;'>";
+        data1 += "<td>Change <span id='chgxx" + token + "'>" + $("#chg" + token).html() + "</span></td>";
+        data1 += "</tr>";
+        $("#sellordervalue").html(data);
+        $("#buyordervalue").html(data1);
+
+    }
+    var mcxdata = [];
+    var tradetype = "";
+    function rendermarketorder() {
+        // alert("ss")
+        $("#mcxlivedata").html('');
+        var uid = localStorage.getItem("userid");
+        var TradeNSEUnits1 = checktrademethod("NSE");
+
+        $.ajax({
+            url: "/api/getselectedtoken/?cid=" + uid + "&exch=NSE",
+            type: "get",
+            success: function (response) {
+                var datas = JSON.parse(response);
+                var data = "";
+                var mobiledata = "";
+                $.each(datas, function (i, item) {
+                    var Id = datas[i].Id;
+                    var ExchangeType = datas[i].ExchangeType;
+                    var SymbolName = datas[i].SymbolName;
+                    var bid = datas[i].sell;
+                    var ask = datas[i].buy;
+                    var SymbolToken = datas[i].SymbolToken;
+                    var Lotsize = datas[i].Lotsize;
+                    var ltp = datas[i].ltp;
+                    var chg = datas[i].chg;
+                    chg = parseFloat(chg).toFixed(2);
+                    var high = datas[i].high;
+                    var low = datas[i].low;
+                    var ltp = datas[i].ltp;
+                    var opn = datas[i].opn;
+                    var cls = datas[i].cls;
+                    var ol = datas[i].ol;
+                    var vol = datas[i].vol;
+
+                    var actuallotsize = datas[i].Lotsize;
+                    if (TradeNSEUnits1 == "true") {
+                        Lotsize = 1;
+                        tradetype = "Units";
+                    }
+                    else {
+                        Lotsize = datas[i].Lotsize;
+                        tradetype = "Lots";
+                    }
+
+                    $("#" + SymbolToken).prop("checked", true);
+                    $("#" + SymbolToken).prop("checked", true);
+                    // $("#estado_cat").prop("checked", true);
+
+                    data += "<tr style='padding:5px;box-shadow:1px 1px 10px #f4f4f4;'>";
+                    data += "<td>" + SymbolName + "</td>";
+                    data += "<td align='center'><div class='btn-default btn form-control sell-btn'><p class='sell-bage'>Sell<p/><span id='bid" + SymbolToken + "' data-toggle='modal' data-target='#placeordersell' onclick=setorder('" + SymbolToken + "','" + SymbolName + "','" + Lotsize + "','" + actuallotsize + "','SELL')>" + bid + "</span></p></td>";
+
+                    data += "<td align='center'><div class='btn-default btn form-control buy-btn'><p class='buy-bage'>Buy<p/><span id='ask" + SymbolToken + "'  data-toggle='modal' data-target='#placeorderbuy' onclick=setorder('" + SymbolToken + "','" + SymbolName + "','" + Lotsize + "','" + actuallotsize + "','BUY')>" + ask + "<span></div></td>";
+                    data += "<td  id='ltp" + SymbolToken + "'>" + ltp + "</td>";
+                    data += "<td  id='chg" + SymbolToken + "'>" + chg + "</td>";
+                    data += "<td  id='high" + SymbolToken + "'>" + high + "</td>";
+                    data += "<td  id='low" + SymbolToken + "'>" + low + "</td>";
+                    data += "<td  id='opn" + SymbolToken + "'>" + opn + "</td>";
+                    data += "<td  id='cls" + SymbolToken + "'>" + cls + "</td>";
+                    data += "<td  id='ol" + SymbolToken + "'>" + ol + "</td>";
+                    data += "<td  id='vol" + SymbolToken + "'>" + vol + "</td>";
+                    data += "</tr>";
+
+
+
+
+                    mcxdata.push(SymbolToken);
+                });
+                $("#mcxlivedata").append(data);
+
+                var x = "";
+                for (var i = 0; i < mcxdata.length; i++) {
+                    x += mcxdata[i] + ",";
+                }
+                x = x.slice(0, -1);
+                console.log(x);
+                // localStorage.setItem("mcx", x);
+
+                readvalues(x)
+            }
+        });
+    }
+    function checkmcx(token, scriptname, lotsize) {
+        var uid = localStorage.getItem("userid");
+        var status = $("#" + token).is(":checked");
+        if (status == true) {
+            $.ajax({
+                url: "/api/savetoken/?symbolname=" + scriptname + "&token=" + token + "&userid=" + uid + "&exchangetype=NSE&lotsize=" + lotsize + "",
+                type: "get",
+                success: function (response) {
+                    //swal("Success","Symbol added into list");
+                    rendermarketorder();
+                    $.ajax({
+                        url: "/api/onselectforload/?tokenid=" + token,
+                        type: "get",
+                        success: function (response) {
+                            //swal("Success","Symbol added into list");
+                        }
+                    });
+                }
+            });
+
+        }
+        else {
+            var index = mcxdata.indexOf(token);
+            if (index !== -1) {
+                mcxdata.splice(index, 1);
+            }
+            var x = "";
+            for (var i = 0; i < mcxdata.length; i++) {
+                x += mcxdata[i] + ",";
+            }
+            x = x.slice(0, -1);
+            console.log(x);
+            // localStorage.setItem("mcx", x);
+            readvalues(x)
+            $.ajax({
+                url: "/api/deletetoken/?token=" + token + "&userid=" + uid + "",
+                type: "get",
+                success: function (response) {
+                    //swal("Success","Symbol Removed Successfully");
+                    rendermarketorder();
+                }
+            });
+
+        }
+    }
+        //
+</script>

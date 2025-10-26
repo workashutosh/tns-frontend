@@ -1,0 +1,2613 @@
+﻿@{
+    ViewBag.Title = "accounts";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+    .m-red-m {
+        color: red;
+    }
+
+    #tblbillinfo td {
+        border: 1px solid 10px;
+        padding: 10px;
+    }
+
+    .mob-head th {
+        color: white;
+    }
+
+    .text-dark {
+        color: #d6d6d6;
+    }
+
+    .td1 {
+        padding: 3px;
+        border: 1px solid #cee7e7;
+    }
+
+    .td2 {
+        padding: 3px;
+        border: 1px solid #cee7e7;
+        color: white;
+        background-color: #212529;
+        font-size: 18px;
+    }
+
+    .m-green-m {
+        color: green;
+    }
+
+    th {
+        background-color: #212529;
+        text-align: center;
+        color: white;
+        vertical-align: top;
+    }
+</style>
+<div id="profilemodel" class="ser-popup  modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content user-profile">
+            <div class="modal-header">
+                <h4 class="text-white">User Trade Profile</h4>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="mob-head">
+                <button type="button" class="close" data-dismiss="modal">
+                    <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+                </button>
+                <h5 class="mb-0">User Trade Profile</h5>
+                <span>&nbsp;&nbsp;&nbsp;</span>
+            </div>
+            <div class="modal-body" style="text-align:center">
+
+                <div class="row" style="background-color:#d6d6d6;" id="MCXBlockData">
+                    <div class="col-lg-12" style="background-color:#d6d6d6">
+                        <h5 style="margin-top:5px;"><b>MCX</b> </h5>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <b style="padding:10px;color:darkcyan">Brokerage Type :</b>
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <span style="padding:10px" id="MCXBrokerageType">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <b style="padding:10px;color:darkcyan">Brokerage Value :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <span style="padding:10px;font-size:12px;" id="MCXbrokerageValue">Per Lot</span>
+                    </div>
+
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Exposure Type :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding:10px" id="MCXExposureType">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Margin Intraday :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 12px;" id="MCXMarginIndradayvalue">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Margin Holding :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 12px;" id="MCXMarginHoldingValue">Per Lot</span>
+                    </div>
+                </div>
+
+                <div class="row" style="background-color: #d6d6d6; margin-top: 10px" id="NSEBlockdata">
+                    <div class="col-lg-12" style="background-color:#d6d6d6"><h5 style="margin-top:5px;"><b>NSE</b> </h5></div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Brokerage</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEbrokeragevalue"></span>/
+                            <span id="NSEBrokeragetype"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left ">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Intraday</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEMarginIndradayvalue"></span>/
+                            <span id="NSEMarginIndradayType"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Holding</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEMarginIndradayHoldingvalue"></span>/
+                            <span id="NSEMarginIndradayHoldingType"></span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row" style="background-color: #d6d6d6; margin-top: 10px" id="CDSBlockdata">
+                    <div class="col-lg-12" style="background-color:#d6d6d6"><h5 style="margin-top:5px;"><b>NFO-OPT</b> </h5></div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Brokerage</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSbrokeragevalue"></span>/
+                            <span id="CDSBrokeragetype"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left ">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Intraday</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSMarginIndradayvalue"></span>/
+                            <span id="CDSMarginIndradayType"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Holding</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSMarginIndradayHoldingvalue"></span>/
+                            <span id="CDSMarginIndradayHoldingType"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="personalprofilemodel" class="ser-popup modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content user-profile bg-white">
+            <div class="modal-header">
+                <h4 class="text-white">User Details</h4>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="mob-head">
+                <button type="button" class="close" data-dismiss="modal">
+                    <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+                </button>
+                <h5 class="mb-0">User Details</h5>
+                <span>&nbsp;&nbsp;&nbsp;</span>
+            </div>
+            <div class="modal-body" style="text-align:center">
+
+                <div class="row" style="background-color: #d6d6d6; margin-top: 10px" id="MCXBlockData">
+
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <b style="padding:10px;color:darkcyan">UserName :</b>
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_username">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <b style="padding:10px;color:darkcyan">Name :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <span style="padding:10px;font-size:14px;" id="per_fnamelname">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Mobile No. :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_mobileno">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Email Id :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_email">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Aadhar No :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_aadharno">-</span>
+                    </div>
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">PAN No :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_panno">-</span>
+                    </div>
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">City :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_city">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Address :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_add">-</span>
+                    </div>
+                    <!--Only For Infinity Trade-->
+                    @*<div class="col-lg-12" style="background-color:aliceblue;padding-top:10px;padding-bottom:10px">
+                            <b>Bank Details</b>
+                            <svg style="float:right;" onclick="editbank()" width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#cacc28"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill-rule="evenodd" clip-rule="evenodd" d="m3.99 16.854-1.314 3.504a.75.75 0 0 0 .966.965l3.503-1.314a3 3 0 0 0 1.068-.687L18.36 9.175s-.354-1.061-1.414-2.122c-1.06-1.06-2.122-1.414-2.122-1.414L4.677 15.786a3 3 0 0 0-.687 1.068zm12.249-12.63 1.383-1.383c.248-.248.579-.406.925-.348.487.08 1.232.322 1.934 1.025.703.703.945 1.447 1.025 1.934.058.346-.1.677-.348.925L19.774 7.76s-.353-1.06-1.414-2.12c-1.06-1.062-2.121-1.415-2.121-1.415z" fill="#312f2f"></path></g></svg>
+                        </div>
+
+                        <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                            <b style="padding:10px;color:darkcyan">Account Holder:</b><br />
+                        </div>
+                        <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                            <input type="text" id="per_accholdername" readonly style="border:0px solid gray;background-color:transparent;" />
+                        </div>
+
+                        <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                            <b style="padding:10px;color:darkcyan">Bank Name :</b><br />
+                        </div>
+                        <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                            <input type="text" id="per_bankname" style="border:0px solid gray;background-color:transparent;" readonly />
+                        </div>
+
+                        <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                            <b style="padding:10px;color:darkcyan">Account No :</b><br />
+                        </div>
+                        <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                            <input type="number" maxlength="11" id="per_accno" style="border:0px solid gray;background-color:transparent;" readonly />
+                        </div>
+
+                        <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                            <b style="padding:10px;color:darkcyan">IFSC :</b><br />
+                        </div>
+                        <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                            <input type="text" maxlength="11" id="per_ifsc" style="border:0px solid gray;background-color:transparent;" readonly />
+                        </div>
+                        <div id="btneditgroup" class="col-lg-12" style="background-color: white; border: 0px solid #d6d6d6; text-align: center;margin-top:10px;display:none">
+                            <input type="button" class="btn btn-success" onclick="Savebankdetails()" value="Save"/>
+                            <input type="button" class="btn btn-danger" value="Cancel" onclick="canceleditbank()" />
+
+                        </div>*@
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="changepassword" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="text-white" id="changePasswordLabel">Change Password</h4>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <svg fill="#ffffff" version="1.1" width="24px" height="27px" viewBox="0 0 32.75 32.75" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="mob-head">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <svg fill="#d6d6d6" version="1.1" width="24px" height="27px" viewBox="0 0 32.75 32.75" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c económica1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path>
+                    </svg>
+                </button>
+                <h5 class="mb-0">Change Password</h5>
+                <span>&nbsp;</span>
+            </div>
+            <div class="modal-body" style="text-align:center;margin-top:10px">
+                <form id="changePasswordForm">
+                    <div class="form-group floating-label-group">
+                        <input type="password" id="oldpass" class="custom-input" autocomplete="off" required aria-describedby="oldpassError">
+                        <label class="floating-label">Current Password</label>
+                        <span class="toggle-password" data-target="oldpass">
+                            <svg width="15px" height="15px" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="6" cy="6" fill="#1D1D1B" r="1.5"></circle>
+                                <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#1D1D1B"></path>
+                            </svg>
+                        </span>
+                        <div id="oldpassError" class="text-danger" style="font-size:12px;"></div>
+                    </div>
+                    <div class="form-group floating-label-group mb-4">
+                        <input type="password" id="newpass" class="custom-input" autocomplete="off" required aria-describedby="newpassError">
+                        <label class="floating-label">New Password</label>
+                        <span class="toggle-password" data-target="newpass">
+                            <svg width="15px" height="15px" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="6" cy="6" fill="#1D1D1B" r="1.5"></circle>
+                                <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#1D1D1B"></path>
+                            </svg>
+                        </span>
+                        <div id="newpassError" class="text-danger" style="font-size:12px;"></div>
+                    </div>
+                    <div class="form-group floating-label-group mb-3">
+                        <input type="password" id="connewpass" class="custom-input" autocomplete="off" required aria-describedby="connewpassError">
+                        <label class="floating-label">Confirm New Password</label>
+                        <span class="toggle-password" data-target="connewpass">
+                            <svg width="15px" height="15px" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="6" cy="6" fill="#1D1D1B" r="1.5"></circle>
+                                <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#1D1D1B"></path>
+                            </svg>
+                        </span>
+                        <div id="connewpassError" class="text-danger" style="font-size:12px;"></div>
+                    </div>
+                    <table class="table" align="center">
+                        <tbody>
+                            <tr>
+                                <td align="center">
+                                    <input type="button" class="btn btn-success form-control" value="Change Password" onclick="changepass()">
+                                </td>
+                                <td align="center">
+                                    <input type="button" class="btn btn-danger form-control" value="Cancel" data-dismiss="modal" onclick="closechangepass()">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="withdrawonlinemodel" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4 class="text-white">Withdraw Online</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Withdraw Online</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+
+                <table class="table table-borderd" style="margin-top:10px;">
+
+
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Enter Amount</span>
+                            <input type="number" required id="withtxttransamount" class="custom-input" autocomplete="off" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Enter Remarks</span>
+                            <textarea rows="2" required cols="1" id="withtxttransremark" class="custom-input" autocomplete="off">
+                                 </textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td>
+                                        <input type="button" class="btn btn-success form-control" value="Submit" onclick="savewithdraw()" />
+                                    </td>
+                                    <td>
+                                        <input type="button" class="btn btn-danger form-control" data-dismiss="modal" value="Close" />
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="payonlinemodel" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+            <h4 class="text-white">Pay Online</h4>
+            <button type="button" class="close text-white" data-dismiss="modal" onclick="closechangepass()">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Pay Online </h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <div class="modal-content" id="manualpay">
+            <div class="modal-body" style="text-align:center">
+                <div class="row">
+                    <div class="col-lg-7" style="border-right:1px solid #cee7e7">
+                        <a id="payupi" href="" class="upi-pay1">
+                            <img id="payimg" width="270" src="#" class="img-responsive" />
+                        </a>
+                        <br />
+                        <h4 style="margin-top:20px">UPI ID : <span id="upiiduser"></span></h4>
+                    </div>
+                    <div class="col-lg-5">
+                        <h3>Account Details</h3>
+                        <table style="background-color:white" class="table">
+                            <tr>
+                                <td align="left"><b>Name:</b></td>
+                                <td align="left" id="accholder"></td>
+                            </tr>
+                            <tr>
+                                <td align="left"><b>Account No:</b></td>
+                                <td align="left" id="accno"></td>
+                            </tr>
+                            <tr>
+                                <td align="left"><b>IFSC Code:</b></td>
+                                <td align="left" id="accifsc"></td>
+                            </tr>
+                        </table>
+                        <hr />
+                        <table class="table table-borderd" style="margin-top:10px;">
+                            <tr>
+                                <td style="text-align:left">
+                                    <p>
+                                        <b> Please fill the details after payment for payment approval.</b>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <hr />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Transaction Id</span>
+                                    <input type="text" id="txttransid" class="custom-input" autocomplete="off" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Amount</span>
+                                    <input type="number" id="txttransamount" required class="custom-input" autocomplete="off" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Remarks</span>
+                                    <textarea rows="5" cols="1" required id="txttransremark" class="custom-input" autocomplete="off">
+                                 </textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="button" required class="btn btn-success form-control" value="Submit" onclick="submitpaymentdetails()" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-content" id="gatewaypay">
+    <div class="modal-body" style="text-align:center">
+        <div class="row">
+            <div class="col-lg-12">
+                <h3>Amount Details</h3>
+                <hr />
+                <table class="table table-borderd" style="margin-top:10px;">
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Transaction ID</span>
+                            <input type="text" id="gatwaytxnid" readonly class="custom-input" autocomplete="off" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td> </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Enter Amount To Be Deposit</span>
+                            <input type="number" id="gatwaytxttransamount" required class="custom-input" autocomplete="off" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td> </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button class="btn btn-primary form-control" href="upi://pay?pa=upiaddress@okhdfcbank&pn=JohnDoe&cu=INR" id="upiBtn"  style="margin-bottom:10px; background-color:#41aa21; border-color:#41aa21; display:flex; align-items:center; justify-content:center;">
+                                <img src="https://imgs.search.brave.com/iWA2XQeaamYNbvDIXrfqLT4Vu_qPY-uJeUjVH6glgHI/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzA4LzkzLzgyLzYz/LzM2MF9GXzg5Mzgy/NjMzMV85RzhweHdE/ZGtaUFYzd0t2TUZj/a3VuQ3hvRXN2UUdU/YS5qcGc" alt="UPI Logo" style="width:24px; height:24px; margin-right:8px; vertical-align:middle;" />
+                                        <a id="upiPayLink" href="#" class="upi-pay1">Pay through UPI</a>                            
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="button" required class="btn btn-success form-control" value="Other Payment" id="payBtn" onclick="submitpaymentdetails1()" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div id="qrcode" style="margin-top:5px; display:flex; justify-content:center;"></div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+<div id="funddetails" class="modal fade ser-popup funds-popup" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h4 class="text-white">Transaction History</h4>
+            <button type="button" style="color:white;" class="close text-white" data-dismiss="modal">&times;</button>
+
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" style="color:white;">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0" style="color:white;">Transaction History</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+
+                <table width="100%" class="table">
+                    <thead style="color:white">
+                        <tr>
+                            <th align="left" colspan="2">
+                                <b style="color:white"> User Current Balance </b>
+                            </th>
+                            <th align="right" style="text-align:right;">
+                                <span style="color:white"><b id="userbalancemodel">0</b></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="sellordervalue">
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="changepassword" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4 class="text-white">Change Password</h4>
+            <button type="button" class="close text-white" data-dismiss="modal" onclick="closechangepass()">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Change Password</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+       <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+
+                <table width="100%" class="table">
+                    <thead style="color:white">
+                        <tr>
+                            <th align="left" colspan="2">
+                                <b style="color:white"> User Current Balance </b>
+                            </th>
+                            <th align="right" style="text-align:right;">
+                                <span style="color:white"><b id="userbalancemodel">0</b></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="sellordervalue"></tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="noti-popup" class="ser-popup raise-comp noti-popup modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h4 class="text-white">Notifications</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Notifications</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <table width="100%" style="height:100vh">
+                <tbody id="tblnoti">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="payonlnpopdiv" class="ser-popup raise-comp  modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h4 class="text-white">Pay Online</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Pay Online</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content" id="payonlnpoparea">
+            <div class="modal-body" style="text-align:center">
+
+
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="PayCustomerName" name="PayCustomerName" readonly placeholder="CustomerName" autofocus="" required="" />
+                </div>
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="PayCustomerPhoneNo" name="PayCustomerPhoneNo" placeholder="MobileNo" readonly autofocus="" required="" />
+                </div>
+                <div class="form-group floating-label-group mb-60">
+                    <input type="tel" class="custom-input" autocomplete="off" id="CustomerEmailID" name="CustomerEmailID" placeholder="Email" readonly autofocus="" required="" />
+                </div>
+                <div class="form-group floating-label-group mb-60">
+                    <input type="tel" class="custom-input" autocomplete="off" id="PayCartAmount" name="PayCartAmount" placeholder="Amount" autofocus="" value="1" />
+                </div>
+
+                <input type="button" class="login-btn" id="payfinal" value="Send" onclick="paynow()" />
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div id="invoicebill" class="ser-popup raise-comp noti-popup modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+            <h4 class="text-black">Bill & Invoice </h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+
+            </button>
+            <h5 class="mb-0">Bill & Invoice</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <table width="100%" class="table-responsive" style="height:100vh">
+                <thead>
+                    <tr>
+                        <th>S.No&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>Script Name <br />Order Category,Lot</th>
+                        <th>Order Price <br />Date & Time</th>
+                        <th>Close Price <br />Date & Time</th>
+                        <th>Profit/Loss&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>Brokerage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                    </tr>
+                </thead>
+
+
+                <tbody id="tblbillinfo">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div id="raise-comp" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4 class="text-white">Raise Complaint</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" id="btnhide" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+
+            </button>
+            <h5 class="mb-0">Raise Complaint</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="name" name="name" autofocus="" required="" />
+                    <label class="floating-label">Name</label>
+                </div>
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="callno" name="callno" autofocus="" required="" />
+                    <label class="floating-label">Phone No.</label>
+                </div>
+                <div class="form-group floating-label-group mb-60">
+                    <input type="tel" class="custom-input" autocomplete="off" id="whatsappno" name="whatsappno" autofocus="" required="" />
+                    <label class="floating-label">Whatsapp No.</label>
+                </div>
+                <div class="form-group floating-label-group text-area" name="name">
+                    <textarea class="custom-input" name="message" id="message" placeholder=""></textarea>
+                    <label class="floating-label">Description</label>
+                </div>
+                <input type="button" class="login-btn" value="Send" onclick="save()" />
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="intradayhistorypopup" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+            <h4 class="text-white"> Intraday History</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" id="btnhide" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+
+            </button>
+            <h5 class="mb-0">Intraday History</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align: center; background-color: white;height:100vh">
+                <div class="row" style="background-color:white">
+                    <div class="col-lg-3 col-sm-3 col-md-3" style="margin-top:5px;">
+                        <select id="exchname" class="form-control" onchange="getscript()">
+                            <option value="Select Exchange">Select Exchange</option>
+                            <option value="MCX">MCX</option>
+                            <option value="NSE">NSE</option>
+                            <option value="OPT">OPT</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-sm-3 col-md-3" style="margin-top:5px;">
+                        <input list="scriptlistdata" class="form-control" id="scriptlist" placeholder="Select Script" onchange="datac()">
+                        <datalist id="scriptlistdata">
+                        </datalist>
+                    </div>
+
+                    <div class="col-lg-3 col-sm-3 col-md-3" style="margin-top:5px;">
+                        <select class="form-control" id="intervaldrop">
+                            <option value="Select Interval">Select Interval</option>
+                            <option value="1M">1M</option>
+                            <option value="2M">2M</option>
+                            <option value="3M">3M</option>
+                            <option value="4M">4M</option>
+                            <option value="5M">5M</option>
+                            <option value="10M">10M</option>
+                            <option value="15M">15M</option>
+                            <option value="30M">30M</option>
+                            <option value="1H">1H</option>
+                            <option value="2H">2H</option>
+                            <option value="3H">3H</option>
+                            <option value="4H">4H</option>
+                            <option value="1D">1D</option>
+
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-sm-3 col-md-3" style="margin-top:5px;">
+                        <div class="btn-group">
+                            <input type="button" value="Search" onclick="btnsrchchart()" class="btn btn-danger form-control" />
+                            <input type="button" value="Reset" onclick="resetchrt()" class="btn btn-success  form-control" />
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row" style="margin-top:10px;background-color:white">
+                    <div class="col-lg-12 table-responsive">
+                        <table width="100%" class=" table-bordered table-striped" style="margin-top:10px;width:100%" cellpadding="5">
+                            <thead>
+                                <tr>
+                                    <td>Timing</td>
+                                    <td>High</td>
+                                    <td>Low</td>
+                                    <td>Volume</td>
+                                    <td>Open</td>
+                                    <td>Close</td>
+                                </tr>
+                            </thead>
+                            <tbody id="chrttbl">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="main_content_iner ">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="white_card card_height_100 mb_30 QA_section minus-mx-15 acount-src">
+                    <div class="white_card_header">
+                        <div class="box_header m-0">
+                            <div class="main-title">
+                                <h3 class="m-0">ACCOUNT</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="white_card_body px-15 pt-3 pb-0">
+                        <div class="row mx-0 h-vh">
+
+                            <div class="col-lg-6 account-left">
+                                <div class="bg-white p-10" style="background-image:linear-gradient(#000,#212529)">
+                                    <table class="table lager-table" cellpadding="5" align="center">
+                                        <tr>
+                                            <td align="center" style="color:#fff">
+                                                Ledger Balance <strong id="userbalance">0</strong>
+                                            </td>
+                                            <td align="center" style="color:#fff">
+                                                Margin Available <strong id="marginavl">0</strong>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td align="center" style="color:#fff">
+                                                Active P/L <strong id="activepl">0</strong>
+                                            </td>
+                                            <td align="center" style="color:#fff">
+                                                M2M (Equity) <strong id="m2m">0</strong>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div id="activeorder" class="active-order">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 acount-right" style="background-image:linear-gradient(#212529,#000)">
+                                <div class="bg-blue"></div>
+                                <div class="wel-head text-dark" style="margin-top: 5px">
+                                    <h3 style="color:#d6d6d6;text-align:center;"><b>Welcome, <span id="usernameh1"></span></b></h3>
+                                </div>
+                                <table class="table">
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="intradayhitory" class="btn-default" data-toggle='modal' data-target='#intradayhistorypopup' style="color:#d6d6d6;font-weight:bold">Intraday History </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#d6d6d6" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+    <td>
+        <a href="#" id="kycRowLink" data-toggle='modal' data-target='#kycdetails' class="btn-default" style="color:#d6d6d6; font-weight:bold;">KYC</a>
+        <div id="kycRowStatus" style="margin-left:0;margin-top:2px;"></div>
+    </td>
+    <td align="right">
+        <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#d6d6d6"></path> <circle cx="6" cy="3.5" fill="#d6d6d6" r="3.5"></circle> </g> </g></svg>
+    </td>
+</tr>
+
+
+
+
+                                    <tr>
+                                        <td>
+                                            <a href="#" data-toggle='modal' data-target='#funddetails' class=" btn-default" style="color:#d6d6d6;font-weight:bold">Funds </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg fill="#d6d6d6" width="30px" height="30px" viewBox="-4.5 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="m15.307 5.83v1.738.021c0 .29-.235.525-.525.525-.007 0-.015 0-.022 0h.001-2.864c-.23 1.609-1.032 2.998-2.19 3.981l-.009.008c-1.288 1.041-2.904 1.723-4.673 1.873l-.032.002q2.846 3.034 7.824 9.136c.086.085.139.202.139.332 0 .092-.026.177-.072.249l.001-.002c-.076.182-.252.308-.459.308-.013 0-.025 0-.037-.001h.002-3.324c-.006 0-.014 0-.021 0-.166 0-.313-.08-.404-.204l-.001-.001q-5.216-6.256-8.489-9.733c-.095-.093-.154-.222-.154-.365 0-.004 0-.007 0-.011v.001-2.167c.004-.3.246-.542.545-.546h1.909c.099.005.214.007.33.007 1.196 0 2.328-.273 3.338-.76l-.046.02c.855-.428 1.49-1.188 1.742-2.107l.005-.023h-7.28c-.006 0-.014 0-.021 0-.29 0-.525-.235-.525-.525 0-.007 0-.015 0-.022v.001-1.738c0-.006 0-.014 0-.021 0-.29.235-.525.525-.525h.022-.001 7.04q-.971-1.926-4.568-1.926h-2.471c-.3-.004-.542-.246-.546-.545v-2.268c0-.006 0-.014 0-.021 0-.29.235-.525.525-.525h.022-.001 14.182.021c.29 0 .525.235.525.525v.022-.001 1.738.021c0 .29-.235.525-.525.525-.007 0-.015 0-.022 0h.001-3.971c.526.689.908 1.516 1.085 2.417l.006.037h2.914.021c.29 0 .525.235.525.525v.022-.001z"></path></g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="billinvoice" class="btn-default" data-toggle='modal' data-target='#invoicebill' style="color:#dfdfdf;font-weight:bold">Bill & Invoice </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <rect fill="#d6d6d6" height="3" width="7" x="2.5" y="8.5"></rect> <polygon fill="#d6d6d6" points="10,3 10,0.5 3.5,0.5 2,2 2,3 "></polygon> <path d="M10.5,4h-9C0.6728516,4,0,4.6728516,0,5.5V10h1.5V7.5h9V10H12V5.5C12,4.6728516,11.3271484,4,10.5,4z M10,6.5H9v-1h1V6.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" data-toggle='modal' data-target='#profilemodel' class="btn-default" style="color:#d6d6d6;font-weight:bold">Profile </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#d6d6d6"></path> <circle cx="6" cy="3.5" fill="#d6d6d6" r="3.5"></circle> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <a href="#" data-toggle='modal' data-target='#personalprofilemodel' class="btn-default" style="color:#d6d6d6;font-weight:bold">User Details </a>
+                                            
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#d6d6d6"></path> <circle cx="6" cy="3.5" fill="#d6d6d6" r="3.5"></circle> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    @*<tr>
+                                            <td>
+                                                <a href="#" class=" btn-default" data-toggle='modal' data-target='#raise-comp'>Raise Complaint</a>
+                                            </td>
+                                            <td align="right"><i class="ti-comment-alt"></i></td>
+                                        </tr>*@
+                                    <tr>
+                                        <td>
+                                            <a href="#" class=" btn-default" data-toggle='modal' data-target='#noti-popup' style="color:#d6d6d6;font-weight:bold">Notifications</a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <polygon fill="#d6d6d6" points="6,6.3818359 12,2.0180664 12,1 0,1 0,2.0181274 "></polygon> <polygon fill="#d6d6d6" points="6,7.6181641 0,3.2543335 0,11 12,11 12,3.2542725 "></polygon> </g> </g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="chgpass" class="btn-default" data-toggle='modal' data-target='#changepassword' style="color:#d6d6d6;font-weight:bold">Change Password </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#d6d6d6" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+
+                                    <!--For id="menupayonline" Payment-->
+
+                                    <tr id="menupayonline">
+                                        <td>
+                                            <a href="#" class="btn-default" data-toggle='modal' data-target='#payonlinemodel' onclick="getdepositdetails()" style="color:#d6d6d6;font-weight:bold">Deposit Online </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#d6d6d6" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <tr id="withmenupayonline">
+                                        <td>
+                                            <a href="#" class="btn-default" data-toggle='modal' data-target='#withdrawonlinemodel' style="color:#d6d6d6;font-weight:bold">Withdraw Online </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#d6d6d6" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <!--For Payment-->
+
+
+                                    <tr>
+                                        <td>
+                                            <a href="#" onclick="logout();" class=" btn-default" style="color:#d6d6d6;font-weight:bold">Logout </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><polygon fill="#d6d6d6" points="9,2 9,0 1,0 1,12 9,12 9,10 8,10 8,11 2,11 2,1 8,1 8,2 "></polygon><polygon fill="#d6d6d6" points="8.2929688,3.2929688 7.5859375,4 9.0859375,5.5 5,5.5 5,6.5 9.0859375,6.5 7.5859375,8 8.2929688,8.7070313 11,6 "></polygon></g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" class=" btn-default" style="color:#d6d6d6;font-weight:bold">Version</a>
+                                        </td>
+                                        <td align="right">3.1.0</td>
+                                    </tr>
+
+                                </table><br /><br />
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/Content/js/jquery-3.4.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+
+$(document).ready(function () {
+    // Password visibility toggle
+    $('.toggle-password').on('click', function () {
+        const targetId = $(this).data('target');
+        const input = $(`#${targetId}`);
+        const type = input.attr('type') === 'password' ? 'text' : 'password';
+        input.attr('type', type);
+        $(this).find('svg').toggleClass('eye-visible eye-hidden');
+    });
+
+    // Reset form when modal is hidden
+    $('#changepassword').on('hidden.bs.modal', function () {
+        $('#changePasswordForm')[0].reset();
+        $('#oldpassError, #newpassError, #connewpassError').text('');
+    });
+
+    // Function to fetch active gateway info on page load
+    fetchActiveGateway();
+});
+
+    $(document).on('click', '.toggle-password1', function () {
+        $(this).toggleClass("fa-eye fa-eye-slash");
+        var input = $("#oldpass");
+        input.attr('type') === 'password' ? input.attr('type', 'text') : input.attr('type', 'password')
+    });
+
+
+    $(document).on('click', '.toggle-password2', function () {
+        $(this).toggleClass("fa-eye fa-eye-slash");
+        var input = $("#newpass");
+        input.attr('type') === 'password' ? input.attr('type', 'text') : input.attr('type', 'password')
+    });
+
+    $(document).on('click', '.toggle-password3', function () {
+        $(this).toggleClass("fa-eye fa-eye-slash");
+        var input = $("#connewpass");
+        input.attr('type') === 'password' ? input.attr('type', 'text') : input.attr('type', 'password')
+    });
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to fetch UPI details from the API
+    async function fetchUpiDetails() {
+        try {
+            const response = await fetch('https://tnsadmin.twmresearchalert.com/api/upigateway.php/upi_details/1');
+            const data = await response.json();
+            if (data.upi_url) {
+                return data.upi_url;
+            } else {
+                console.error('UPI URL not found in API response');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching UPI details:', error);
+            return null;
+        }
+    }
+
+    // Function to update UPI URL and QR code
+    function updateUpiUrlAndQr(upiBaseUrl, amount) {
+        if (!upiBaseUrl) {
+            $('#upiPayLink').attr('href', '#').addClass('disabled').css('pointer-events', 'none');
+            $('#qrcode').empty(); // Clear QR code if no URL
+            return;
+        }
+        let upiUrl = upiBaseUrl;
+        if (amount && !isNaN(amount)) {
+            upiUrl += '&am=' + encodeURIComponent(amount);
+        }
+        $('#upiPayLink').attr('href', upiUrl).removeClass('disabled').css('pointer-events', 'auto');
+
+        // Update or create QR code
+        $('#qrcode').empty(); // Clear previous QR code
+        new QRCode(document.getElementById('qrcode'), {
+            text: upiUrl,
+            width: 128,
+            height: 128
+        });
+    }
+
+    // Fetch UPI URL once and store it
+    fetchUpiDetails().then(upiBaseUrl => {
+        // Listen for changes in the amount input
+        $('#gatwaytxttransamount').on('input', function() {
+            var amount = $(this).val();
+            updateUpiUrlAndQr(upiBaseUrl, amount);
+        });
+
+        // Update UPI URL and QR code when the modal is shown
+        $('#payonlinemodel').on('shown.bs.modal', function() {
+            var amount = $('#gatwaytxttransamount').val();
+            updateUpiUrlAndQr(upiBaseUrl, amount);
+        });
+
+        // Initial update with no amount
+        updateUpiUrlAndQr(upiBaseUrl, '');
+    });
+});
+
+
+
+    function paymentonline() {
+        $("#payonlnpopdiv").modal("show");
+        var ClientName = localStorage.getItem("ClientName");
+        var MobileNo = localStorage.getItem("MobileNo");
+        var EmailId = localStorage.getItem("EmailId");
+        $("#PayCustomerName").val(ClientName);
+        $("#PayCustomerPhoneNo").val(MobileNo);
+        $("#CustomerEmailID").val(EmailId);
+    }
+
+
+
+
+    function paynow() {
+
+        $("#payfinal").html(
+            `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`
+        );
+
+        var PayCustomerName = $("#PayCustomerName").val();
+        var PayCustomerPhoneNo = $("#PayCustomerPhoneNo").val();
+        var CustomerEmailID = $("#CustomerEmailID").val();
+        var PayCartAmount = $("#PayCartAmount").val();
+        var currentDomain = window.location.hostname;
+        if (currentDomain == "localhost") {
+            var port = window.location.port;
+            currentDomain = "http://" + currentDomain + ":" + port;
+        } else {
+            currentDomain = "https://" + currentDomain;
+        }
+        var refid = localStorage.getItem("Refid");
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getformconetntAsync/?PayCustomerName=" + PayCustomerName + "&PayCustomerPhoneNo=" + PayCustomerPhoneNo + "&CustomerEmailID=" + CustomerEmailID + "&PayCartAmount=" + PayCartAmount + "&baseuri=" + currentDomain + "&userid=" + userid + "&refid=" + refid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                console.log(data);
+                $("#payonlnpoparea").html(data.PreparePOSTForm);
+            }
+        });
+    }
+
+
+    function editbank() {
+        $("#per_accholdername").css("border", "1px solid gray");
+        $("#per_bankname").css("border", "1px solid gray");
+        $("#per_accno").css("border", "1px solid gray");
+        $("#per_ifsc").css("border", "1px solid gray");
+
+        $("#per_accholdername").removeAttr("readonly");
+        $("#per_bankname").removeAttr("readonly");
+        $("#per_accno").removeAttr("readonly");
+        $("#per_ifsc").removeAttr("readonly");
+
+
+        $("#btneditgroup").css("display", "block");
+    }
+
+    function validateIndianBankAccount(accountNumber) {
+        // Regular expression for Indian bank account number validation
+        var accountRegex = /^\d{9,18}$/;
+        // Check if the provided account number matches the regular expression
+        if (accountNumber.match(accountRegex)) {
+            return true; // Valid account number format
+        } else {
+            return false; // Invalid account number format
+        }
+    }
+
+    function validateIFSC(ifsc) {
+        // Regular expression for IFSC code validation
+        var ifscRegex = /^[A-Za-z]{4}[0][\d]{6}$/;
+        // Check if the provided IFSC matches the regular expression
+        if (ifsc.match(ifscRegex)) {
+            return true; // Valid IFSC code
+        } else {
+            return false; // Invalid IFSC code
+        }
+    }
+
+    function Savebankdetails() {
+        var userid = localStorage.getItem("userid");
+        var per_accholdername = $("#per_accholdername").val();
+        var per_bankname = $("#per_bankname").val();
+        var per_accno = $("#per_accno").val();
+        var per_ifsc = $("#per_ifsc").val();
+        var per_mobileno = $("#per_mobileno").html();
+        var per_email = $("#per_email").html();
+        var per_add = $("#per_add").html();
+        if (validateIFSC(per_ifsc) == false) {
+            swal("Error", "Invalid IFSC Code", "error");
+            return;
+        }
+
+        if (validateIndianBankAccount(per_accno) == false) {
+            swal("Error", "Invalid Account No.", "error");
+            return;
+        }
+        $.ajax({
+            url: "/api/updateuserbankdetails/?userid=" + userid + "&bankname=" + per_bankname + "&accno=" + per_accno + "&ifsccode=" + per_ifsc + "&accountholder=" + per_accholdername + "&mob=" + per_mobileno + "&email=" + per_email + "&address=" + per_add,
+            type: "get",
+            success: function (response) {
+                if (response == "true") {
+                    swal("Success", "Bank Details Updated", "success");
+                }
+            }
+        });
+    }
+
+    function canceleditbank() {
+        $("#per_accholdername").css("border", "0px solid gray");
+        $("#per_bankname").css("border", "0px solid gray");
+        $("#per_accno").css("border", "0px solid gray");
+        $("#per_ifsc").css("border", "0px solid gray");
+
+        $("#per_accholdername").attr("readonly", true);
+        $("#per_bankname").attr("readonly", true);
+        $("#per_accno").attr("readonly", true);
+        $("#per_ifsc").attr("readonly", true);
+        $("#btneditgroup").css("display", "none");
+    }
+
+    function generateTransactionId() {
+        return 'txn_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    }
+
+    $(document).ready(function () {
+
+       // manualpay, gatewaypay
+
+        getuserbalance();
+        getuserbilldetails();
+        getpersonaldetails();
+        getactiveorder();
+        getnotification();
+        userprofiledata();
+
+        var IsRazorpayAllowornot = localStorage.getItem("IsRazorpayAllowornot");
+        if (IsRazorpayAllowornot == "No") {
+            $("#gatewaypay").hide();
+            $("#manualpay").show();
+        } else {
+            $("#gatewaypay").show();
+            $("#manualpay").hide();
+        }
+
+
+
+    })
+
+    function datac() {
+        var dat = $("#scriptlist").val();
+
+        $.ajax({
+            url: "/api/getscripttoken/?scriptname=" + dat,
+            type: "get",
+            success: function (response) {
+                localStorage.setItem("instokn", response);
+            }
+        });
+    }
+
+    function save() {
+
+        var name = $("#name").val();
+        var callno = $("#callno").val();
+        var whatsappno = $("#whatsappno").val();
+        var message = $("#message").val();
+        var postdata = { name: name, callno: callno, whatsappno: whatsappno, message: message, others: 'Complaint' };
+        $.ajax({
+            url: "/api/contactus/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Thank you for connecting with us.");
+                $("#btnhide").trigger('click');
+            }
+        });
+    }
+
+    // Add this function before submitpaymentdetails1
+    async function handlePhonePePayment(amount, username, phone, client_id, client_secret) {
+        const TestTokenUrl = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
+        const TestCheckoutUrl = "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay";
+
+        // Get access token
+        let token = null;
+        try {
+            const tokenResponse = await fetch(TestTokenUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `client_id=${encodeURIComponent(client_id)}&client_version=1&client_secret=${encodeURIComponent(client_secret)}&grant_type=client_credentials`
+            });
+            const tokenData = await tokenResponse.json();
+            token = tokenData.access_token || null;
+        } catch (error) {
+            alert("Error getting access token: " + error.message);
+            return;
+        }
+        if (!token) {
+            alert("Failed to get access token from PhonePe.");
+            return;
+        }
+
+        // Create payment
+        const merchantOrderId = `merch_${new Date().toISOString().replace(/[-:T.]/g, '')}${Math.floor(Math.random() * 9000 + 1000)}`;
+        const paymentData = {
+            merchantOrderId,
+            amount: parseInt(amount),
+            expireAfter: 1200,
+            metaInfo: {
+                udf1: username,
+                udf2: phone
+            },
+            paymentFlow: {
+                type: "PG_CHECKOUT",
+                message: "Payment message used for collect requests",
+                merchantUrls: {
+                    redirectUrl: `Tradenstocko://home/accounts/?txnId=${merchantOrderId}`
+                }
+            }
+        };
+
+        let redirectUrl = null;
+        try {
+            const paymentResponse = await fetch(TestCheckoutUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `O-Bearer ${token}`
+                },
+                body: JSON.stringify(paymentData)
+            });
+            const paymentResult = await paymentResponse.json();
+            redirectUrl = paymentResult.redirectUrl || null;
+        } catch (error) {
+            alert("Error creating payment: " + error.message);
+            return;
+        }
+        if (redirectUrl) {
+            window.open(redirectUrl, '_blank');
+        }  else {
+            alert("Failed to initiate payment. Please try again later.");
+        }
+    }
+
+    function submitpaymentdetails1() {
+        // Get user/payment details
+        var PayCustomerName = localStorage.getItem("ClientName");
+        var PayCustomerPhoneNo = localStorage.getItem("MobileNo");
+        var PayCartAmount = $("#gatwaytxttransamount").val();
+
+        // Check for active gateway and use PhonePe if set
+        if (
+            activeGatewayInfo &&
+            activeGatewayInfo.gateway_name &&
+            activeGatewayInfo.gateway_name.toLowerCase() === "phonepe"
+        ) {
+            handlePhonePePayment(
+                PayCartAmount,
+                PayCustomerName,
+                PayCustomerPhoneNo,
+                activeGatewayInfo.client_id,
+                activeGatewayInfo.client_secret
+            );
+            return; // Prevent further execution (e.g., Razorpay)
+        }
+
+        // ... existing Razorpay logic ...
+    }
+
+    function submitpaymentdetails() {
+        var userid = localStorage.getItem("userid");
+        var txttransid = $("#txttransid").val();
+        var txttransamount = $("#txttransamount").val();
+        var txttransremark = $("#txttransremark").val();
+        var refid = localStorage.getItem("Refid");
+        if (txttransamount == "" || txttransremark == "" || txttransid == "") {
+            swal("Error", "Please fill required details.");
+            return;
+        }
+        var postdata = { userid: userid, txttransid: txttransid, txttransamount: txttransamount, txttransremark: txttransremark, refid: refid };
+        $.ajax({
+            url: "/api/savetransaction/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Transaction Details Saved Successfully.");
+                $("#payonlinemodel").modal('hide');
+            }
+        });
+    }
+
+    function prefix0(value) {
+        var val = ((parseInt(value)) > 9) ? (parseInt(value)) : "0" + (parseInt(value));
+        return val;
+    }
+
+    function filterchartdata(token, interval) {
+        var chartData = [];
+        var instoken = token;
+        var date1 = new Date();
+        var yy = date1.getFullYear();
+        var mm = ((date1.getMonth() + 1) > 9) ? (date1.getMonth() + 1) : "0" + (date1.getMonth() + 1);
+        var dd = ((date1.getDate()) > 9) ? (date1.getDate()) : "0" + (date1.getDate());
+
+        var hh = ((date1.getHours()) > 9) ? (date1.getHours()) : "0" + (date1.getHours());
+        var mmm = ((date1.getMinutes()) > 9) ? (date1.getMinutes()) : "0" + (date1.getMinutes());
+        var ss = ((date1.getSeconds()) > 9) ? (date1.getSeconds()) : "0" + (date1.getSeconds());
+
+
+        var fromdatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+        var todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+
+        var intrvl = "";
+        if (interval == "1M" || interval == "2M" || interval == "3M" || interval == "4M" || interval == "5M" || interval == "10M" || interval == "15M" || interval == "30M") {
+            var actualmin = mmm;
+            var mint = interval + "".replace("M", "");
+            intrvl = mint.replace("M", "") + "minute";
+            if (intrvl == "1minute") {
+                intrvl = "minute";
+            }
+            var newmmm = parseInt(mmm) - parseInt(mint);
+            var newmmt = prefix0(newmmm);
+            fromdatetime = yy + "-" + mm + "-" + dd + "+" + "09" + ":" + "00" + ":" + "00";
+            todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + actualmin + ":" + ss + "";
+        }
+        else if (interval == "1H" || interval == "2H" || interval == "3H" || interval == "4H" || interval == "5H") {
+            var actualhh = hh;
+            var hhh = interval + "".replace("H", "");
+            intrvl = hhh.replace("H", "") + "hour";
+            if (intrvl == "1hour") {
+                intrvl = "hour";
+            }
+            var newhh = parseInt(dd) - parseInt(7);
+            var d = new Date();
+            var prey = d.getFullYear();
+            var premm = prefix0((d.getMonth() + 1));
+            var predd = prefix0(d.getDate());
+
+            fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+            todatetime = yy + "-" + mm + "-" + dd + "+" + actualhh + ":" + mmm + ":" + ss + "";
+        }
+        else if (interval == "1D") {
+            var actualdd = dd;
+            var dddd = interval + "".replace("D", "");
+            intrvl = "day";
+            var d = new Date();
+            var prey = d.getFullYear();
+            var premm = prefix0((d.getMonth() + 1));
+            var predd = prefix0(d.getDate());
+
+            fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+            todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+        }
+
+        instoken = instoken.replace("D", "");
+
+        $.ajax({
+            url: "/api/gethistorydata?interval=" + intrvl + "&instrumenttoken=" + instoken + "&fromdatetime=" + fromdatetime + "&todatetime=" + todatetime,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+
+                var chrtdata = "";
+
+                $.each(data.data.candles, function (i, item) {
+                    //[timestamp, open, high, low, close, volume]
+                    var actualtime = data.data.candles[i][0];
+                    var date = new Date(actualtime);
+                    var timestamp = date.getTime();
+                    var date = new Date(timestamp);
+                    var hours = date.getHours();
+                    var minutes = "0" + date.getMinutes();
+                    var seconds = "0" + date.getSeconds();
+                    var ddts = prefix0(date.getDate()) + "-" + prefix0(date.getMonth()) + "-" + date.getFullYear();
+                    var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+
+                    var open = data.data.candles[i][1];
+                    var high = data.data.candles[i][2];
+                    var low = data.data.candles[i][3];
+                    var close = data.data.candles[i][4];
+                    var volume = data.data.candles[i][5];
+                    chrtdata += "<tr>";
+                    chrtdata += "<td>" + formattedTime + "</td>";
+                    chrtdata += "<td>" + high + "</td>";
+                    chrtdata += "<td>" + low + "</td>";
+                    chrtdata += "<td>" + volume + "</td>";
+                    chrtdata += "<td>" + open + "</td>";
+                    chrtdata += "<td>" + close + "</td>";
+                    chrtdata += "</tr>";
+                });
+                $("#chrttbl").html(chrtdata)
+            }
+        });
+    }
+
+    function btnsrchchart() {
+        var tokenno = localStorage.getItem("instokn");
+
+        var interval = $("#intervaldrop :selected").val();
+        filterchartdata(tokenno, interval);
+    }
+
+    function resetchrt() {
+        $("#scriptlist").val("");
+        $("#intervaldrop").val("Select Interval");
+        $("#exchname").val("Select Exchange");
+        $("#chrttbl").html("")
+    }
+
+    function getscript() {
+        var exchname = $("#exchname :selected").val();
+        //
+        $.ajax({
+            url: "/api/getscript?exchangename=" + exchname,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var optionval = "<option value='Select Script'>";
+                $.each(data, function (i, item) {
+                    var symbolname = data[i].symbolname;
+                    var instrument_token = data[i].instrument_token;
+                    optionval += "<option tag='" + instrument_token + "' value='" + symbolname + "'>";
+                });
+                $("#scriptlistdata").html(optionval);
+            }
+        });
+    }
+
+    function savewithdraw() {
+        var txttransamount = $("#withtxttransamount").val();
+        if (txttransamount == "") {
+            $("#withtxttransamount").val("");
+            swal("Error", "Please Enter Amount.");
+            return;
+        }
+        var userbalance = $("#userbalance").html();
+        var txttransremark = $("#withtxttransremark").val();
+        if (parseInt(txttransamount) > parseInt(userbalance)) {
+            $("#withtxttransamount").val("");
+            swal("Error", "Amount should be less then ledgerbalance");
+            return;
+        }
+
+        var userid = localStorage.getItem("userid");
+        var txttransid = "Withdraw";
+        var refid = localStorage.getItem("Refid");
+
+
+        if (txttransamount == "" || txttransremark == "") {
+            swal("Success", "Please fill required details.");
+            return;
+        }
+        var postdata = { userid: userid, txttransid: txttransid, txttransamount: txttransamount, txttransremark: txttransremark, refid: refid };
+        $.ajax({
+            url: "/api/savetransaction/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Withdrawl Request Sent Successfully.");
+                $("#withdrawonlinemodel").modal('hide');
+            }
+        });
+    }
+
+
+
+    function getdepositdetails()
+    {
+        var IsRazorpayAllowornot = localStorage.getItem("IsRazorpayAllowornot");
+        if (IsRazorpayAllowornot == "No") {
+            $("#gatewaypay").hide();
+            $("#manualpay").show();
+        } else {
+            $("#gatewaypay").show();
+            $("#manualpay").hide();
+        }
+     
+
+        $("#gatwaytxnid").val(generateTransactionId());
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "/api/getpaymentimage/?refid=" + refid,
+            type: "get",
+            success: function (response) {
+                if (response != "") {
+                    var data = JSON.parse(response);
+                    var upiid = data.upiid;
+                    var imgurl = data.imgurl;
+                    $("#accbank").html(data.BankName);
+                    $("#accno").html(data.AccountNo);
+                    $("#accifsc").html(data.IFSCCode);
+                    $("#accholder").html(data.AccountHolderName);
+                    $("#upiiduser").html(upiid)
+                    $("#payupi").attr('href', "upi://pay?pa=" + upiid + "&pn=KingdomExch&cu=INR");
+                    $("#payimg").attr('src', imgurl);
+
+                }
+            }
+        });
+    }
+
+    $(window).on('load', function () {
+
+        //$("#btnhide").trigger('click');
+        //if (localStorage.getItem("FirstTimeLogin") == "true") {
+        //    $("#chgpass")[0].click();
+        //}
+       // $("#menupayonline").hide();
+       // $("#withmenupayonline").hide();
+        var ispayonline = checkisonlinepagment();
+
+        if (ispayonline == "true") {
+            $("#menupayonline").show();
+            $("#withmenupayonline").show();
+            var refid = localStorage.getItem("Refid");
+
+            $.ajax({
+                url: "/api/getpaymentimage/?refid=" + refid,
+                type: "get",
+                success: function (response) {
+                    if (response != "") {
+                        var data = JSON.parse(response);
+                        var upiid = data.upiid;
+                        var imgurl = data.imgurl;
+                        $("#accbank").html(data.BankName);
+                        $("#accno").html(data.AccountNo);
+                        $("#accifsc").html(data.IFSCCode);
+                        $("#accholder").html(data.AccountHolderName);
+                        $("#upiiduser").html(upiid)
+                        $("#payupi").attr('href', "upi://pay?pa=" + upiid + "&pn=KingdomExch&cu=INR");
+                        $("#payimg").attr('src', imgurl);
+
+                    }
+                }
+            });
+
+        }
+        //WebSocketTest();
+    });
+
+
+    function getpersonaldetails() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/userprofile/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                $.each(data, function (i, item) {
+                    var FirstName = data[i].FirstName;
+                    var LastName = data[i].LastName;
+                    var UserName = data[i].UserName;
+                    var CreditLimit = data[i].CreditLimit;
+                    var LedgerBalance = data[i].LedgerBalance;
+                    var MobileNo = data[i].MobileNo;
+                    var EmailId = data[i].EmailId;
+                    var AadharNo = data[i].AadharNo;
+                    var PanNo = data[i].PanNo;
+                    var City = data[i].City;
+                    var Address = data[i].Address;
+
+                    var AccountHolderName = data[i].AccountHolderName;
+                    var BankName = data[i].BankName;
+                    var AccountNo = data[i].AccountNo;
+                    var IFSCCode = data[i].IFSCCode;
+
+                    if (AadharNo == "0" || AadharNo == "") {
+                        AadharNo = "xxxx-xxxx-xxxx";
+                    }
+                    $("#per_username").html(UserName);
+                    $("#per_fnamelname").html(FirstName + " " + LastName);
+                    $("#per_mobileno").html(MobileNo);
+                    $("#per_email").html(EmailId);
+                    $("#per_aadharno").html(AadharNo);
+                    $("#per_panno").html(PanNo);
+                    $("#per_city").html(City);
+                    $("#per_add").html(Address);
+
+                    $("#per_accholdername").val(AccountHolderName);
+                    $("#per_bankname").val(BankName);
+                    $("#per_accno").val(AccountNo);
+                    $("#per_ifsc").val(IFSCCode);
+                });
+            }
+        });
+
+
+
+    }
+
+    function getuserbilldetails() {
+        //tblbillinfo
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getuserbill/?UserId=" + userid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                var totalpl = 0;
+                var totalbrkg = 0;
+
+                $.each(data, function (i, item) {
+                    var ScriptName = data[i].ScriptName;
+                    var OrderCategory = data[i].OrderCategory;
+                    var Lot = data[i].Lot;
+                    var OrderDate = data[i].OrderDate;
+                    var OrderTime = data[i].OrderTime;
+                    var OrderPrice = data[i].OrderPrice;
+                    var BroughtBy = data[i].BroughtBy;
+                    var ClosedAt = data[i].ClosedAt;
+                    var ClosedTime = data[i].ClosedTime;
+                    var P_L = parseInt(data[i].P_L);
+                    var Brokerage = parseInt(data[i].Brokerage);
+                    totalpl += parseInt(P_L);
+                    totalbrkg += parseInt(Brokerage);
+                    usrbalnce += "<tr>";
+                    usrbalnce += "<td class='td1' >" + (i + 1) + "</td>";
+                    usrbalnce += "<td class='td1'  align='left' width='250px'><b>" + ScriptName + "</b><br>" + OrderCategory + "(" + Lot + ")</td>";
+                    usrbalnce += "<td class='td1'  align='center' width='180px'>" + OrderPrice + "<br>" + OrderDate + " <br> " + OrderTime + "</td>";
+                    usrbalnce += "<td class='td1'  align='center' width='180px'>" + BroughtBy + "<br>" + ClosedAt + "<br> " + ClosedTime + "</td>";
+                    usrbalnce += "<td class='td1'  align='right'>" + P_L + "</td>";
+                    usrbalnce += "<td class='td1'  align='right'>" + Brokerage + "</td>";
+                    usrbalnce += "</tr>";
+                });
+
+                usrbalnce += "<tr>";
+                usrbalnce += "<td class='td2' align='center' colspan='4'> <b>Total of Profit & Loss and Brokerage</b></td>";
+                usrbalnce += "<td class='td2'  align='right'><b>" + totalpl + "</b></td>";
+                usrbalnce += "<td class='td2'  align='right'><b>" + totalbrkg + "</b></td>";
+                usrbalnce += "</tr>";
+                usrbalnce += "<tr >";
+                usrbalnce += "<td class='td2' align='center' colspan='4'> <b>Net Profit & Loss </b></td>";
+
+                usrbalnce += "<td class='td2' colspan='2'  align='right'><b>" + (totalpl - totalbrkg) + "</b></td>";
+                usrbalnce += "</tr>";
+
+                $("#tblbillinfo").html(usrbalnce);
+            }
+        });
+
+    }
+
+    function getuserbalance() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getledgerbalance/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                response = parseFloat(response).toFixed(2);
+                $("#userbalance").html(parseInt(response));
+                var activepl = $("#activepl").html();
+                var newm2m = Math.round($("#userbalance").html()) - Math.round(activepl);
+                var creditlimit = localStorage.getItem("CreditLimit");
+                var m2m = Math.round($("#userbalance").html()) + 0 + Math.round(creditlimit);
+                $("#m2m").html(parseInt(m2m));
+                $("#marginavl").html(m2m - 0);
+                //  $("#m2m").html(newm2m);
+                $("#userbalancemodel").html(parseInt(response));
+            }
+        });
+
+        $.ajax({
+            url: "/api/getuserbalanceledger/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                $("#sellordervalue").html('');
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                $.each(data, function (i, item) {
+                    var Amount = data[i].Amount;
+                    var OrderId = data[i].OrderId;
+                    var ScriptName = data[i].ScriptName;
+                    var TokenNo = data[i].TokenNo;
+                    var Lot = data[i].Lot;
+                    var OrderCategory = data[i].OrderCategory;
+
+
+                    var TransactionType = data[i].TransactionType;
+                    if (TransactionType == "Credit") {
+                        TransactionType = "Deposit";
+                    }
+                    else if (TransactionType == "Loss") {
+                        TransactionType = "Loss";
+                    }
+                    else if (TransactionType == "Profit") {
+                        TransactionType = "Profit";
+                    }
+                    else {
+                        TransactionType = "Withdrawal";
+                    }
+
+                    var CreatedDate = data[i].CreatedDate;
+                    usrbalnce += "<tr>";
+                    //usrbalnce += "<td   align='left'><span><b>Order No: </b>" + OrderId + " (" + ScriptName + ")</span><br><span><b>Lot: </b>" + Lot + " (" + OrderCategory + ")</span><br><span><b>Date: </b> " + CreatedDate + "</span></td>";
+                    if (TransactionType == "Profit" || TransactionType == "Loss") {
+                        usrbalnce += "<td   align='left'><span><b>Order No: </b>" + OrderId + " (" + ScriptName + ")</span><br><span><b>Date: </b> " + CreatedDate + "</span></td>";
+                    } else {
+                        usrbalnce += "<td   align='left'><span><b>Date: </b> " + CreatedDate + "</span></td>";
+                    }
+
+                    usrbalnce += "<td  align='center'>" + TransactionType + "</td>";
+                    if (TransactionType == "Withdrawal" || TransactionType == "Loss") {
+                        usrbalnce += "<td   align='right'><span class='bedge-t' style='color:red'>" + parseInt(Amount) + "</span></td>";
+                    } else {
+                        usrbalnce += "<td   align='right'><span class='bedge-t'>" + parseInt(Amount) + "</span></td>";
+                    }
+
+                    usrbalnce += "</tr>";
+                });
+                $("#sellordervalue").html(usrbalnce);
+            }
+        });
+    }
+
+    function userprofiledata() {
+
+        var userid = localStorage.getItem("userid");
+
+        $.ajax({
+            url: "/api/profiledata/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                //For MCX
+                var Holding_Exposure_Margin_MCX = data["MCX"].Holding_Exposure_Margin_MCX;
+                var Intraday_Exposure_Margin_MCX = data["MCX"].Intraday_Exposure_Margin_MCX;
+                var IsMCXTrade = data["MCX"].IsMCXTrade;
+                var MCX_brokerage_per_crore = data["MCX"].MCX_brokerage_per_crore;
+                var Mcx_Brokerage_Type = data["MCX"].Mcx_Brokerage_Type;
+                var Mcx_Exposure_Type = data["MCX"].Mcx_Exposure_Type;
+                if (IsMCXTrade == "true") {
+                    $("#MCXBlockData").show();
+                    $("#MCXBrokerageType").html(Mcx_Brokerage_Type);
+
+                    console.log("MCX_brokerage_per_crore", MCX_brokerage_per_crore);
+
+                    if (Mcx_Brokerage_Type == "per_lot") {
+                        var brkd = "{";
+                        $(MCX_brokerage_per_crore).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        console.log("ss")
+                        $("#MCXbrokerageValue").html(brkd);
+                    }
+                    else {
+
+                        $("#MCXbrokerageValue").html(MCX_brokerage_per_crore);
+                    }
+
+                    $("#MCXExposureType").html(Mcx_Exposure_Type);
+                    if (Mcx_Exposure_Type == "per_turnover") {
+                        $("#MCXMarginIndradayvalue").html(Intraday_Exposure_Margin_MCX);
+                    }
+                    else {
+                        var brkd = "{";
+                        $(Intraday_Exposure_Margin_MCX).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        $("#MCXMarginIndradayvalue").html(brkd);
+                    }
+
+
+
+
+                    if (Mcx_Exposure_Type == "per_turnover") {
+                        $("#MCXMarginHoldingValue").html(Holding_Exposure_Margin_MCX);
+                    }
+                    else {
+                        var brkd = "{";
+                        $(Holding_Exposure_Margin_MCX).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        $("#MCXMarginHoldingValue").html(brkd);
+                    }
+
+
+
+
+                } else {
+                    $("#MCXBlockData").hide();
+                }
+                //For NSE
+
+                var IsNSETrade = data["NSE"].IsNSETrade;
+                var NSE_Brokerage_Type = data["NSE"].NSE_Brokerage_Type;
+                var Equity_brokerage_per_crore = data["NSE"].Equity_brokerage_per_crore;
+                var NSE_Exposure_Type = data["NSE"].NSE_Exposure_Type;
+                var Intraday_Exposure_Margin_Equity = data["NSE"].Intraday_Exposure_Margin_Equity;
+                var Holding_Exposure_Margin_Equity = data["NSE"].Holding_Exposure_Margin_Equity;
+
+                if (IsNSETrade == "true") {
+                    $("#NSEBlockdata").show();
+                    $("#NSEbrokeragevalue").html(Equity_brokerage_per_crore);
+                    $("#NSEBrokeragetype").html(NSE_Brokerage_Type);
+                    $("#NSEMarginIndradayType").html(NSE_Exposure_Type);
+                    $("#NSEMarginIndradayvalue").html(Intraday_Exposure_Margin_Equity);
+                    $("#NSEMarginIndradayHoldingType").html(NSE_Exposure_Type);
+                    $("#NSEMarginIndradayHoldingvalue").html(Holding_Exposure_Margin_Equity);
+                }
+                else {
+                    $("#NSEBlockdata").hide();
+                }
+
+                //For CDS
+
+
+                var IsCDSTrade = data["CDS"].IsCDSTrade;
+                var CDS_Brokerage_Type = data["CDS"].CDS_Brokerage_Type;
+                var CDS_brokerage_per_crore = data["CDS"].CDS_brokerage_per_crore;
+                var CDS_Exposure_Type = data["CDS"].CDS_Exposure_Type;
+                var Intraday_Exposure_Margin_CDS = data["CDS"].Intraday_Exposure_Margin_CDS;
+                var Holding_Exposure_Margin_CDS = data["CDS"].Holding_Exposure_Margin_CDS;
+
+                if (IsCDSTrade == "true") {
+                    $("#CDSBlockdata").show();
+                    $("#CDSbrokeragevalue").html(CDS_brokerage_per_crore);
+                    $("#CDSBrokeragetype").html(CDS_Brokerage_Type);
+                    $("#CDSMarginIndradayType").html(CDS_Exposure_Type);
+                    $("#CDSMarginIndradayvalue").html(Intraday_Exposure_Margin_CDS);
+                    $("#CDSMarginIndradayHoldingType").html(CDS_Exposure_Type);
+                    $("#CDSMarginIndradayHoldingvalue").html(Holding_Exposure_Margin_CDS);
+                }
+                else {
+                    $("#CDSBlockdata").hide();
+                }
+
+                //$.each(data, function (i, item) {
+                //    var FirstName = data[i].FirstName;
+                //});
+                $("#userprofiledata").html(usrbalnce);
+            }
+        });
+    }
+
+    function changepass() {
+                const userid = localStorage.getItem("userid");
+                const oldpass = $("#oldpass").val().trim();
+                const newpass = $("#newpass").val().trim();
+                const connewpass = $("#connewpass").val().trim();
+
+                // Clear previous error messages
+                $('#oldpassError, #newpassError, #connewpassError').text('');
+
+                // Validate inputs
+                if (!oldpass) {
+                    $('#oldpassError').text('Please enter your current password.');
+                    return;
+                }
+                if (!newpass) {
+                    $('#newpassError').text('Please enter a new password.');
+                    return;
+                }
+                if (!connewpass) {
+                    $('#connewpassError').text('Please confirm your new password.');
+                    return;
+                }
+                if (newpass !== connewpass) {
+                    $('#connewpassError').text('Confirm password does not match the new password.');
+                    return;
+                }
+                
+                
+
+                // Show loading state
+                const $btn = $('#changePasswordForm .btn-success');
+                $btn.prop('disabled', true).val('Processing...');
+
+                $.ajax({
+                    url: `/api/changepassword/?userid=${encodeURIComponent(userid)}&oldpass=${encodeURIComponent(oldpass)}&newpass=${encodeURIComponent(newpass)}`,
+                    type: "GET",
+                    success: function (response) {
+                        if (response === 'true') {
+                            Swal.fire({
+                                title: 'Success',
+                                text: 'Password changed successfully!',
+                                icon: 'success'
+                            }).then(() => {
+                                localStorage.setItem("FirstTimeLogin", "false");
+                                $('#changepassword').modal('hide');
+                            });
+                        } else {
+                            $('#oldpassError').text('Incorrect current password.');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to change password. Please try again later.',
+                            icon: 'error'
+                        });
+                    },
+                    complete: function () {
+                        $btn.prop('disabled', false).val('Change Password');
+                    }
+                });
+            }
+
+            function closechangepass() {
+                const userid = localStorage.getItem("userid");
+                $.ajax({
+                    url: `/api/closechangepass/?userid=${encodeURIComponent(userid)}`,
+                    type: "GET",
+                    success: function () {
+                        localStorage.setItem("FirstTimeLogin", "false");
+                    },
+                    error: function () {
+                        console.error('Failed to update FirstTimeLogin status.');
+                    }
+                });
+            }
+    var totalmarginused = 0;
+    function getactiveorder() {
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getconsolidatedtrade/?uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                if (data.length != 0) {
+                    var pendingorderdata = "";
+                    var tokens = "";
+                    $.each(data, function (i, item) {
+                        var OrderId = data[i].Id;
+                        var OrderCategory = data[i].OrderCategory;
+                        var TokenNo = data[i].TokenNo;
+                        tokens += TokenNo + ",";
+                        var OrderType = data[i].OrderType;
+                        var lot = data[i].Lot;
+                        var selectedlotsize = data[i].selectedlotsize;
+                        var SymbolType = data[i].SymbolType
+                        var OrderDate = data[i].OrderDate;
+                        var cmp = data[i].cmp;
+                        var OrderTime = data[i].OrderTime;
+                        var ScriptName = data[i].ScriptName;
+                        var ActionType = data[i].ActionType;
+                        var OrderPrice = data[i].OrderPrice;
+                        OrderPrice = parseFloat(OrderPrice).toFixed(2);
+                        //let op = OrderPrice;
+                        //OrderPrice = op.tofixed(2);
+                        var MarginUsed = data[i].MarginUsed;
+                        totalmarginused += Math.round(MarginUsed);
+                        var HoldingMarginReq = data[i].HoldingMarginReq;
+                        var OrderStatus = data[i].OrderStatus;
+                        pendingorderdata += "<div class='act-box'>";
+                        pendingorderdata += "<table width='100%'>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2' align='left'><span class='scrip-name' style='color:#000'><b>" + ScriptName + "</b></span></td>";
+                        if (OrderCategory == "SELL") {
+                            pendingorderdata += "<td align='right'><span class='m-red-m'><strong id='ordercat" + TokenNo + "'>" + OrderCategory + "</strong></span>&nbsp;&nbsp;&nbsp;<span><strong class='color-bluest m-red-m'>" + lot + " @@ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                        } else {
+                            pendingorderdata += "<td align='right'><span class='m-green-m'><strong id='ordercat" + TokenNo + "'>" + OrderCategory + "</strong></span>&nbsp;&nbsp;&nbsp;<span><strong class='color-bluest m-green-m'>" + lot + " @@ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                        }
+
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2'><span  style='color:#000'>Margin : <strong class='color-bluest' style='color:#000'>" + parseInt(MarginUsed) + "</strong></span></td> <td colspan='2' align='right'><span style=''><strong class='color-bluest' id='diffpric" + TokenNo + "'>0</strong></span></td>";
+                        pendingorderdata += "</tr>";
+                        pendingorderdata += "<tr style='margin-top:3px;'>";
+                        pendingorderdata += "<td  colspan='2' align='left'><a href='#' onclick=closetrade('" + uid + "','" + OrderCategory + "','" + TokenNo + "','" + SymbolType + "') class='btn-danger' style='padding:4px;font-size:13px;font-weight:bold;margin-top:5px;' >Close Trade</a></td>";
+                        pendingorderdata += "<td  colspan='2' align='right'>CMP : <span class='color-bluest' id='bid" + TokenNo + "'  style='color:#000' ><strong style='color:#000'>" + cmp + "</strong></span></td>";
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "</table>";
+                        pendingorderdata += "</div>";
+
+
+                    });
+                    $("#activeorder").html(pendingorderdata);
+                    tokens = tokens.slice(0, -1);
+                    WebSocketTest(tokens);
+                }
+
+            }
+        });
+    }
+
+    var uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    //var uri = "wss://103.220.223.27/api/webapiwebsoc";
+    websocket = new WebSocket(uri);
+    function readvalues() {
+
+
+        var ws;
+
+        //Initialize socket
+
+        if (websocket.readyState == WebSocket.CLOSED) {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        else {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        //Open socket and send message
+
+        //Socket error handler
+        websocket.onerror = function (event) {
+            $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+        };
+
+        var totalactivepl = 0;
+        var lotokn = localStorage.getItem("tkn");
+        //Socket message handler  +
+        websocket.onmessage = function (event) {
+            if (event.data != "" && event.data != "true") {
+
+
+                var datax = JSON.parse(event.data);
+                if (datax.bid == "0") {
+                    datax.bid = datax.last_price;
+                }
+                if (datax.ask == "0") {
+                    datax.ask = datax.last_price;
+                }
+
+                var Bid = datax.bid;
+                var scriptname = datax.instrument_token;
+                var Ask = datax.ask;
+                var cmp = 0;
+                var newamtdeff = 0;
+
+                var ordercat = $("#ordercat" + scriptname).html();
+                if (ordercat == "SELL") {
+                    cmp = Ask;
+                    newamtdeff = (parseFloat($("#oldpr" + scriptname).html()) - parseFloat(cmp)).toFixed(2);
+                    console.log("newamtdeff1", newamtdeff);
+                }
+                else {
+                    cmp = Bid;
+                    newamtdeff = parseFloat(cmp) - parseFloat($("#oldpr" + scriptname).html());
+                    console.log("newamtdeff2", newamtdeff);
+                }
+
+                $("#bid" + scriptname).html("<b>" + cmp + "</b>");
+                var newval = parseInt($("#sellotsize" + scriptname).html()) * newamtdeff;
+                newval = parseFloat(newval).toFixed(2);
+                totalactivepl += newval;
+                if (parseInt(newval) < 0) {
+                    $("#diffpric" + scriptname).addClass("m-red-m");
+                } else {
+                    $("#diffpric" + scriptname).addClass("m-green-m");
+                }
+                $("#diffpric" + scriptname).html(parseInt(newval));
+                calcm2m(lotokn);
+            }
+        };
+    }
+
+    function calcm2m(token) {
+        var totalactivepl = 0;
+        var tokarr = token.split(',');
+        for (var x = 0; x < tokarr.length; x++) {
+            var tokn = tokarr[x];
+            var acpl = $("#diffpric" + tokn).html();
+            totalactivepl += parseFloat(acpl);
+        }
+        totalactivepl = parseFloat(totalactivepl).toFixed(2);
+        $("#activepl").html(parseInt(totalactivepl));
+        var userbalance = $("#userbalance").html();
+        var creditlimit = localStorage.getItem("CreditLimit");
+        var m2m = (parseFloat(userbalance) + parseFloat(totalactivepl) + parseFloat(creditlimit)).toFixed(2);
+        $("#m2m").html(parseInt(m2m));
+        var newmaginavailable = (parseFloat(m2m - totalmarginused)).toFixed(2);
+        $("#marginavl").html(parseInt(newmaginavailable));
+    }
+
+    function WebSocketTest(token) {
+        localStorage.setItem("tkn", token);
+        readvalues();
+    }
+
+    function closetrade(userid, ordercategory, tokenno, exchangetype) {
+        var confrm = confirm("Do you want to close these trades?")
+        if (confrm == true) {
+            var refid = localStorage.getItem("Refid");
+            $.ajax({
+                url: "/api/getmarkettime/?Exchange=" + exchangetype + "&refid=" + refid,
+                type: "get",
+                success: function (resp) {
+                    var data = resp.split('|');
+                    var starttime = data[0] + ":00";
+                    var endttime = data[1] + ":00";
+                    var _starttime = starttime;
+                    var _endttime = endttime;
+                    var today = new Date();
+                    if (today.getDay() == 6 || today.getDay() == 0) {
+                        swal("Market not open.");
+                        //return;
+                    }
+                    else {
+                        var date = new Date();
+                        var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                        //current
+                        var currenttime_sec = ctime.split(':');
+                        var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                        //_starttime
+                        var Startcurrenttime_sec = _starttime.split(':');
+                        var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+
+                        //_endtime
+                        var Endcurrenttime_sec = _endttime.split(':');
+                        var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                        if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                            var cmp = $("#bid" + tokenno).html();
+                            cmp = cmp.replace("<b>", "");
+                            cmp = cmp.replace("</b>", "");
+                            cmp = cmp.trim();
+                            $.ajax({
+                                url: "/api/closetrade_from_account_portfolio/?userid=" + userid + "&ordercat=" + ordercategory + "&tokenno=" + tokenno + "&cmpval=" + cmp,
+                                type: "get",
+                                success: function (response) {
+
+                                    var data = JSON.parse(response);
+                                    swal({
+                                        title: "Trade Closed!",
+                                        text: data.ResponseMessage,
+                                        type: "success"
+                                    }).then(function () {
+                                        location.reload();
+                                    });
+                                }
+                            });
+                        }
+                        else {
+                            swal("Market not open.");
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function getnotification() {
+        var userid = localStorage.getItem("userid");
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "/api/getnotification/?userid=" + userid + "&refid=" + refid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var innerdata = "";
+                $.each(data, function (i, item) {
+                    var Title = data[i].Title;
+                    var Message = data[i].Message;
+                    var CreatedDate = data[i].CreatedDate;
+                    innerdata += "<tr>";
+                    innerdata += "<td>";
+                    innerdata += " <strong>" + Title + " (" + CreatedDate + ")</strong><br>" + Message + "</td>";
+                    innerdata += "</tr>";
+                });
+                $("#tblnoti").html(innerdata);
+            }
+        });
+    }
+
+
+
+
+
+    //
+
+    function fetchKYCStatus() {
+        var userid = localStorage.getItem("userid");
+        if (!userid) return;
+
+        $.ajax({
+            url: "https://tnsadmin.twmresearchalert.com/api/get_kyc.php?user_id=" + userid,
+            type: "GET",
+            success: function (response) {
+                if (typeof response === "string") {
+                    response = JSON.parse(response);
+                }
+                if (response.status === "success") {
+                    if (response.data && response.data.length > 0) {
+                        var kyc = response.data[0];
+                        lastKycData = kyc;
+                        $("#kycStatus").html(
+                            "<b>KYC Status:</b> " + kyc.approval_status.charAt(0).toUpperCase() + kyc.approval_status.slice(1)
+                        );
+                        $("#kycPendingBar").remove();
+                        // If images are submitted and approval_status is pending, show orange text
+                        if (kyc.aadhaar_image && kyc.pan_image && kyc.approval_status === 'pending') {
+                            $('#kycRowStatus').html('<span style="color:orange;font-weight:bold;">Under Inspection</span>');
+                        } else {
+                            $('#kycRowStatus').html('');
+                        }
+                        // Always allow modal to open
+                        $('#kycRowLink').attr('data-toggle', 'modal').attr('data-target', '#kycModal');
+                        $('#kycRowLink').off('click');
+                    } else {
+                        lastKycData = null;
+                        $("#kycStatus").html(
+                            "<span style='color:red;'><b>You have not submitted your KYC. Please submit your KYC documents.</b></span>"
+                        );
+                        if (!$("#kycPendingBar").length) {
+                            var kycBar =
+                                '<div id="kycPendingBar" style="width:100%;background:#ff4d4d;color:white;text-align:center;padding:10px 0;z-index:9999;font-weight:bold;">' +
+                                '<span style="display:inline-block;width:12px;height:12px;background:#ff0000;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>' +
+                                'KYC Pending - Please submit your KYC documents to access all features.' +
+                                '<span id="closeKycBar" style="float:right;margin-right:20px;cursor:pointer;font-size:18px;font-weight:bold;">&times;</span>' +
+                                '</div>';
+                            $(".main_content_iner").before(kycBar);
+                            $(document).on('click', '#closeKycBar', function() {
+                                $('#kycPendingBar').remove();
+                            });
+                        }
+                        // Enable modal trigger for KYC row
+                        $('#kycRowStatus').html('');
+                        $('#kycRowLink').attr('data-toggle', 'modal').attr('data-target', '#kycModal');
+                        $('#kycRowLink').off('click');
+                    }
+                } else {
+                    lastKycData = null;
+                    $("#kycStatus").html(
+                        "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
+                    );
+                    $("#kycPendingBar").remove();
+                }
+            },
+            error: function () {
+                lastKycData = null;
+                $("#kycStatus").html(
+                    "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
+                );
+                $("#kycPendingBar").remove();
+            }
+        });
+    }
+
+    fetchKYCStatus();
+
+    // Function to fetch active gateway info on page load
+    function fetchActiveGateway() {
+        $.ajax({
+            url: 'https://tnsadmin.twmresearchalert.com/api/activegateway.php',
+            type: 'GET',
+            success: function(response) {
+                console.log('Active Gateway Response:', response);
+                activeGatewayInfo = response && response.data && response.data.length > 0 ? response.data[0] : null;
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching active gateway:', error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        // ... existing code ...
+        fetchActiveGateway(); // Call the function on page load
+        // ... existing code ...
+    });
+
+    var activeGatewayInfo = null;
+
+  
+</script>
+
+<div id="kycStatus"></div>
+
+// Add KYC Modal HTML at the end of the file
+<div class="modal fade" id="kycModal" tabindex="-1" role="dialog" aria-labelledby="kycModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="kycModalLabel">KYC Details</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="kycModalBody">
+        <!-- Content will be injected by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Store KYC data globally for modal use
+var lastKycData = null;
+
+function fetchKYCStatus() {
+    var userid = localStorage.getItem("userid");
+    if (!userid) return;
+
+    $.ajax({
+        url: "https://tnsadmin.twmresearchalert.com/api/get_kyc.php?user_id=" + userid,
+        type: "GET",
+        success: function (response) {
+            if (typeof response === "string") {
+                response = JSON.parse(response);
+            }
+            if (response.status === "success") {
+                if (response.data && response.data.length > 0) {
+                    var kyc = response.data[0];
+                    lastKycData = kyc;
+                    $("#kycStatus").html(
+                        "<b>KYC Status:</b> " + kyc.approval_status.charAt(0).toUpperCase() + kyc.approval_status.slice(1)
+                    );
+                    $("#kycPendingBar").remove();
+                } else {
+                    lastKycData = null;
+                    $("#kycStatus").html(
+                        "<span style='color:red;'><b>You have not submitted your KYC. Please submit your KYC documents.</b></span>"
+                    );
+                    if (!$("#kycPendingBar").length) {
+                        var kycBar =
+                            '<div id="kycPendingBar" style="width:100%;background:#ff4d4d;color:white;text-align:center;padding:10px 0;z-index:9999;font-weight:bold;">' +
+                            '<span style="display:inline-block;width:12px;height:12px;background:#ff0000;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>' +
+                            'KYC Pending - Please submit your KYC documents to access all features.' +
+                            '<span id="closeKycBar" style="float:right;margin-right:20px;cursor:pointer;font-size:18px;font-weight:bold;">&times;</span>' +
+                            '</div>';
+                        $(".main_content_iner").before(kycBar);
+                        $(document).on('click', '#closeKycBar', function() {
+                            $('#kycPendingBar').remove();
+                        });
+                    }
+                }
+            } else {
+                lastKycData = null;
+                $("#kycStatus").html(
+                    "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
+                );
+                $("#kycPendingBar").remove();
+            }
+        },
+        error: function () {
+            lastKycData = null;
+            $("#kycStatus").html(
+                "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
+            );
+            $("#kycPendingBar").remove();
+        }
+    });
+}
+
+// Handler for KYC row click
+$(document).on('click', '[data-toggle="modal"][data-target="#kycdetails"], #kycdetails', function(e) {
+    e.preventDefault();
+    // Open our custom modal instead
+    $('#kycModal').modal('show');
+    populateKycModal();
+});
+
+function populateKycModal() {
+    var $body = $('#kycModalBody');
+    $body.html('<div style="text-align:center;">Loading...</div>');
+    // Defensive: ensure lastKycData is set only if KYC is submitted
+    var kyc = (lastKycData && lastKycData.aadhaar_image && lastKycData.pan_image) ? lastKycData : null;
+    if (!kyc) {
+        // Not submitted: show file inputs
+        $body.html(`
+            <form id="kycUploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="aadhaar_image">Aadhaar Image (max 2MB, images only)</label>
+                    <input type="file" class="form-control" id="aadhaar_image" name="aadhaar_image" accept="image/*" required />
+                </div>
+                <div class="form-group">
+                    <label for="pan_image">PAN Image (max 2MB, images only)</label>
+                    <input type="file" class="form-control" id="pan_image" name="pan_image" accept="image/*" required />
+                </div>
+                <button type="submit" class="btn btn-primary">Submit KYC</button>
+                <div id="kycUploadMsg" style="margin-top:10px;"></div>
+            </form>
+        `);
+        // Attach submit handler
+        $('#kycUploadForm').off('submit').on('submit', function(ev) {
+            ev.preventDefault();
+            var aadhaar = $('#aadhaar_image')[0].files[0];
+            var pan = $('#pan_image')[0].files[0];
+            var user_id = localStorage.getItem('userid');
+            if (!aadhaar || !pan) {
+                $('#kycUploadMsg').html('<span style="color:red;">Both files are required.</span>');
+                return;
+            }
+            if (aadhaar.size > 2*1024*1024 || pan.size > 2*1024*1024) {
+                $('#kycUploadMsg').html('<span style="color:red;">Each file must be less than 2MB.</span>');
+                return;
+            }
+            if (!aadhaar.type.startsWith('image/') || !pan.type.startsWith('image/')) {
+                $('#kycUploadMsg').html('<span style="color:red;">Only image files are allowed.</span>');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('aadhaar_image', aadhaar);
+            formData.append('pan_image', pan);
+            formData.append('user_id', user_id);
+            $('#kycUploadMsg').html('<span style="color:green;">Uploading...</span>');
+            $.ajax({
+                url: 'https://tnsadmin.twmresearchalert.com/api/submit_kyc.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (typeof response === 'string') {
+                        try { response = JSON.parse(response); } catch(e) {}
+                    }
+                    if (response.status === 'success') {
+                        $('#kycUploadMsg').html('<span style="color:green;">KYC images submitted successfully!</span>');
+                        setTimeout(function() {
+                            $('#kycModal').modal('hide');
+                            fetchKYCStatus();
+                        }, 1200);
+                    } else {
+                        $('#kycUploadMsg').html('<span style="color:red;">' + (response.message || 'Submission failed. Please try again.') + '</span>');
+                    }
+                },
+                error: function(xhr) {
+                    $('#kycUploadMsg').html('<span style="color:red;">Submission failed. Please try again.</span>');
+                }
+            });
+        });
+    } else {
+        // Submitted: show images and status only
+        var aadhaarImg = kyc.aadhaar_image ? `<img src="data:image/png;base64,${kyc.aadhaar_image}" alt="Aadhaar" style="max-width:100%;max-height:200px;display:block;margin:10px auto;" />` : '<span>No Aadhaar image</span>';
+        var panImg = kyc.pan_image ? `<img src="data:image/png;base64,${kyc.pan_image}" alt="PAN" style="max-width:100%;max-height:200px;display:block;margin:10px auto;" />` : '<span>No PAN image</span>';
+        $body.html(`
+            <div style="text-align:center;">
+                <div><b>Aadhaar Image:</b><br>${aadhaarImg}</div>
+                <div style="margin-top:15px;"><b>PAN Image:</b><br>${panImg}</div>
+                <div style="margin-top:20px;"><b>Approval Status:</b> <span style="color:${kyc.approval_status==='approved'?'green':'orange'};text-transform:capitalize;">${kyc.approval_status}</span></div>
+            </div>
+        `);
+    }
+}
+</script>
+<source> 
+```
+</source>

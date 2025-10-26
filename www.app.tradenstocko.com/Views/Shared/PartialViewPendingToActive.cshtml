@@ -1,0 +1,426 @@
+﻿
+
+
+<div class="main_content_iner ">
+    <div class="container-fluid p-0 ">
+        <div class="row ">
+            <div class="col-lg-12">
+                <div class="white_card card_height_100 mb_30 QA_section">
+                    <div class="white_card_header">
+                        <div class="box_header m-0">
+                            <div class="main-title">
+                                User Balance: <span id="partialuserbalance">0</span>
+                                <br />
+                                <h3 class="m-0" style="font-size:20px;color:black">Pending Orders </h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="white_card_body">
+                        <div class="row">
+                            <div class="col-lg-6" style="border-top: solid 1px #2f8aa2; border-bottom: solid 1px #2f8aa2; background-color: white; border-right: solid 1px #2f8aa2; border-left: solid 1px #2f8aa2; ">
+
+                                <h4 style="text-align: center; color: black; padding: 5px; margin-top: 2px; border-bottom: solid 0px #2f8aa2;">Active Trades</h4>
+                                <div id="partialactiveorder" style="background-color:white;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/Content/js/jquery-3.4.1.min.js"></script>
+<script src="~/Content/js/sweetalert2.all.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        getuserbalance1();
+        changeactivestatus();
+        setInterval(changeactivestatus, 1000);
+        getactiveorder1();
+    });
+    function getdeviceid() {
+        let machineId = localStorage.getItem('MachineId');
+        if (!machineId) {
+            machineId = crypto.randomUUID();
+            localStorage.setItem('MachineId', machineId);
+        }
+        return machineId;
+    }
+
+
+
+    function checkscreensize() {
+        return localStorage.getItem("isdesktopcreen");
+    }
+
+    function changeactivestatus() {
+        var pdeviceid = localStorage.getItem("pdeviceid");
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/changeactivestatus/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+                if (!pdeviceid.includes(response))
+                {
+                    localStorage.removeItem("userid");
+                    location.href = "/login/index";
+                }
+            }
+        });
+    }
+
+
+    function getuserbalance1() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getledgerbalance/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                response = parseFloat(response).toFixed(2);
+                $("#partialuserbalance").html(response);
+            }
+        });
+    }
+
+    var totalmarginused = 0;
+    var ordid = [];
+    function getactiveorder1() {
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getorders/?orderstatus=Pendingonly&uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var pendingorderdata = "";
+                var tokens = "";
+                $.each(data, function (i, item) {
+                    var OrderId = data[i].Id;
+                    ordid.push(OrderId);
+                    var OrderCategory = data[i].OrderCategory;
+                    var TokenNo = data[i].TokenNo;
+                    tokens += TokenNo + ",";
+                    var OrderType = data[i].OrderType;
+                    var lot = data[i].Lot;
+                    var selectedlotsize = data[i].selectedlotsize;
+                    var OrderDate = data[i].OrderDate;
+                    var OrderTime = data[i].OrderTime;
+                    var ScriptName = data[i].ScriptName;
+                    var StopLossOrder = data[i].isstoplossorder;
+                    var ActionType = data[i].ActionType;
+                    var SymbolType = data[i].SymbolType;
+                    var OrderPrice = data[i].OrderPrice;
+                    OrderPrice = parseFloat(OrderPrice).toFixed(2);
+                    //let op = OrderPrice;
+                    //OrderPrice = op.tofixed(2);
+                    var MarginUsed = data[i].MarginUsed;
+                    totalmarginused += Math.round(MarginUsed);
+                    var HoldingMarginReq = data[i].HoldingMarginReq;
+                    var OrderStatus = data[i].OrderStatus;
+                    pendingorderdata += "<div class='col-lg-12' style='margin-top:5px;border-top:1px dashed gray;border-radius:4px;padding:5px;background-color:white;'>";
+                    pendingorderdata += "<table width='100%'>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left'><span  style=''><b id='partialscriptmame" + OrderId + TokenNo + "'>" + ScriptName + "</b></span></td>";
+                    pendingorderdata += "<td align='right'><span style='color:red' id='partialordercat" + OrderId + TokenNo + "'><b>" + OrderCategory + "</b></span>&nbsp;&nbsp;&nbsp;<span  style='color:red'><b>" + lot + " @@ " + OrderPrice + "</b></span><span style='display:none'  id='partialoldpr" + OrderId + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='partialsellotsize" + OrderId + TokenNo + "'>" +selectedlotsize + "</span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2'><span id='partialOrderType" + OrderId + TokenNo + "' style='display:none'>" + OrderType + "</span><span  style=''><b>Margin :" + MarginUsed + "</b></span></td> <td colspan='2' align='right'>StopLoss :<span style=''><b id='partialStopLossOrder" + OrderId + TokenNo + "'>" + StopLossOrder + "</b></span><span style='display:none'><b id='partialbrokerageperrow" + OrderId + TokenNo + "'>0</b></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td  colspan='2' align='left'><span id='partialorderid" + OrderId + TokenNo + "'>" + OrderId + "</span></td>";
+                    pendingorderdata += "<td  colspan='2' align='right'>CMP :<span id='partialbid" + OrderId + TokenNo + "' ><b>0</b></span><span id='partialsymboltype" + OrderId + TokenNo + "' style='display:none'>" + SymbolType + "</span><span id='partiallotqty" + OrderId + TokenNo + "' style='display:none'>" + lot + "</span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "</table>";
+                    pendingorderdata += "</div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'><span style='background-color:lightgreen;padding:10px'>" + OrderCategory + "</span><span style='background-color:orangered;padding:10px;'>" + OrderType + "</span></div><div  align='right'>" + OrderDate + " " + OrderTime + "</div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'><b>" + ScriptName + "</b></div><div align='right'>" + OrderPrice + "</div>";
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'>" + ActionType + "</div><div align='right'><span style='padding:10px;border-radius:10px;background-color:red;color:white'>Close Now</span></div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'>Margin Used :" + MarginUsed + "</div><div align='right'>HoldingMarginReq : " + HoldingMarginReq + "</div>";
+                    //pendingorderdata += "</div>";
+
+                });
+                $("#partialactiveorder").html(pendingorderdata);
+                tokens = tokens.slice(0, -1);
+                WebSocketTest1(tokens);
+            }
+        });
+    }
+
+    var uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    //var uri = "wss://103.220.223.27/api/webapiwebsoc";
+    websocket = new WebSocket(uri);
+    function readvalues1() {
+
+        //$.ajax({
+        //    url: "http://103.220.223.27/api/getdata?tokenno=61744647",
+        //    type: "get",
+        //    success: function (response) {
+        //        console.log("ipx",response);
+        //    }
+        //});
+        var ws;
+
+        //Initialize socket
+
+        if (websocket.readyState == WebSocket.CLOSED) {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        else {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        //Open socket and send message
+
+        //Socket error handler
+        websocket.onerror = function (event) {
+            $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+        };
+
+        var totalactivepl = 0;
+        var totalbrokerage = 0;
+        var lotokn = localStorage.getItem("tkn");
+        //Socket message handler  +
+        websocket.onmessage = function (event) {
+            var datax = JSON.parse(event.data);
+            var Bid = datax.bid;
+            var scriptname = datax.instrument_token;
+            var Ask = datax.ask;
+            var cmp = 0;
+            var newamtdeff = 0;
+
+            var isoktime = true;
+            var _starttime = "09:00:00";
+            var _endttime = "23:59:00";
+            var today = new Date();
+            if (today.getDay() == 6 || today.getDay() == 0) {
+                isoktime = false;
+            }
+            else {
+                var date = new Date();
+                var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                //current
+                var currenttime_sec = ctime.split(':');
+                var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                //_starttime
+                var Startcurrenttime_sec = _starttime.split(':');
+                var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+                //_endtime
+                var Endcurrenttime_sec = _endttime.split(':');
+                var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                    isoktime = true;
+                }
+                else {
+                    isoktime = false;
+                }
+            }
+
+
+            for (var ri = 0; ri < ordid.length; ri++)
+            {
+
+                var orderindx = ordid[ri];
+                console.log("orderindx", orderindx);
+                var ordercat = $("#partialordercat" + orderindx + scriptname).html()+"";//partialordercat10591661574151
+                ordercat = ordercat.replace("<b>", "");
+                ordercat = ordercat.replace("</b>", "");
+                console.log("ordcat", ordercat);
+                if (ordercat != undefined || ordercat != "undefined") {
+                    if (ordercat == "SELL") {
+                        cmp = Bid;
+                    }
+                    else {
+                        cmp = Ask;
+                    }
+                    $("#partialbid" + orderindx + scriptname).html(cmp);
+                }
+                //if (ri == 0) {
+                //    websocket.close();
+                //}
+                //if (ri == ordid.length) {
+                //    websocket.onopen = function () {
+                //        websocket.send(true);
+                //        console.log("open");
+                //    };
+                //}
+                var orderprice = $("#partialoldpr" + orderindx + scriptname).html();
+                var partialsymboltype = $("#partialsymboltype" + orderindx + scriptname).html();
+                var partiallotqty = $("#partiallotqty" + orderindx + scriptname).html();
+                var sellotsize = $("#partialsellotsize" + orderindx + scriptname).html();
+                var partialStopLossOrder = $("#partialStopLossOrder" + orderindx + scriptname).html();
+                var orderid = $("#partialorderid" + orderindx + scriptname).html();
+                var userbalance = $("#partialuserbalance").html();
+                var OrderDate = new Date();
+                var uid = localStorage.getItem("userid");
+                var partialscriptmame = $("#partialscriptmame" + orderindx + scriptname).html();
+                var partialOrderType = $("#partialOrderType" + orderindx + scriptname).html()
+                var usrnam = localStorage.getItem("ClientName");
+                //Check For Pending To Active
+                if (isoktime == true) {
+                    if (Bid != 0 && Ask != 0 && userbalance != "0") {
+                        if (ordercat == "SELL") {
+                            if (partialStopLossOrder == "true") {
+                                if (parseFloat(Bid) <= parseFloat(orderprice)) {
+                                    var orddata =
+                                    {
+                                        OrderDate: OrderDate,
+                                        UserId: uid,
+                                        OrderCategory: ordercat,
+                                        ScriptName: partialscriptmame,
+                                        TokenNo: scriptname,
+                                        OrderPrice: orderprice,
+                                        Lot: partiallotqty,
+                                        SymbolType: partialsymboltype,
+                                        selectedlotsize: sellotsize,
+                                        UserName: usrnam,
+                                        OrderType: partialOrderType,
+                                        OrderStatus: "Pending",
+                                        Id: orderid
+                                    }
+                                    websocket.close();
+                                    var userid = localStorage.getItem("userid");
+                                    $.ajax({
+                                        url: "/api/tradesettlementpost_pendingtoactive",
+                                        type: "post",
+                                        data: orddata,
+                                        success: function (response) {
+                                            if (checkscreensize() == "true") {
+                                                window.parent.location.href = "/home/tradedetails";
+                                            } else {
+                                                window.parent.location.href = "/home/tradedetailsapp";
+                                            }
+                                          
+                                        }
+                                    });
+                                }
+                            }
+                            else {
+
+                                if (parseFloat(Bid) >= parseFloat(orderprice)) {
+                                    var orddata = {
+                                        OrderDate: OrderDate,
+                                        UserId: uid,
+                                        OrderCategory: ordercat,
+                                        ScriptName: partialscriptmame,
+                                        TokenNo: scriptname,
+                                        OrderPrice: orderprice,
+                                        Lot: partiallotqty,
+                                        SymbolType: partialsymboltype,
+                                        selectedlotsize: sellotsize,
+                                        UserName: usrnam,
+                                        OrderType: partialOrderType,
+                                        OrderStatus: "Pending",
+                                        Id: orderid
+                                    }
+                                    websocket.close();
+                                    var userid = localStorage.getItem("userid");
+                                    $.ajax({
+                                        url: "/api/tradesettlementpost_pendingtoactive",
+                                        type: "post",
+                                        data: orddata,
+                                        success: function (response) {
+                                            if (checkscreensize() == "true") {
+                                                window.parent.location.href = "/home/tradedetails";
+                                            } else {
+                                                window.parent.location.href = "/home/tradedetailsapp";
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        else {
+                            if (partialStopLossOrder == "true") {
+                                if (parseFloat(Ask) >= parseFloat(orderprice)) {
+                                    var orddata = {
+                                        OrderDate: OrderDate,
+                                        UserId: uid,
+                                        OrderCategory: ordercat,
+                                        ScriptName: partialscriptmame,
+                                        TokenNo: scriptname,
+                                        OrderPrice: orderprice,
+                                        Lot: partiallotqty,
+                                        SymbolType: partialsymboltype,
+                                        selectedlotsize: sellotsize,
+                                        UserName: usrnam,
+                                        OrderType: partialOrderType,
+                                        OrderStatus: "Pending",
+                                        Id: orderid
+                                    }
+                                    websocket.close();
+                                    var userid = localStorage.getItem("userid");
+                                    $.ajax({
+                                        url: "/api/tradesettlementpost_pendingtoactive",
+                                        type: "post",
+                                        data: orddata,
+                                        success: function (response) {
+                                            if (checkscreensize() == "true") {
+                                                window.parent.location.href = "/home/tradedetails";
+                                            } else {
+                                                window.parent.location.href = "/home/tradedetailsapp";
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                            else {
+                                if (parseFloat(Ask) <= parseFloat(orderprice)) {
+                                    var orddata = {
+                                        OrderDate: OrderDate,
+                                        UserId: uid,
+                                        OrderCategory: ordercat,
+                                        ScriptName: partialscriptmame,
+                                        TokenNo: scriptname,
+                                        OrderPrice: orderprice,
+                                        Lot: partiallotqty,
+                                        SymbolType: partialsymboltype,
+                                        selectedlotsize: sellotsize,
+                                        UserName: usrnam,
+                                        OrderType: partialOrderType,
+                                        OrderStatus: "Pending",
+                                        Id: orderid
+                                    }
+                                    websocket.close();
+                                    var userid = localStorage.getItem("userid");
+                                    $.ajax({
+                                        url: "/api/tradesettlementpost_pendingtoactive",
+                                        type: "post",
+                                        data: orddata,
+                                        success: function (response) {
+                                            if (checkscreensize() == "true") {
+                                                window.parent.location.href = "/home/tradedetails";
+                                            } else {
+                                                window.parent.location.href = "/home/tradedetailsapp";
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        };
+    }
+
+    function WebSocketTest1(token) {
+        localStorage.setItem("tkn", token);
+        readvalues1();
+          }
+   
+</script>

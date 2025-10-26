@@ -1,0 +1,685 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <title>Registration </title>
+
+    <link rel="icon" href="~/Content/img/crazy-logo.jpg" type="image/png" />
+    <!-- themefy CSS -->
+    <link rel="stylesheet" href="~/Content/vendors/themefy_icon/themify-icons.css" />
+    <link rel="stylesheet" href="~/Content/vendors/font_awesome/css/all.min.css" />
+    <!-- datatable CSS -->
+    <!-- scrollabe  -->
+    <link rel="stylesheet" href="~/Content/vendors/scroll/scrollable.css" />
+    <!-- menu css  -->
+    <link rel="stylesheet" href="~/Content/css/metisMenu.css" />
+    <!-- style CSS -->
+    <link rel="stylesheet" href="~/Content/css/plugins.css" />
+    <!-- Media CSS -->
+    <link rel="stylesheet" href="~/Content/css/media.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-login {
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .contactfrm {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .registration-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid #333333;
+            max-width: 500px;
+            width: 100%;
+            margin: 20px;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-container img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 16px;
+        }
+
+        h3 {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            color: #888888;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+
+        .form-control {
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 12px;
+            color: #ffffff !important;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            outline: none;
+            margin-bottom: 16px;
+            padding: 16px 20px;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            background: #2a2a2a;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #888888;
+            font-weight: 400;
+        }
+
+        .login-btn {
+            background: #22c55e;
+            border: none;
+            border-radius: 12px;
+            color: #ffffff !important;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: none;
+            letter-spacing: 0;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+
+        .login-btn:hover {
+            background: #16a34a;
+        }
+
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+
+        .classhide {
+            display: none;
+            visibility: hidden;
+        }
+
+        .classhow {
+            display: inline;
+            visibility: visible;
+        }
+
+        .trading-accent {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .trading-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .trading-badge::before {
+            content: '✓';
+            width: 18px;
+            height: 18px;
+            background: rgba(34, 197, 94, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #22c55e;
+            font-weight: 600;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .spinner-border {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            vertical-align: text-bottom;
+            border: 0.2em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+
+        @@keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner-border-sm {
+            width: 0.875rem;
+            height: 0.875rem;
+            border-width: 0.15em;
+        }
+
+        @@media (max-width: 768px) {
+            .registration-card {
+                padding: 24px 20px;
+                margin: 16px;
+                border-radius: 16px;
+                max-width: 400px;
+            }
+
+            h3 {
+                font-size: 24px;
+            }
+
+            .logo-container img {
+                width: 50px;
+                height: 50px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            .form-control {
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+
+            .login-btn {
+                padding: 14px 18px;
+                font-size: 15px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .registration-card {
+                padding: 20px 16px;
+                margin: 12px;
+                max-width: 340px;
+            }
+
+            h3 {
+                font-size: 22px;
+            }
+
+            .logo-container img {
+                width: 45px;
+                height: 45px;
+            }
+
+            .subtitle {
+                font-size: 13px;
+            }
+
+            .form-control {
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+
+            .login-btn {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body class="crm_body_bg">
+
+    <section class="main-login contact-us">
+        <!--/ menu  -->
+        <div class="container">
+            <div class="registration-card">
+                <form method="post" class="" id="contactfrm" name="contactfrm"  action="/login/registrationAsync/">
+                    <div class="logo-container">
+                        <img src="https://www.tradenstocko.com/Content/img/logo.png" alt="Tradebulls Logo">
+                        <h3>Sign up</h3>
+                        <p class="subtitle">Let's get your account set up</p>
+                    </div>
+
+                    <!-- Step 1: Mobile Number -->
+                    <div id="div1beforeotp" style="display:block;">
+                        <div class="form-group">
+                            <input type="number" class="form-control" placeholder="Enter Mobile Number" id="txtbeforeotp" maxlength="10" name="name" autocomplete="off" autofocus required />
+                        </div>
+                        <div class="form-group">
+                            <a href="#" id="lgn" class="login-btn" onclick="sendotp()">Send OTP</a>
+                        </div>
+                        <div class="form-group">
+                            <a href="/login/index" class="login-btn" style="background-color:#666666;">Go Back To Login</a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: OTP Verification -->
+                    <div id="div3afterotp" style="display: none;">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="txtbeforeotpenter" name="name" autocomplete="off" autofocus required placeholder="Enter OTP" />
+                        </div>
+                        <div class="form-group">
+                            <a href="#" class="login-btn" onclick="verifyotp()" id="btnverbtn">Verify & Continue</a>
+                        </div>
+                        <div class="form-group">
+                            <a href="/login/registration" class="login-btn" style="background-color:#666666;">Send OTP Again</a>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: User Registration Form -->
+                    <div id="div12userreg" style="display:none;">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="First Name" id="txtfirstname" name="txtfirstname" autocomplete="off" required />
+                            <input type="hidden" class="form-control" id="txtdomainname" name="txtdomainname" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Last Name" id="txtlastname" name="txtlastname" autocomplete="off" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input readonly type="text" class="form-control" placeholder="Mobile Number" id="txtmob" name="txtmob" autocomplete="off" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="email" class="form-control" placeholder="Email Address" id="txtemail" name="txtemail" autocomplete="off" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Username" maxlength="10" id="txtusernm" onblur="txtchange()" name="txtusernm" autocomplete="off" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="password" class="form-control" placeholder="Password" id="txtupassword" name="txtupassword" autocomplete="off" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Aadhar Number" maxlength="12" id="txtaadhar" name="txtaadhar" autocomplete="off" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="PAN Number" maxlength="10" id="txtpanno" name="txtpanno" autocomplete="off" required style="text-transform: uppercase;" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="City" id="txtcity" name="txtcity" autocomplete="off" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Address" id="txtaddress" name="txtaddress" autocomplete="off" required />
+                        </div>
+                        
+                        <div class="form-group">
+                            <a onclick="save()" id="btnsubmituser" class="login-btn">Submit</a>
+                        </div>
+                        
+                        <div class="form-group">
+                            <a href="/login/index" class="login-btn" style="background-color:#666666;" onclick="goback()">Go Back To Login</a>
+                        </div>
+                    </div>
+            </form>
+        </div>
+        <!-- footer part -->
+
+    </section>
+    <!-- main content part end -->
+    <!-- ### CHAT_MESSAGE_BOX   ### -->
+    <!--/### CHAT_MESSAGE_BOX  ### -->
+    <div id="back-top" style="display: none;">
+        <a title="Go to Top" href="#">
+            <i class="ti-angle-up"></i>
+        </a>
+    </div>
+    <!-- footer  -->
+    <!-- jquery slim -->
+    <script src="~/Content/js/jquery-3.4.1.min.js"></script>
+    <!-- popper js -->
+    <script src="~/Content/js/popper.min.js"></script>
+    <!-- bootstarp js -->
+    <script src="~/Content/js/bootstrap.min.js"></script>
+    <!-- sidebar menu  -->
+    <script src="~/Content/js/metisMenu.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
+
+    <!-- scrollabe  -->
+    <script src="~/Content/vendors/scroll/perfect-scrollbar.min.js"></script>
+    <script src="~/Content/vendors/scroll/scrollable-custom.js"></script>
+
+    <!-- custom js -->
+    <script src="~/Content/js/custom.js"></script>
+
+    <script>
+    function generateRandomFourDigitNumber() {
+    return Math.floor(1000 + Math.random() * 9000);
+}
+$(document).ready(function () {
+    var url = window.location.hostname;
+    $('#txtemail').on('blur', function () {
+        const email = $(this).val();
+        const regex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+
+        if (!regex.test(email)) {
+            swal("Invalid Email", "Please enter a valid email address", "error");
+            $(this).css('border-color', 'red');
+        } else {
+            $(this).css('border-color', 'green');
+        }
+    });
+
+    $('#txtaadhar').on('blur', function () {
+        const aadhaar = $(this).val();
+        const regex = /^\d{12}$/;
+
+        if (!regex.test(aadhaar)) {
+            swal("Invalid Aadhaar Number", "Please enter a valid 12-digit Aadhaar number.", "error");
+            $(this).css('border-color', 'red');
+        } else {
+            $(this).css('border-color', 'green');
+        }
+    });
+
+    $('#txtaadhar').on('blur', function () {
+        const aadhaar = $(this).val();
+        const regex = /^\d{12}$/;
+
+        if (!regex.test(aadhaar)) {
+            swal("Invalid Aadhaar Number", "Please enter a valid 12-digit Aadhaar number.", "error");
+            $(this).css('border-color', 'red');
+        } else {
+            $(this).css('border-color', 'green');
+        }
+    });
+
+    $('#txtpanno').on('blur', function () {
+        const pan = $(this).val().toUpperCase();
+        const regex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+
+        if (!regex.test(pan)) {
+            swal("Invalid PAN Number", "Please enter a valid 10-character PAN number (e.g., ABCDE1234F).", "error");
+            $(this).css('border-color', 'red');
+        } else {
+            $(this).css('border-color', 'green');
+        }
+    });
+
+    $('#txtcity').on('blur', function () {
+        const city = $(this).val();
+        const regex = /^[A-Za-z\s-'.]+$/;
+
+        if (!regex.test(city) || city.trim() === "") {
+            swal("Invalid City Name", "Please enter a valid city name.", "error");
+            $(this).css('border-color', 'red');
+        } else {
+            $(this).css('border-color', 'green');
+        }
+    });
+
+    $('#txtfirstname').on('blur', function () {
+        const city = $(this).val();
+        const regex = /^[A-Za-z\s-'.]+$/;
+
+        if (!regex.test(city) || city.trim() === "") {
+            swal("Invalid First Name", "Please enter a valid Detail.", "error");
+            $(this).css('border-color', 'red');
+        } else {
+            $(this).css('border-color', 'green');
+        }
+    });
+    $('#txtlastname').on('blur', function () {
+        const city = $(this).val();
+        const regex = /^[A-Za-z\s-'.]+$/;
+
+        if (!regex.test(city) || city.trim() === "") {
+            swal("Invalid Last Name", "Please enter a valid Detail.", "error");
+            $(this).css('border-color', 'red');
+        } else {
+            $(this).css('border-color', 'green');
+        }
+    });
+
+});
+
+function txtchange() {
+    var txtvalu = $("#txtusernm").val();
+    var prefix = localStorage.getItem("prefix");
+
+    $.ajax({
+        url: "/api/getusercount/?userid=" + prefix + txtvalu,
+        type: "get",
+        success: function (response) {
+            if (response == "0") {
+            }
+            else {
+                $("#txtusernm").val("");
+                swal("Error", "UserName is already exist", "error");
+                return;
+            }
+        }
+    });
+}
+
+function validate(evt) {
+    var theEvent = evt || window.event;
+
+    if (theEvent.type === 'paste') {
+        key = event.clipboardData.getData('text/plain');
+    } else {
+        var key = theEvent.keyCode || theEvent.which;
+        key = String.fromCharCode(key);
+    }
+    var regex = /[0-9]|\./;
+    if (!regex.test(key)) {
+        theEvent.returnValue = false;
+        if (theEvent.preventDefault) theEvent.preventDefault();
+    }
+}
+
+function goback() {
+    location.href = "/login/index";
+}
+
+function sendotp() {
+    var txtbeforeotp = $("#txtbeforeotp").val();
+    const regex = /^(?:[6789]\d{9})$/;
+    if (!regex.test(txtbeforeotp)) {
+        swal("Invalid Mobile Number", "Please enter a valid Indian mobile number.", "error");
+        $("#txtbeforeotp").css('border-color', 'red');
+        return;
+    } else {
+        $("#txtbeforeotp").css('border-color', 'green');
+    }
+
+    if (txtbeforeotp != "") {
+        $("#lgn").html(
+            `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending OTP...`
+        );
+        $.ajax({
+            url: `https://cpaas.messagecentral.com/verification/v3/send?countryCode=91&customerId=C-769541B7B67C491&flowType=SMS&mobileNumber=${txtbeforeotp}`,
+            type: "post",
+            headers: {
+                "authToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTc2OTU0MUI3QjY3QzQ5MSIsImlhdCI6MTc1MTUyODcxMiwiZXhwIjoxOTA5MjA4NzEyfQ.XFKN0L0h2hHkHvQNDibseOXhsI934FQyo2IKDKomg9TFOqwMOFccJLKOjwyBs4c0bOC_xBmxFNAyew5mSqmq9Q"
+            },
+            success: function (response) {
+                if (response.responseCode === 200 && response.message === "SUCCESS") {
+                    $("#lgn").html(`Send OTP`);
+                    localStorage.setItem("trnID", response.data.verificationId);
+                    swal("Success", "OTP Sent Successfully.", "success");
+                    $("#div1beforeotp").hide();
+                    $("#div2beforeotp").hide();
+                    $("#div3afterotp").show();
+                    $("#div4afterotp").show();
+                } else {
+                    $("#lgn").html(`Send OTP`);
+                    swal("Error", "Failed to send OTP.", "error");
+                }
+            },
+            error: function () {
+                $("#lgn").html(`Send OTP`);
+                swal("Error", "Server error. Please try again later.", "error");
+            }
+        });
+    } else {
+        swal("Error", "Please Enter Mobile No.", "error");
+    }
+}
+
+function verifyotp() {
+    var otpCode = $("#txtbeforeotpenter").val();
+    var verificationId = localStorage.getItem("trnID");
+
+    if (!otpCode || !verificationId) {
+        swal("Error", "Missing OTP or Verification ID.", "error");
+        return;
+    }
+
+    $("#btnverbtn").html(
+        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verifying OTP...`
+    );
+
+    $.ajax({
+        url: `https://cpaas.messagecentral.com/verification/v3/validateOtp?countryCode=91&mobileNumber=${$("#txtbeforeotp").val()}&verificationId=${verificationId}&customerId=C-769541B7B67C491&code=${otpCode}`,
+        method: 'get',
+        headers: {
+            "authToken": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTc2OTU0MUI3QjY3QzQ5MSIsImlhdCI6MTc1MTUyODcxMiwiZXhwIjoxOTA5MjA4NzEyfQ.XFKN0L0h2hHkHvQNDibseOXhsI934FQyo2IKDKomg9TFOqwMOFccJLKOjwyBs4c0bOC_xBmxFNAyew5mSqmq9Q"
+        },
+        success: function (response) {
+            if (response.responseCode === 200 && response.data.verificationStatus === "VERIFICATION_COMPLETED") {
+                $("#btnverbtn").html(`Verify & Continue`);
+                $("#txtmob").val($("#txtbeforeotp").val());
+                $("#div3afterotp").css("display", "none");
+                $("#div4afterotp").css("display", "none");
+                for (i = 1; i < 15; i++) {
+                    $("#div" + i + "userreg").css("display", "inline");
+                }
+                $("#tradingAccent").css("display", "flex");
+            } else {
+                $("#btnverbtn").html(`Verify & Continue`);
+                swal("Error", "OTP verification failed.", "error");
+            }
+        },
+        error: function (xhr) {
+            $("#btnverbtn").html(`Verify & Continue`);
+            swal("Error", "OTP verification failed: " + xhr.responseText, "error");
+        }
+    });
+}
+
+function save() {
+    var txtfirstname = $("#txtfirstname").val();
+    var txtlastname = $("#txtlastname").val();
+    var txtmob = $("#txtmob").val();
+    var txtemail = $("#txtemail").val();
+    var txtusernm = $("#txtusernm").val().trim();
+    var txtaadhar = $("#txtaadhar").val();
+    var txtpanno = $("#txtpanno").val();
+    var txtcity = $("#txtcity").val();
+    var password = $("#txtupassword").val();
+    var txtaddress = $("#txtaddress").val();
+    var txtdomainname = $("#txtdomainname").val().trim();
+    $('#btnsubmituser').prop('disabled', true);
+    $("#btnsubmituser").html(
+        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving User...`
+    );
+    if ((txtmob.trim() !== "") && (txtemail.trim() !== "") && (password.trim() !== "") && (txtusernm.trim() !== "")) {
+        var datasd = {
+            "txtfirstname": txtfirstname,
+            "txtlastname": txtlastname,
+            "txtmob": txtmob,
+            "txtemail": txtemail,
+            "txtusernm": txtusernm,
+            "txtaadhar": txtaadhar,
+            "txtupassword": password,
+            "txtpanno": txtpanno,
+            "txtcity": txtcity,
+            "txtaddress": txtaddress,
+            "txtdomainname": txtdomainname
+        };
+        $.ajax({
+            url: "/api/Register/",
+            type: "post",
+            data: datasd,
+            success: function (response) {
+                if (response === "true") {
+                    swal({
+                        title: "User Details Successfully Submited.",
+                        text: "Thank you for connecting with us! We will contact you soon.",
+                        type: "success"
+                    }).then(function () {
+                        location.href = "/login/index/";
+                    });
+                } else {
+                    swal("Error", response, "error");
+                }
+            }
+        });
+    } else {
+        swal("Error", "Please Enter Required Details.");
+    }
+}
+
+    </script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,466 @@
+﻿
+
+@{
+    ViewBag.Title = "Portfolio";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="main_content_iner ">
+    <div class="container-fluid">
+        <div class="white_card card_height_100 mb_30 QA_section minus-mx-15 acount-src">
+            <div class="white_card_header mb-0">
+                <div class="box_header m-0">
+                    <div class="main-title">
+                        <h3 class="m-0">Portfolio</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="port-foilio">
+
+                <div class="tile" id="tile-1">
+
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs nav-justified" role="tablist">
+                        <div class="slider"></div>
+
+                        <li class="nav-item">
+                            <a class="nav-link active" id="profile-tab" data-toggle="tab" href="#Activetab" role="tab" aria-controls="profile" aria-selected="false">Active</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="contact-tab" data-toggle="tab" href="#Closedtab" role="tab" aria-controls="contact" aria-selected="false">Closed</a>
+                        </li>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+
+                        <div class="tab-pane active fadein" id="Activetab" role="tabpanel" aria-labelledby="profile-tab">
+                            <div class="table-responsive disp1">
+                                <div class="container-fluid">
+                                    <div class="row">
+
+                                        <div class="col-lg-12">
+                                            <div class="bg-white p-10">
+                                                <table class="table lager-table" cellpadding="5">
+                                                    <tr>
+                                                        <td align="center">
+                                                            Ledger Balance <strong id="userbalance">0</strong>
+                                                        </td>
+                                                        <td align="center">
+                                                            Margin Available <strong id="marginavl">0</strong>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td align="center">
+                                                            Active P/L <strong id="activepl">0</strong>
+                                                        </td>
+                                                        <td align="center">
+                                                            M2M (Equity) <strong id="m2m">0</strong>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+
+                                            <div id="activeorder" class="active-order">
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade closedtab" id="Closedtab" role="tabpanel" aria-labelledby="contact-tab">
+                            <div class="table-responsive disp1">
+                                <div class="col-md-12">
+                                    <div class="bg-white p-10">
+                                        <table class="table lager-table" cellpadding="5">
+                                            <tbody>
+                                                <tr>
+                                                    <td align="center">
+                                                        Ledger Balance <strong id="closeuserbalance">0</strong>
+                                                    </td>
+                                                    <td align="center">
+                                                        Net Profit/Loss <strong id="closenetpl">0</strong>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="closedorder" class="container-fluid active-order">
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $("#tile-1 .nav-tabs a").click(function () {
+        var position = $(this).parent().position();
+        var width = $(this).parent().width();
+        $("#tile-1 .slider").css({ "left": + position.left, "width": width });
+    });
+    var actWidth = $("#tile-1 .nav-tabs").find(".active").parent("li").width();
+    var actPosition = $("#tile-1 .nav-tabs .active").position();
+    $("#tile-1 .slider").css({ "left": + actPosition.left, "width": actWidth });
+
+
+    $(window).on('load', function () {
+        getuserbalance();
+        getactiveorder();
+        getclosedorder();
+        //WebSocketTest();
+    });
+
+
+    function getuserbalance() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getledgerbalance/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                response = parseInt(response);
+                $("#userbalance").html(response);
+                $("#closeuserbalance").html(response);
+
+                var activepl = $("#activepl").html();
+                var newm2m = Math.round($("#userbalance").html()) - Math.round(activepl);
+                var creditlimit = localStorage.getItem("CreditLimit");
+                var m2m = Math.round($("#userbalance").html()) + 0 + Math.round(creditlimit);
+                $("#m2m").html(parseInt(m2m));
+                $("#marginavl").html(parseInt(m2m) - 0);
+                //  $("#m2m").html(newm2m);
+                $("#userbalancemodel").html(response);
+            }
+        });
+
+        $.ajax({
+            url: "/api/getnetpl/?UserId=" + userid,
+            type: "post",
+            success: function (response) {
+                var data = JSON.parse(response);
+                $("#closenetpl").html(parseInt(data.P_L));
+            }
+        });
+    }
+
+    var totalmarginused = 0;
+    function getactiveorder() {
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getconsolidatedtrade/?uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+
+                if (data.length != 0) {
+                    var pendingorderdata = "";
+                    var tokens = "";
+                    $.each(data, function (i, item) {
+                        var OrderId = data[i].Id;
+                        var OrderCategory = data[i].OrderCategory;
+                        var TokenNo = data[i].TokenNo;
+                        tokens += TokenNo + ",";
+                        var OrderType = data[i].OrderType;
+                        var lot = data[i].Lot;
+                        var selectedlotsize = data[i].selectedlotsize;
+                        var OrderDate = data[i].OrderDate;
+                        var OrderTime = data[i].OrderTime;
+                        var cmp = data[i].cmp;
+                        var ScriptName = data[i].ScriptName;
+                        var screxp = ScriptName.split('_');
+                        ScriptName = screxp[0];
+                        var newexp = screxp[1];
+                        var ActionType = data[i].ActionType;
+                        var OrderPrice = data[i].OrderPrice;
+                        var SymbolType = data[i].SymbolType
+                       // OrderPrice = parseFloat(OrderPrice).toFixed(2);
+                        //let op = OrderPrice;
+                        //OrderPrice = op.tofixed(2);
+                        var MarginUsed = data[i].MarginUsed;
+                        totalmarginused += Math.round(MarginUsed);
+                        var HoldingMarginReq = data[i].HoldingMarginReq;
+                        var OrderStatus = data[i].OrderStatus;
+                        pendingorderdata += "<div class='act-box'>";
+                        pendingorderdata += "<table width='100%'>";
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2' align='left'><span class='scrip-name'><strong>" + ScriptName + "</strong></span></td>";
+                        if (OrderCategory == "SELL")
+                        {
+                            pendingorderdata += "<td align='right' valign='top'><b><span id='ordercat" + TokenNo + "' class='color-bluest m-red-m'>" + OrderCategory + "</span>&nbsp;&nbsp;&nbsp;<span></b><strong class='color-bluest m-red-m'>" + lot + " @@ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                        }
+                        else
+                        {
+                            pendingorderdata += "<td align='right'  valign='top'><b><span id='ordercat" + TokenNo + "'class='color-bluest m-green-m'>" + OrderCategory + "</span>&nbsp;&nbsp;&nbsp;<span></b><strong class='color-bluest m-green-m'>" + lot + " @@ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                        }
+
+                        pendingorderdata += "</tr>";
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2'>" + newexp+"</td> <td colspan='2' align='right'><span style=''><strong class='color-bluest ' id='diffpric" + TokenNo + "'>0</strong></span></td>";
+                        pendingorderdata += "</tr>";
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td  colspan='2' align='left'><span  style=''>Margin : <strong class='color-bluest'>" + parseInt(MarginUsed) + "</strong></span></td>";
+                        pendingorderdata += "<td  colspan='2' align='right'>CMP : <span class='color-bluest' id='bid" + TokenNo + "' ><strong>" + cmp + "</strong></span></td>";
+                        pendingorderdata += "</tr>";
+                        pendingorderdata += "<tr><td></td><td></td></tr>";
+                        pendingorderdata += "<tr><td colspan='2'></td><td colspan='2' align='right'>&nbsp;<a href='#' onclick=closetrade('" + uid + "','" + OrderCategory + "','" + TokenNo + "','" + SymbolType+"') class='btn-danger' style='margin-top:2px;padding:4px;font-size:13px;font-weight:bold;margin-top:5px;' >Close Trade</a></td></tr>"
+
+                        pendingorderdata += "</table>";
+                        pendingorderdata += "</div>";
+                    });
+                    $("#activeorder").html(pendingorderdata);
+                    tokens = tokens.slice(0, -1);
+                    WebSocketTest(tokens);
+                }   
+
+            }
+        });
+    }
+
+
+    function getclosedorder() {
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getuserclosedorders/?UserId=" + uid,
+            type: "post",
+            success: function (response) {
+                var data = JSON.parse(response);
+
+                if (data.length != 0) {
+                    var closeordata = "";
+                    var tokens = "";
+                    $.each(data, function (i, item) {
+                        var OrderId = data[i].Id;
+                        var ScriptName = data[i].ScriptName;
+                        var Lot = data[i].Lot;
+                        var P_L = data[i].P_L;
+                        var OrderPrice = data[i].OrderPrice;
+                        var BroughtBy = data[i].BroughtBy;
+                        closeordata += "<div class='act-box'>";
+                        closeordata += "<table width='100%'>";
+
+                        closeordata += "<tr>";
+                        closeordata += "<td align='left'><span class='scrip-name'>" + ScriptName + "</span></td>";
+                        closeordata += "<td align='right'><span>Qty: <strong class='color-bluest'>" + Lot + "</strong></span></td>";
+                        closeordata += "</tr>";
+
+                        closeordata += "<tr>";
+                        closeordata += "<td align='left'><span >AvgSell : <strong class='color-bluest'>" + OrderPrice + "</strong></span></td> <td align='right'><span style=''>AvgBuy : <strong class='color-bluest'>" + BroughtBy+"</strong></span></td>";
+                        closeordata += "</tr>";
+
+                        closeordata += "<tr>";
+                        if (parseInt(P_L)<0) {
+                            closeordata += "<td colspan='2' align='left'>Profit/Loss : <strong class='m-red-m'>" + parseInt(P_L) + "</strong></td>";
+                        } else {
+                            closeordata += "<td colspan='2' align='left'>Profit/Loss : <strong class='m-green-m'>+" + parseInt(P_L) + "</strong></td>";
+                        }
+
+                        closeordata += "</tr>";
+
+                        closeordata += "</table>";
+                        closeordata += "</div>";
+
+                    });
+                    $("#closedorder").html(closeordata);
+                    tokens = tokens.slice(0, -1);
+                   // WebSocketTest(tokens);
+                }
+
+            }
+        });
+    }
+
+
+    function closetrade(userid, ordercategory, tokenno, exchangetype) {
+        var confrm = confirm("Do you want to close these trades?")
+        if (confrm == true) {
+            var refid = localStorage.getItem("Refid");
+            $.ajax({
+                url: "/api/getmarkettime/?Exchange=" + exchangetype + "&refid=" + refid,
+                type: "get",
+                success: function (resp) {
+                    var data = resp.split('|');
+                    var starttime = data[0] + ":00";
+                    var endttime = data[1] + ":00";
+                    var _starttime = starttime;
+                    var _endttime = endttime;
+                    var today = new Date();
+                    if (today.getDay() == 6 || today.getDay() == 0) {
+                        swal("Market not open.");
+                        //return;
+                    }
+                    else {
+                        var date = new Date();
+                        var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                        //current
+                        var currenttime_sec = ctime.split(':');
+                        var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                        //_starttime
+                        var Startcurrenttime_sec = _starttime.split(':');
+                        var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+
+                        //_endtime
+                        var Endcurrenttime_sec = _endttime.split(':');
+                        var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                        if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                            var cmp = $("#bid" + tokenno).html();
+                            cmp = cmp.replace("<b>", "");
+                            cmp = cmp.replace("</b>", "");
+                            cmp = cmp.trim();
+                            $.ajax({
+                                url: "/api/closetrade_from_account_portfolio/?userid=" + userid + "&ordercat=" + ordercategory + "&tokenno=" + tokenno + "&cmpval=" + cmp,
+                                type: "get",
+                                success: function (response) {
+
+                                    var data = JSON.parse(response);
+                                    swal({
+                                        title: "Trade Closed!",
+                                        text: data.ResponseMessage,
+                                        type: "success"
+                                    }).then(function () {
+                                        location.reload();
+                                    });
+                                }
+                            });
+                        }
+                        else {
+                            swal("Market not open.");
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+
+
+    var uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    //var uri = "wss://103.220.223.27/api/webapiwebsoc";
+    var websocket = new WebSocket(uri);
+    function readvalues() {
+
+        //$.ajax({
+        //    url: "http://103.220.223.27/api/getdata?tokenno=61744647",
+        //    type: "get",
+        //    success: function (response) {
+        //        console.log("ipx",response);
+        //    }
+        //});
+        var ws;
+
+        //Initialize socket
+
+        if (websocket.readyState == WebSocket.CLOSED) {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        else {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        //Open socket and send message
+
+        //Socket error handler
+        websocket.onerror = function (event) {
+            $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+        };
+
+        var totalactivepl = 0;
+        var lotokn = localStorage.getItem("tkn");
+        //Socket message handler  +
+        websocket.onmessage = function (event) {
+            if (event.data != "" && event.data != "true") {
+                var datax = JSON.parse(event.data);
+                var Bid = datax.bid;
+                var scriptname = datax.instrument_token;
+                var Ask = datax.ask;
+                var cmp = 0;
+                var newamtdeff = 0;
+
+                var ordercat = $("#ordercat" + scriptname).html();
+                console.log("ordercat==", ordercat)
+                if (ordercat == "SELL") {
+                    cmp = Ask;
+                    newamtdeff = (parseFloat($("#oldpr" + scriptname).html()) - parseFloat(cmp)).toFixed(2);
+                    console.log("newamtdeff1", newamtdeff);
+                }
+                else {
+                    cmp = Bid;
+                    newamtdeff = parseFloat(cmp) - parseFloat($("#oldpr" + scriptname).html());
+                    console.log("newamtdeff2", newamtdeff);
+                }
+
+                $("#bid" + scriptname).html("<b>" + cmp + "</b>");
+                var newval = parseInt($("#sellotsize" + scriptname).html()) * newamtdeff;
+                newval = parseFloat(newval).toFixed(2);
+                totalactivepl += newval;
+                if (parseInt(newval) < 0) {
+                    $("#diffpric" + scriptname).addClass("m-red-m");
+                    $("#diffpric" + scriptname).removeClass("m-green-m");
+                } else {
+                    $("#diffpric" + scriptname).addClass("m-green-m");
+                    $("#diffpric" + scriptname).removeClass("m-red-m");
+                }
+                $("#diffpric" + scriptname).html(parseInt(newval));
+
+                calcm2m(lotokn);
+            }
+
+
+            // var newmaginavailable = Math.round(userbalance) - Math.round(totalact);
+          //  $("#marginavl").html(totalact);
+           // $("#marginavl1").html(totalact);
+           // $("#activepl").html(totalactivepl);
+           // $("#activepl1").html(totalactivepl);
+            //  console.log("dataxs", datax);
+        };
+    }
+
+        function calcm2m(token) {
+            var totalactivepl = 0;
+            if (token != null) {
+                var tokarr = token.split(',');
+                for (var x = 0; x < tokarr.length; x++) {
+                    var tokn = tokarr[x];
+                    var acpl = $("#diffpric" + tokn).html();
+                    totalactivepl += parseFloat(acpl);
+                }
+                totalactivepl = parseFloat(totalactivepl).toFixed(2);
+                $("#activepl").html(parseInt(totalactivepl));
+                $("#activepl1").html(parseInt(totalactivepl));
+                var userbalance = $("#userbalance").html();
+                var creditlimit = localStorage.getItem("CreditLimit");
+                var m2m = (parseFloat(userbalance) + parseFloat(totalactivepl) + parseFloat(creditlimit)).toFixed(2);
+                $("#m2m").html(parseInt(parseInt(m2m)));
+                var newmaginavailable = (parseFloat(m2m - totalmarginused) + parseFloat(creditlimit)).toFixed(2);
+                $("#marginavl").html(parseInt(newmaginavailable));
+            }
+
+        }
+
+    function WebSocketTest(token) {
+        localStorage.setItem("tkn", token);
+        readvalues();
+    }
+
+
+    var mcxdata = [];
+
+    //
+</script>

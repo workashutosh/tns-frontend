@@ -1,0 +1,119 @@
+﻿
+
+<script>
+    var _userid;
+    var ClientName;
+    var MCX_BRKG;
+    var NSE_BRKG;
+    var CDS_BRKG;
+
+    var MCX_brokerage_per_crore;
+    var Equity_brokerage_per_crore;
+    var CDS_brokerage_per_crore;
+
+    var BULLDEX_brokerage;
+    var GOLD_brokerage;
+    var SILVER_brokerage;
+    var CRUDEOIL_brokerage;
+    var COPPER_brokerage;
+    var NICKEL_brokerage;
+    var ZINC_brokerage;
+    var LEAD_brokerage;
+    var NATURALGAS_brokerage;
+    var ALUMINIUM_brokerage;
+    var MENTHAOIL_brokerage;
+    var COTTON_brokerage;
+    var CPO_brokerage;
+    var GOLDM_brokerage;
+    var SILVERM_brokerage;
+    var SILVERMIC_brokerage;
+    var losslimit;
+    var LB;
+    var CL;
+    var AutoCloseAt;
+
+
+    function getParameterByName(name, url = window.location.href) {
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+    $(document).ready(function () {
+        _userid = getParameterByName('userid');
+        AutoCloseAt = getParameterByName('AutoCloseAt');
+        losslimit = getParameterByName("losslimit");
+        ClientName = getParameterByName("UserName");
+        CL = getParameterByName("creditlimit");
+        BULLDEX_brokerage = getParameterByName("BULLDEX_brokerage");
+        GOLD_brokerage = getParameterByName("GOLD_brokerage");
+        SILVER_brokerage = getParameterByName("SILVER_brokerage");
+        CRUDEOIL_brokerage = getParameterByName("CRUDEOIL_brokerage");
+        COPPER_brokerage = getParameterByName("COPPER_brokerage");
+        NICKEL_brokerage = getParameterByName("NICKEL_brokerage");
+        ZINC_brokerage = getParameterByName("ZINC_brokerage");
+        LEAD_brokerage = getParameterByName("LEAD_brokerage");
+        NATURALGAS_brokerage = getParameterByName("NATURALGAS_brokerage");
+        ALUMINIUM_brokerage = getParameterByName("ALUMINIUM_brokerage");
+        MENTHAOIL_brokerage = getParameterByName("MENTHAOIL_brokerage");
+        COTTON_brokerage = getParameterByName("COTTON_brokerage");
+        CPO_brokerage = getParameterByName("CPO_brokerage");
+        GOLDM_brokerage = getParameterByName("GOLDM_brokerage");
+        SILVERM_brokerage = getParameterByName("SILVERM_brokerage");
+        SILVERMIC_brokerage = getParameterByName("SILVERMIC_brokerage");
+
+        MCX_BRKG = getParameterByName("MCX_BRKG");
+        NSE_BRKG = getParameterByName("NSE_BRKG");
+        CDS_BRKG = getParameterByName("CDS_BRKG");
+
+        MCX_brokerage_per_crore = getParameterByName("MCX_brokerage_per_crore");
+        Equity_brokerage_per_crore = getParameterByName("Equity_brokerage_per_crore");
+        CDS_brokerage_per_crore = getParameterByName("CDS_brokerage_per_crore");
+
+        localStorage.setItem("userid" + _userid, _userid);
+        localStorage.setItem("Mcx_Brokerage_Type" + _userid, MCX_BRKG);
+        localStorage.setItem("NSE_Brokerage_Type" + _userid, NSE_BRKG);
+        localStorage.setItem("CDS_Brokerage_Type" + _userid, CDS_BRKG);
+
+        localStorage.setItem("MCX_brokerage_per_crore" + _userid, MCX_brokerage_per_crore);
+        localStorage.setItem("Equity_brokerage_per_crore" + _userid, Equity_brokerage_per_crore);
+        localStorage.setItem("CDS_brokerage_per_crore" + _userid, CDS_brokerage_per_crore);
+
+        localStorage.getItem("BULLDEX_brokerage" + _userid, BULLDEX_brokerage);
+        localStorage.getItem("GOLD_brokerage" + _userid, GOLD_brokerage);
+        localStorage.getItem("SILVER_brokerage" + _userid, SILVER_brokerage);
+        localStorage.getItem("CRUDEOIL_brokerage" + _userid, CRUDEOIL_brokerage);
+        localStorage.getItem("COPPER_brokerage" + _userid, COPPER_brokerage);
+        localStorage.getItem("NICKEL_brokerage" + _userid, NICKEL_brokerage);
+        localStorage.getItem("ZINC_brokerage" + _userid, ZINC_brokerage);
+        localStorage.getItem("LEAD_brokerage" + _userid, LEAD_brokerage);
+        localStorage.getItem("NATURALGAS_brokerage" + _userid, NATURALGAS_brokerage);
+        localStorage.getItem("ALUMINIUM_brokerage" + _userid, ALUMINIUM_brokerage);
+        localStorage.getItem("MENTHAOIL_brokerage" + _userid, MENTHAOIL_brokerage);
+        localStorage.getItem("COTTON_brokerage" + _userid, COTTON_brokerage);
+        localStorage.getItem("CPO_brokerage" + _userid, CPO_brokerage);
+        localStorage.getItem("GOLDM_brokerage" + _userid, GOLDM_brokerage);
+        localStorage.getItem("SILVERM_brokerage" + _userid, SILVERM_brokerage);
+        localStorage.getItem("SILVERMIC_brokerage" + _userid, SILVERMIC_brokerage);
+
+        localStorage.setItem("auto_close_all_active_trades_when_the_losses_reach" + _userid, AutoCloseAt);
+        localStorage.setItem("AutoCloseTradesLossesLimit" + _userid, losslimit);
+
+
+        localStorage.setItem("ClientName" + _userid, ClientName);
+        localStorage.setItem("CreditLimit" + _userid, CL);
+
+        getuserbalance1();
+
+    });
+
+</script>
+
+
+<div style="height:500px">
+    @{
+        Html.RenderPartial("PartialViewAutoSquare");
+    }
+</div>

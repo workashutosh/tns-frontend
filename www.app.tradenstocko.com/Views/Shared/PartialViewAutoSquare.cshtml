@@ -1,0 +1,499 @@
+﻿
+
+<div class="main_content_iner ">
+    <div class="container-fluid p-0 ">
+        <div class="row ">
+            <div class="col-lg-12">
+                <div class="white_card card_height_100 mb_30 QA_section">
+                    <div class="white_card_header">
+                        <div class="box_header m-0">
+                            <div class="main-title">
+                                <h3 class="m-0" style="font-size:20px;color:black">Account </h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="white_card_body">
+                        <div class="row">
+                            <div class="col-lg-6" style="border-top: solid 1px #2f8aa2; border-bottom: solid 1px #2f8aa2; background-color: white; border-right: solid 1px #2f8aa2; border-left: solid 1px #2f8aa2; ">
+
+                                <table class="table table-bordered" style="background-color:white;margin-top:5px;">
+                                    <tr>
+                                        <td>
+                                            <b>Ledger Balance :</b> <span id="partialuserbalance">0</span>
+                                        </td>
+                                        <td>
+                                            <b>M2M (Equity) :</b> <span id="partialm2m">0</span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <b>Active P/L :</b> <span id="partialactivepl">0</span>
+                                        </td>
+                                        <td>
+                                            <b>Brokerage :</b> <span id="partialbrokerage">0</span>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <h4 style="text-align: center; color: black; padding: 5px; margin-top: 2px; border-bottom: solid 0px #2f8aa2;">Active Trades</h4>
+                                <div id="partialactiveorder" style="background-color:white;">
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/Content/js/jquery-3.4.1.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        changeactivestatus();
+       // setInterval(changeactivestatus, 1000);
+        getuserbalance1();
+    });
+    function checkscreensize() {
+        return localStorage.getItem("isdesktopcreen");
+    }
+    
+    function getdeviceid() {
+        let machineId = localStorage.getItem('MachineId');
+        if (!machineId)
+        {
+            machineId = crypto.randomUUID();
+            localStorage.setItem('MachineId', machineId);
+        }
+        return machineId;
+    }
+
+    function changeactivestatus()
+    {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/changeactivestatus/?userid=" + userid,
+            type: "get",
+            async:true,
+            success: function (response)
+            {
+                console.log(response);
+            }
+        });
+    }
+
+
+
+    function getuserbalance1() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getledgerbalance/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                response = parseFloat(response).toFixed(2);
+                $("#partialuserbalance").html(response);
+                var activepl = $("#partialactivepl").html();
+                var newm2m = Math.round($("#partialuserbalance").html()) - Math.round(activepl);
+                var creditlimit = localStorage.getItem("CreditLimit");
+                var m2m = Math.round($("#partialuserbalance").html()) + 0 + Math.round(creditlimit);
+                $("#partialm2m").html(m2m);
+                $("#partialmarginavl").html(m2m - 0);
+                //  $("#m2m").html(newm2m);
+                $("#partialuserbalancemodel").html(response);
+                getactiveorder1();
+            }
+        });
+
+        $.ajax({
+            url: "/api/getuserbalanceledger/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                $("#partialsellordervalue").html('');
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                $.each(data, function (i, item) {
+                    var Amount = data[i].Amount;
+                    var TransactionType = data[i].TransactionType;
+                    if (TransactionType == "Credit") {
+                        TransactionType = "Deposit";
+                    }
+                    else {
+                        TransactionType = "Withdrawal";
+                    }
+                    var CreatedDate = data[i].CreatedDate;
+                    usrbalnce += "<tr>";
+                    usrbalnce += "<td   align='left'>" + CreatedDate + "</td>";
+                    usrbalnce += "<td  align='center'>" + TransactionType + "</td>";
+                    usrbalnce += "<td   align='right'>" + Amount + "</td>";
+                    usrbalnce += "</tr>";
+                });
+                $("#partialsellordervalue").html(usrbalnce);
+            }
+        });
+    }
+    var ordid = [];
+    var totalmarginused = 0;
+    function getactiveorder1() {
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getalltradeforAutoSqarePartialView/?uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var pendingorderdata = "";
+                var tokens = "";
+                $.each(data, function (i, item) {
+                    var OrderId = data[i].Id;
+                    ordid.push(OrderId);
+                    var OrderCategory = data[i].OrderCategory;
+                    var TokenNo = data[i].TokenNo;
+                    tokens += TokenNo + ",";
+                    var OrderType = data[i].OrderType;
+                    var lot = data[i].Lot;
+                    var selectedlotsize = data[i].selectedlotsize;
+                    var OrderDate = data[i].OrderDate;
+                    var OrderTime = data[i].OrderTime;
+                    var ScriptName = data[i].ScriptName;
+                    var ActionType = data[i].ActionType;
+                    var SymbolType = data[i].SymbolType;
+                    var OrderPrice = data[i].OrderPrice;
+                    OrderPrice = parseFloat(OrderPrice).toFixed(2);
+                    //let op = OrderPrice;
+                    //OrderPrice = op.tofixed(2);
+                    var MarginUsed = data[i].MarginUsed;
+                    totalmarginused += Math.round(MarginUsed);
+                    var HoldingMarginReq = data[i].HoldingMarginReq;
+                    var OrderStatus = data[i].OrderStatus;
+                    pendingorderdata += "<div class='col-lg-12' style='margin-top:5px;border-top:1px dashed gray;border-radius:4px;padding:5px;background-color:white;'>";
+                    pendingorderdata += "<table width='100%'>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2' align='left'><span  style=''><b id='partialscriptmame" + OrderId+ TokenNo + "'>" + ScriptName + "</b></span></td>";
+                    pendingorderdata += "<td align='right'><span style='color:red'><b id='partialordercat" + OrderId + TokenNo + "'>" + OrderCategory + "</b></span>&nbsp;&nbsp;&nbsp;<span  style='color:red'><b>" + lot + " @@ " + OrderPrice + "</b></span><span style='display:none'  id='partialoldpr" + OrderId+ TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='partialsellotsize" + OrderId+ TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td colspan='2'><span  style=''><b>Margin :" + MarginUsed + "</b></span></td> <td colspan='2' align='right'><span style=''><b id='partialdiffpric" + OrderId + TokenNo + "'>0</b></span><span style='display:none'><b id='partialbrokerageperrow" + OrderId+ TokenNo + "'>0</b></span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "<tr>";
+                    pendingorderdata += "<td  colspan='2' align='left'><span id='partialorderid" + OrderId+ TokenNo + "'>" + OrderId + "</span></td>";
+                    pendingorderdata += "<td  colspan='2' align='right'>CMP :<span id='partialbid" + OrderId + TokenNo + "' style=''><b>0</b></span><span id='partialsymboltype" + OrderId + TokenNo + "' style='display:none'>" + SymbolType + "</span><span id='partiallotqty" + OrderId+ TokenNo + "' style='display:none'>" + lot + "</span></td>";
+                    pendingorderdata += "</tr>";
+
+                    pendingorderdata += "</table>";
+                    pendingorderdata += "</div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'><span style='background-color:lightgreen;padding:10px'>" + OrderCategory + "</span><span style='background-color:orangered;padding:10px;'>" + OrderType + "</span></div><div  align='right'>" + OrderDate + " " + OrderTime + "</div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'><b>" + ScriptName + "</b></div><div align='right'>" + OrderPrice + "</div>";
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'>" + ActionType + "</div><div align='right'><span style='padding:10px;border-radius:10px;background-color:red;color:white'>Close Now</span></div>";
+
+                    //pendingorderdata += "<div syle='height:auto;padding:0px;margin:0px;'>Margin Used :" + MarginUsed + "</div><div align='right'>HoldingMarginReq : " + HoldingMarginReq + "</div>";
+                    //pendingorderdata += "</div>";
+
+                });
+                $("#partialactiveorder").html(pendingorderdata);
+                tokens = tokens.slice(0, -1);
+                WebSocketTest1(tokens);
+            }
+        });
+    }
+
+
+    var uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    //var uri = "wss://103.220.223.27/api/webapiwebsoc";
+    websocket = new WebSocket(uri);
+    function readvalues1() {
+
+        //$.ajax({
+        //    url: "http://103.220.223.27/api/getdata?tokenno=61744647",
+        //    type: "get",
+        //    success: function (response) {
+        //        console.log("ipx",response);
+        //    }
+        //});
+        var ws;
+
+        //Initialize socket
+
+        if (websocket.readyState == WebSocket.CLOSED) {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        else {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        //Open socket and send message
+
+        //Socket error handler
+        websocket.onerror = function (event) {
+            $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+        };
+
+        var totalactivepl = 0;
+        var totalbrokerage = 0;
+        var lotokn = localStorage.getItem("tkn");
+        //Socket message handler  +
+        websocket.onmessage = function (event) {
+
+            var datax = JSON.parse(event.data);
+            var Bid = datax.bid;
+            var scriptname = datax.instrument_token;
+            var Ask = datax.ask;
+            var cmp = 0;
+            var newamtdeff = 0;
+            for (var ri = 0; ri < ordid.length; ri++)
+            {
+
+                var orderindx = ordid[ri];
+
+                var orderprice = $("#partialoldpr" + orderindx + scriptname).html();
+                var ordercat = $("#partialordercat" + orderindx+ scriptname).html();
+                var partialsymboltype = $("#partialsymboltype" + orderindx+ scriptname).html();
+                var partiallotqty = $("#partiallotqty" + orderindx+ scriptname).html();
+                var sellotsize = $("#partialsellotsize" + orderindx+ scriptname).html();
+                var globalscriptname = $("#partialscriptmame" + orderindx + scriptname).html();
+                if (ordercat == "SELL")
+                {
+                    cmp = Ask;
+                    newamtdeff = (parseFloat(orderprice) - parseFloat(cmp)).toFixed(2);
+                    console.log("newamtdeff1", newamtdeff);
+                }
+                else {
+                    cmp = Bid;
+                    newamtdeff = parseFloat(cmp) - parseFloat(orderprice);
+                    console.log("newamtdeff2", newamtdeff);
+                }
+
+                $("#partialbid" + orderindx + scriptname).html("<b>" + cmp + "</b>");
+                var newval = parseInt(sellotsize) * newamtdeff;
+                newval = parseFloat(newval).toFixed(2);
+                totalactivepl += newval;
+
+                $("#partialdiffpric" + orderindx + scriptname).html(newval);
+
+                //For Brokerage
+                var tradeprice = 0;
+
+                var finalbrokerage = 0;
+                var brokerage = 0;
+                if (partialsymboltype == "NSE")
+                {
+                    var broktype = localStorage.getItem("NSE_Brokerage_Type");
+                    brokerage = localStorage.getItem("Equity_brokerage_per_crore");
+                    if (broktype == "per_lot") {
+                        finalbrokerage = parseInt(partiallotqty) * parseInt(brokerage);
+                    }
+                    else {
+                        tradeprice = (parseInt(cmp) + parseInt(orderprice)) * parseInt(sellotsize);
+                        finalbrokerage = (tradeprice * parseInt(brokerage)) / 10000000;
+                    }
+                }
+                else if (partialsymboltype == "OPT") {
+                    var broktype = localStorage.getItem("CDS_Brokerage_Type");
+                    brokerage = localStorage.getItem("CDS_brokerage_per_crore");
+                    if (broktype == "per_lot") {
+                        finalbrokerage = parseInt(partiallotqty) * parseInt(brokerage);
+                    }
+                    else {
+                        tradeprice = (parseInt(cmp) + parseInt(orderprice)) * parseInt(sellotsize);
+                        finalbrokerage = (tradeprice * parseInt(brokerage)) / 10000000;
+                    }
+                }
+                else if (partialsymboltype == "MCX")
+                {
+                    var broktype = localStorage.getItem("Mcx_Brokerage_Type");
+                    brokerage = localStorage.getItem("MCX_brokerage_per_crore");
+                    if (broktype == "per_lot")
+                    {
+                        var symbolname = globalscriptname;//GOLD22AUGFUT
+                        var MCX_symbols = ['ALUMINIUM', 'COPPER', 'COTTON', 'COTTONREF', 'CRUDEOIL', 'GOLDGUINEA', 'GOLDPETAL', 'KAPAS', 'LEAD', 'MCXBULLDEX', 'MCXENRGDEX', 'MCXMETLDEX', 'MENTHAOIL', 'NATURALGAS', 'NICKEL', 'RUBBER', 'SILVERM', 'SILVERMIC', 'ZINC', 'GOLD', 'GOLDM', 'SILVER'];
+                        var similersym = "";
+                        for (var i = 0; i < MCX_symbols.length; i++) {
+                            if (symbolname.startsWith(MCX_symbols[i])) {
+                                similersym = MCX_symbols[i];
+                                break;
+                            }
+                            else if (symbolname.startsWith("ALUMINI")) {
+                                similersym = "ALUMINIUM";
+                                break;
+                            }
+                            else if (symbolname.startsWith("NATGASMINI")) {
+                                similersym = "NATURALGAS";
+                                break;
+                            }
+                        }
+                        brokerage = localStorage.getItem(similersym + "_brokerage");
+                        finalbrokerage = parseInt(partiallotqty) * parseInt(brokerage);
+                      //  alert(finalbrokerage);
+                    }
+                    else
+                    {
+                        tradeprice = (parseInt(cmp) + parseInt(orderprice)) * parseInt(sellotsize);
+                        finalbrokerage = (tradeprice * parseInt(brokerage)) / 10000000;
+                    }
+                }
+                $("#partialbrokerageperrow" + orderindx+ scriptname).html(finalbrokerage);
+
+                //check for time / day
+
+                var isoktime = true;
+                var _starttime = "09:00:00";
+                var _endttime = "23:59:00";
+                var today = new Date();
+                if (localStorage.getItem("AutoCloseTradesLossesLimit") == "true") {
+                    if (today.getDay() == 6 || today.getDay() == 0) {
+                        isoktime = false;
+                    }
+                    else {
+                        var date = new Date();
+                        var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                        //current
+                        var currenttime_sec = ctime.split(':');
+                        var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                        //_starttime
+                        var Startcurrenttime_sec = _starttime.split(':');
+                        var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+                        //_endtime
+                        var Endcurrenttime_sec = _endttime.split(':');
+                        var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                        if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                            isoktime = true;
+                        }
+                        else {
+                            isoktime = false;
+                        }
+                    }
+
+                    if (isoktime == true) {
+                        calcm2m1(lotokn);
+                    }
+                }
+
+
+            }
+
+
+            // var newmaginavailable = Math.round(userbalance) - Math.round(totalact);
+            //  $("#marginavl").html(totalact);
+            // $("#marginavl1").html(totalact);
+            // $("#activepl").html(totalactivepl);
+            // $("#activepl1").html(totalactivepl);
+            //  console.log("dataxs", datax);
+        };
+    }
+
+    function calcm2m1(token) {
+        //alert(localStorage.getItem("INDIAN"));
+        var auto_close_at = (100 - parseFloat(localStorage.getItem("auto_close_all_active_trades_when_the_losses_reach")));
+
+        var totalactivepl = 0;
+        var totalbrokerage = 0;
+        var tokarr = token.split(',');
+        var orderdataarr = [];
+        var isok = true;
+        for (var x = 0; x < tokarr.length; x++)
+        {
+            var tokn = tokarr[x];
+            var orderno = ordid[x];
+            var acpl = $("#partialdiffpric" + orderno+ tokn).html();
+            var brokrg = $("#partialbrokerageperrow" + orderno+ tokn).html();
+            var cmp = $("#partialbid" + orderno+ tokn).html().replace("<b>", "");
+            cmp = cmp.replace("</b>", "");
+            if (parseFloat(cmp) <= 0) {
+                isok = false;
+                break;
+            }
+
+            var partialorderid = $("#partialorderid" + orderno+ tokn).html();
+            var ordercat = $("#partialordercat" + orderno+ tokn).html();
+            var partiallotqty = $("#partiallotqty" + orderno+ tokn).html();
+            var orderprice = $("#partialoldpr" + orderno+ tokn).html();
+            var partialscriptmame = $("#partialscriptmame" + orderno+ tokn).html();
+            var orderdata = {
+                "orderid": partialorderid,
+                "cmp": cmp,
+                "acpl": acpl,
+                "brokrg": brokrg,
+                "tokn": tokn,
+                "ordercat": ordercat,
+                "orderprice": orderprice,
+                "lot": partiallotqty,
+                "scriptname": partialscriptmame
+            }
+            orderdataarr.push(orderdata);
+            totalactivepl += parseFloat(acpl);
+            totalbrokerage += parseFloat(brokrg);
+        }
+        totalactivepl = parseFloat(totalactivepl).toFixed(2);
+        totalbrokerage = parseFloat(totalbrokerage).toFixed(2);
+        $("#partialactivepl").html(totalactivepl);
+        //$("#partialactivepl1").html(totalactivepl);
+        $("#partialbrokerage").html(totalbrokerage);
+        var userbalance = $("#partialuserbalance").html();
+        var creditlimit = localStorage.getItem("CreditLimit");
+        var totlb = (parseFloat(userbalance) + parseFloat(creditlimit)).toFixed(2);
+        var stoplossamt = (totlb * parseFloat(auto_close_at)) / 100;
+
+        var m2m = ((totlb - parseFloat(totalbrokerage)) + parseFloat(totalactivepl)).toFixed(2);
+        $("#partialm2m").html(m2m);
+        var newmaginavailable = parseFloat(m2m - totalmarginused).toFixed(2) + parseFloat(creditlimit);
+        $("#partialmarginavl").html(newmaginavailable);
+        //Alert("Ledger Balance = " + newlb + " Total B = " + totalbrokerage + " Total PL = " + totalactivepl);
+        if (isok == true) {
+            if (m2m <= stoplossamt) {
+                websocket.close();
+                var userid = localStorage.getItem("userid");
+                var usrnam = localStorage.getItem("ClientName");
+                var newlb = ((parseFloat(userbalance) - parseFloat(totalbrokerage)) + parseFloat(totalactivepl)).toFixed(2);
+                var jsonObject = JSON.stringify(orderdataarr);
+               // console.log("orderdata", jsonObject);
+
+                $.ajax({
+                    url: "/api/closealltrades/?idcmp=" + jsonObject + "&userid=" + userid + "&username=" + usrnam + "&lb=" + newlb,
+                    type: "get",
+                    success: function (response) {
+                      //  tempAlert("All Active trade's have been closed due to insufficient margin.", 1000);
+                       // location.href = "/home/tradedetails";
+                        if (checkscreensize() == "true") {
+                            window.parent.location.href = "/home/tradedetails";
+                        } else {
+                            window.parent.location.href = "/home/tradedetailsapp";
+                        }
+                        //location.reload();
+                    }
+                });
+            }
+        }
+
+
+
+    }
+
+    function tempAlert(msg, duration) {
+        var el = document.createElement("div");
+        el.setAttribute("style", "position:absolute;top:40%;left:20%;background-color:white;");
+        el.innerHTML = msg;
+        setTimeout(function () {
+            el.parentNode.removeChild(el);
+        }, duration);
+        document.body.appendChild(el);
+    }
+
+
+    function WebSocketTest1(token) {
+        localStorage.setItem("tkn", token);
+        readvalues1();
+     
+    }
+    
+</script>

@@ -1,0 +1,63 @@
+﻿
+@{
+    ViewBag.Title = "paymentfail";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failure</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #ff0000;
+        }
+
+        .icon {
+            font-size: 80px;
+            color: #ff0000;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        a {
+            text-decoration: none;
+            color: #ff0000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">&#10060;</div>
+        <h1>Payment Failed</h1>
+        <p>Sorry, we were unable to process your payment.</p>
+        <p>Please try again later or contact customer support.</p>
+        <p><a href="/home/accounts/">Return to Home Page</a></p>
+    </div>
+</body>
+</html>
+

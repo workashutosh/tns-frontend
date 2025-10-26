@@ -1,0 +1,970 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>User Login</title>
+    <script src="~/Content/js/sweetalert2.all.min.js"></script>
+    <link rel="icon" href="~/Content/img/crazy-logo.jpg" type="image/png" />
+    <link href="~/Content/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <!-- themefy CSS -->
+    <!-- datatable CSS -->
+    <!-- scrollabe  -->
+    @*<link rel="stylesheet" href="~/Content/vendors/scroll/scrollable.css" />*@
+    <!-- menu css  -->
+    @*<link rel="stylesheet" href="~/Content/css/metisMenu.css">*@
+    <!-- style CSS -->
+    <link rel="stylesheet" href="~/Content/css/plugins.css" />
+
+    <!-- Media CSS -->
+    @*<link rel="stylesheet" href="~/Content/css/media.css" />*@
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-login {
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .h-vh {
+            min-height: 100vh;
+        }
+
+        .login-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid #333333;
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        #t_applogo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 16px;
+        }
+
+        #t_apptitle {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            color: #888888;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .floating-label-group {
+            position: relative;
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 12px;
+            color: #ffffff !important;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .custom-input::placeholder {
+            color: #888888;
+            font-weight: 400;
+        }
+
+        .custom-input:focus {
+            background: #2a2a2a;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        .floating-label {
+            position: absolute;
+            left: 20px;
+            top: 16px;
+            color: rgba(255, 255, 255, 0.5) !important;
+            font-size: 16px;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 400;
+        }
+
+        .custom-input ~ .floating-label {
+            top: 16px;
+            left: 20px;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5) !important;
+            background: transparent;
+            padding: 0;
+        }
+
+        .char-counter {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4) !important;
+            font-size: 12px;
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            padding: 8px;
+            z-index: 10;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .toggle-password:hover {
+            transform: translateY(-50%) scale(1.1);
+            color: #22c55e;
+        }
+
+        .toggle-password svg {
+            display: block;
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 20px;
+            background: #22c55e;
+            border: none;
+            border-radius: 12px;
+            color: #ffffff !important;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: none;
+            letter-spacing: 0;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .btn:hover {
+            background: #16a34a;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-center p {
+            color: #888888;
+            font-size: 14px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .text-center a {
+            color: #22c55e;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .text-center a:hover {
+            color: #16a34a;
+            text-decoration: underline;
+        }
+
+        .text-center strong {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        form i {
+            margin-left: -30px;
+            cursor: pointer;
+        }
+
+        .disp1 {
+            display: none;
+        }
+
+        .disp2 {
+            display: block;
+        }
+
+        .mb-4 {
+            margin-bottom: 20px;
+        }
+
+        .spinner-border {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            vertical-align: text-bottom;
+            border: 0.2em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+
+        @@keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner-border-sm {
+            width: 0.875rem;
+            height: 0.875rem;
+            border-width: 0.15em;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: 8px;
+            margin-bottom: 24px;
+        }
+
+        .forgot-password a {
+            color: #22c55e;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-password a:hover {
+            color: #16a34a;
+            text-decoration: underline;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: #666666;
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #404040;
+        }
+
+        .divider::before {
+            margin-right: 16px;
+        }
+
+        .divider::after {
+            margin-left: 16px;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px 16px;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 12px;
+            color: #666666;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .social-btn:hover {
+            background: #2a2a2a;
+            border-color: #404040;
+            color: #666666;
+        }
+
+        @@media (min-width: 769px) {
+            .disp1 {
+                display: block;
+            }
+
+            .disp2 {
+                display: none;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .login-card {
+                padding: 24px 20px;
+                margin: 16px;
+                border-radius: 16px;
+                max-width: 380px;
+            }
+
+            #t_apptitle {
+                font-size: 24px;
+            }
+
+            #t_applogo {
+                width: 50px;
+                height: 50px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            .custom-input {
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 14px 18px;
+                font-size: 15px;
+            }
+
+            .social-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .social-btn {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .login-card {
+                padding: 20px 16px;
+                margin: 12px;
+                max-width: 340px;
+            }
+
+            #t_apptitle {
+                font-size: 22px;
+            }
+
+            #t_applogo {
+                width: 45px;
+                height: 45px;
+            }
+
+            .subtitle {
+                font-size: 13px;
+            }
+
+            .custom-input {
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+
+            .btn {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            .social-btn {
+                padding: 12px 14px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body class="crm_body_bg login-bg">
+
+    <section class="main-login">
+        <!--/ menu  -->
+        <div class="main_content_iner">
+            <div class="container-fluid">
+                <div class="row justify-content-center align-items-center h-vh">
+
+                    <div class="col-lg-4">
+                        <!-- sign_in  -->
+                        <div class="login-card">
+                            <div class="logo-container">
+                                <img id="t_applogo" src="~/Content/img/logo.png" />
+                                <h1 id="t_apptitle">Welcome back</h1>
+                                <p class="subtitle">Sign in to your account to continue</p>
+                            </div>
+                            
+                            <form>
+                                <div class="form-group">
+                                    <input type="text" id="username" class="custom-input" autocomplete="off" autofocus required placeholder="Username" />
+                                </div>
+                                
+                                <div class="form-group">
+                                    <input type="password" id="passwd" class="custom-input" autocomplete="off" required placeholder="Password" />
+                                    <span toggle="#password-field" class="fa fa-fw fa-eye field_icon toggle-password">
+                                        <svg width="15px" height="15px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#fff" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#fff"></path> </g> </g></svg>
+                                    </span>
+                                </div>
+                                
+                                <div class="forgot-password">
+                                    <a href="/login/forgotpassword">Forgot password?</a>
+                                </div>
+                                
+                                <a href="#" id="btnsubmit" class="btn text-center mb-4 disp1" onclick="logincheck()">Log in</a>
+                                <a href="#" id="btnsubmitmob" class="btn login-btn text-center mb-4 disp2" onclick="logincheckmob()">Log in</a>
+                                
+                                <div class="divider">or</div>
+                                
+                                <div class="social-buttons">
+                                    <a href="#" class="social-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                        </svg>
+                                        Continue with Google
+                                    </a>
+                                    <a href="#" class="social-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+                                        </svg>
+                                        Continue with Apple
+                                    </a>
+                                </div>
+                                
+                                <p class="text-center">
+                                    Don't have an account? <a href="/login/registration">Sign up</a>
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- footer part -->
+
+    </section>
+    <!-- main content part end -->
+    <!-- ### CHAT_MESSAGE_BOX   ### -->
+    <!--/### CHAT_MESSAGE_BOX  ### -->
+    <div id="back-top" style="display: none;">
+        <a title="Go to Top" href="#">
+            <i class="ti-angle-up"></i>
+        </a>
+    </div>
+    <!-- footer  -->
+    <!-- jquery slim -->
+    <script src="~/Content/js/jquery-3.4.1.min.js"></script>
+    <!-- popper js -->
+  
+    <!-- sidebar menu  -->
+    <!-- scrollabe  -->
+
+    <script>
+        var domain = window.location.hostname;
+        //$.ajax({
+        //    url: "/api/getcommondata?domain=" + domain,
+        //    type: "get",
+        //    success: function (resp) {
+        //        var data = JSON.parse(resp);
+        //        $("#t_apptitle").html(data[0].ApplicationName);
+        //        $("#t_applogo").attr("src", data[0].ApplicationLogo);
+        //        localStorage.setItem("masteruserid", data[0].userid);
+        //        localStorage.setItem("appicon", data[0].ApplicationLogo);
+        //        localStorage.setItem("apptitle", data[0].ApplicationName);
+        //    }
+        //});
+
+
+
+        $(document).on('click', '.toggle-password', function () {
+            $(this).toggleClass("fa-eye fa-eye-slash");
+            var input = $("#passwd");
+            input.attr('type') === 'password' ? input.attr('type', 'text') : input.attr('type', 'password')
+        });
+      
+        function getdeviceid() {
+
+            let machineId = localStorage.getItem('MachineId');
+            if (!machineId) {
+                machineId = crypto.randomUUID();
+                localStorage.setItem('MachineId', machineId);
+            }
+            return machineId;
+        }
+        function checkscreensize() {
+
+            return localStorage.getItem("isdesktopcreen");
+        }
+
+        $(document).ready(function () {
+            localStorage.setItem("isedit", "false");
+            getdeviceip();
+            
+            //  alert(navigator.userAgentData.mobile);
+            if (localStorage.getItem("userid") != null) {
+
+                var isdesktop = checkscreensize();
+                if (isdesktop == "true")
+                {
+                    var ismcx = localStorage.getItem("IsMCXTrade");
+                    var isnse = localStorage.getItem("IsNSETrade");
+                    var iscds = localStorage.getItem("IsCDSTrade");
+
+                    if (ismcx == "true") {
+                        location.href = "/home/mcxfuture";
+                    } else if (isnse == "true") {
+                        location.href = "/home/nsefuture";
+                    } else if (iscds == "true") {
+                        location.href = "/home/cdsfuture";
+                    } else {
+                        location.href = "/home/tradedetails";
+                    }
+                }
+                else {
+                    location.href = "/home/marketwatchapp";
+                   // location.href = "../marketwatchapp.html";
+                }
+            }
+        });
+
+        function getdeviceip() {
+            $.ajax({
+                url: "https://api.ipify.org",
+                type: "get",
+                success: function (resp) {
+                    localStorage.setItem("devip", resp);
+                    var url = window.location.href;
+                    $.ajax({
+                        url: "/api/userurl?url=" + url,
+                        type: "get",
+                        success: function (resp) {
+
+                        }
+                    });
+                }
+            }); 
+           
+
+        }
+
+
+        function logincheck() {
+            getdeviceip();
+            localStorage.setItem("isedit", "false");
+            $("#btnsubmit").html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`
+            );
+            localStorage.setItem("isdesktopcreen", true);
+            var servercode = $("#servercode").val();
+            var username = $("#username").val();
+            var password = $("#passwd").val();
+            var masterrefid = localStorage.getItem("masteruserid");
+            var deviceid = getdeviceid();
+            localStorage.setItem("pdeviceid", deviceid);
+            $.ajax({
+                url: "/api/checklogin/?username=" + username + "&password=" + password + "&deviceid=" + deviceid + "&refidbyuser=" + servercode + "&refidformatch=" + masterrefid,
+                type: "get",
+                success: function (response)
+                {
+                    if (response == "false") {
+                        swal("Please Try Again", "Invalid Login Details");
+                        $("#btnsubmit").html(
+                            `Submit`
+                        );
+                    }
+                    else if (response == "Bloked") {
+                        swal("Please Try Again", "Sorry Your Account Is Blocked");
+                        $("#btnsubmit").html(
+                            `Submit`
+                        );
+                    }
+                    else {
+                        var data = JSON.parse(response);
+
+                        localStorage.setItem("userid", data.UserId);
+                        localStorage.setItem("ClientName", data.ClientName);
+                        localStorage.setItem("oldpassword", password);
+                        localStorage.setItem("Refid", data.Refid);
+                        localStorage.setItem("isonlinepayment", data.isonlinepayment);
+                        localStorage.setItem("MobileNo", data.MobileNo);
+                        localStorage.setItem("EmailId", data.EmailId);
+                        localStorage.setItem("IsMCXTrade", data.IsMCXTrade);
+                        localStorage.setItem("IsNSETrade", data.IsNSETrade);
+                        localStorage.setItem("IsCDSTrade", data.IsCDSTrade);
+                        localStorage.setItem("trademcxunits", data.TradeMCXUnits);
+                        localStorage.setItem("tradeequityunits", data.TradeEquityUnits);
+                        localStorage.setItem("tradecdsunits", data.TradeCDSUnits);
+                        localStorage.setItem("profittradestoptime", data.profittradestoptime);
+                        localStorage.setItem("CreditLimit", data.CreditLimit);
+                        localStorage.setItem("LedgerBalance", data.LedgerBalance);
+                        localStorage.setItem("TotalActive", data.TotalActive);
+                        localStorage.setItem("TotalPending", data.TotalPending);
+                        localStorage.setItem("TotalClosed", data.TotalClosed);
+                        localStorage.setItem("AllowOrdersCurrentBid", data.AllowOrdersCurrentBid);
+                        localStorage.setItem("AllowFreshEntryHighAndBelow", data.AllowFreshEntryHighAndBelow);
+                        localStorage.setItem("AllowOrdersHighLow", data.AllowOrdersHighLow);
+                        localStorage.setItem("AutoCloseTradesLossesLimit", data.AutoCloseTradesLossesLimit);
+                        localStorage.setItem("auto_close_all_active_trades_when_the_losses_reach", data.auto_close_all_active_trades_when_the_losses_reach);
+
+                        //MCX Brokerage
+                        localStorage.setItem("Mcx_Brokerage_Type", data.Mcx_Brokerage_Type);
+                        localStorage.setItem("MCX_brokerage_per_crore", data.MCX_brokerage_per_crore);
+                        localStorage.setItem("BULLDEX_brokerage", data.BULLDEX_brokerage);
+                        localStorage.setItem("GOLD_brokerage", data.GOLD_brokerage);
+                        localStorage.setItem("SILVER_brokerage", data.SILVER_brokerage);
+                        localStorage.setItem("CRUDEOIL_brokerage", data.CRUDEOIL_brokerage);
+                        localStorage.setItem("COPPER_brokerage", data.COPPER_brokerage);
+                        localStorage.setItem("NICKEL_brokerage", data.NICKEL_brokerage);
+                        localStorage.setItem("ZINC_brokerage", data.ZINC_brokerage);
+                        localStorage.setItem("LEAD_brokerage", data.LEAD_brokerage)
+                        localStorage.setItem("NATURALGAS_brokerage", data.NATURALGAS_brokerage);
+                        localStorage.setItem("ALUMINIUM_brokerage", data.ALUMINIUM_brokerage);
+                        localStorage.setItem("MENTHAOIL_brokerage", data.MENTHAOIL_brokerage);
+                        localStorage.setItem("COTTON_brokerage", data.COTTON_brokerage);
+                        localStorage.setItem("CPO_brokerage", data.CPO_brokerage);
+                        localStorage.setItem("GOLDM_brokerage", data.GOLDM_brokerage);
+                        localStorage.setItem("SILVERMINI_brokerage", data.SILVERMINI_brokerage);
+                        localStorage.setItem("SILVERMIC_brokerage", data.SILVERMIC_brokerage);
+
+                        localStorage.setItem("ALUMINI_brokerage", data.ALUMINI_brokerage);
+                        localStorage.setItem("CRUDEOILM_brokerage", data.CRUDEOILM_brokerage);
+                        localStorage.setItem("LEADMINI_brokerage", data.LEADMINI_brokerage);
+                        localStorage.setItem("NATGASMINI_brokerage", data.NATGASMINI_brokerage);
+                        localStorage.setItem("ZINCMINI_brokerage", data.ZINCMINI_brokerage);
+
+
+                        //MCX Intrday
+                        localStorage.setItem("Mcx_Exposure_Type", data.Mcx_Exposure_Type);
+                        localStorage.setItem("Intraday_Exposure_Margin_MCX", data.Intraday_Exposure_Margin_MCX);
+                        localStorage.setItem("Holding_Exposure_Margin_MCX", data.Holding_Exposure_Margin_MCX);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Intraday", data.MCX_Exposure_Lot_wise_BULLDEX_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Holding", data.MCX_Exposure_Lot_wise_BULLDEX_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Intraday", data.MCX_Exposure_Lot_wise_GOLD_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Holding", data.MCX_Exposure_Lot_wise_GOLD_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Intraday", data.MCX_Exposure_Lot_wise_SILVER_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Holding", data.MCX_Exposure_Lot_wise_SILVER_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Intraday", data.MCX_Exposure_Lot_wise_CRUDEOIL_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Holding", data.MCX_Exposure_Lot_wise_CRUDEOIL_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Intraday", data.MCX_Exposure_Lot_wise_COPPER_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Holding", data.MCX_Exposure_Lot_wise_COPPER_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Intraday", data.MCX_Exposure_Lot_wise_NICKEL_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Holding", data.MCX_Exposure_Lot_wise_NICKEL_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Intraday", data.MCX_Exposure_Lot_wise_ZINC_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Holding", data.MCX_Exposure_Lot_wise_ZINC_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Intraday", data.MCX_Exposure_Lot_wise_LEAD_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Holding", data.MCX_Exposure_Lot_wise_LEAD_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Intraday", data.MCX_Exposure_Lot_wise_NATURALGAS_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Holding", data.MCX_Exposure_Lot_wise_NATURALGAS_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Intraday", data.MCX_Exposure_Lot_wise_ALUMINIUM_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Holding", data.MCX_Exposure_Lot_wise_ALUMINIUM_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Intraday", data.MCX_Exposure_Lot_wise_MENTHAOIL_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Holding", data.MCX_Exposure_Lot_wise_MENTHAOIL_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Intraday", data.MCX_Exposure_Lot_wise_COTTON_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Holding", data.MCX_Exposure_Lot_wise_COTTON_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Intraday", data.MCX_Exposure_Lot_wise_CPO_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Holding", data.MCX_Exposure_Lot_wise_CPO_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Intraday", data.MCX_Exposure_Lot_wise_GOLDM_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Holding", data.MCX_Exposure_Lot_wise_GOLDM_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Intraday", data.MCX_Exposure_Lot_wise_SILVERM_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Holding", data.MCX_Exposure_Lot_wise_SILVERM_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Intraday", data.MCX_Exposure_Lot_wise_SILVERMIC_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Holding", data.MCX_Exposure_Lot_wise_SILVERMIC_Holding);
+
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINI_Intraday", data.MCX_Exposure_Lot_wise_ALUMINI_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINI_Holding", data.MCX_Exposure_Lot_wise_ALUMINI_Holding);
+
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOILM_Intraday", data.MCX_Exposure_Lot_wise_CRUDEOILM_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOILM_Holding", data.MCX_Exposure_Lot_wise_CRUDEOILM_Holding);
+
+                        localStorage.setItem("MCX_Exposure_Lot_wise_LEADMINI_Intraday", data.MCX_Exposure_Lot_wise_LEADMINI_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_LEADMINI_Holding", data.MCX_Exposure_Lot_wise_LEADMINI_Holding);
+
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NATGASMINI_Intraday", data.MCX_Exposure_Lot_wise_NATGASMINI_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NATGASMINI_Holding", data.MCX_Exposure_Lot_wise_NATGASMINI_Holding);
+
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ZINCMINI_Intraday", data.MCX_Exposure_Lot_wise_ZINCMINI_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ZINCMINI_Holding", data.MCX_Exposure_Lot_wise_ZINCMINI_Holding);
+
+
+                        //NSE
+
+                        localStorage.setItem("NSE_Brokerage_Type", data.NSE_Brokerage_Type);
+                        localStorage.setItem("Equity_brokerage_per_crore", data.Equity_brokerage_per_crore);
+
+                        localStorage.setItem("NSE_Exposure_Type", data.NSE_Exposure_Type);
+                        localStorage.setItem("Intraday_Exposure_Margin_Equity", data.Intraday_Exposure_Margin_EQUITY);
+                        localStorage.setItem("Holding_Exposure_Margin_Equity", data.Holding_Exposure_Margin_EQUITY);
+
+                        //CDS
+                        localStorage.setItem("CDS_Brokerage_Type", data.CDS_Brokerage_Type);
+                        localStorage.setItem("CDS_brokerage_per_crore", data.CDS_brokerage_per_crore);
+
+                        localStorage.setItem("CDS_Exposure_Type", data.CDS_Exposure_Type);
+                        localStorage.setItem("Intraday_Exposure_Margin_CDS", data.Intraday_Exposure_Margin_CDS);
+                        localStorage.setItem("Holding_Exposure_Margin_CDS", data.Holding_Exposure_Margin_CDS);
+
+                    //    var tkendata = token;
+                      //  localStorage.setItem("token", tkendata);
+
+                        var isdesktop = checkscreensize();
+                        if (data.FirstTimeLogin == "false") {
+                            localStorage.setItem("FirstTimeLogin", "false");
+                            location.href = "/home/accounts";
+                        } else {
+                            localStorage.setItem("FirstTimeLogin", "true");
+                            if (isdesktop == "true") {
+                                if (data.IsMCXTrade == "true") {
+                                    location.href = "/home/mcxfuture";
+                                } else if (data.IsNSETrade == "true") {
+                                    location.href = "/home/nsefuture";
+                                } else if (data.IsCDSTrade == "true") {
+                                    location.href = "/home/cdsfuture";
+                                } else {
+                                    location.href = "/home/tradedetails";
+                                }
+                            } else {
+                                location.href = "/home/marketwatchapp";
+                            }
+
+                        }
+
+                    }
+                }
+            });
+        }
+
+        function logincheckmob() {
+            getdeviceip();
+            $("#btnsubmitmob").html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`
+            );
+            localStorage.setItem("isdesktopcreen", false);
+            var servercode = $("#servercode").val();
+            var username = $("#username").val();
+            var password = $("#passwd").val();
+            var masterrefid = localStorage.getItem("masteruserid");
+            var deviceid = getdeviceid();
+            localStorage.setItem("pdeviceid", deviceid);
+            $.ajax({
+                url: "/api/checklogin/?username=" + username + "&password=" + password + "&deviceid=" + deviceid + "&refidbyuser=" + servercode + "&refidformatch=" + masterrefid,
+                type: "get",
+                success: function (response) {
+                    if (response == "false") {
+                        swal("Please Try Again", "Invalid Login Details");
+                        $("#btnsubmitmob").html(
+                            `Submit`
+                        );
+                    }
+                    else if (response == "Bloked") {
+                        swal("Please Try Again", "Sorry Your Account Is Blocked");
+                        $("#btnsubmitmob").html(
+                            `Submit`
+                        );
+                    }
+                    else {
+                        var data = JSON.parse(response);
+                        localStorage.setItem("userid", data.UserId);
+                        localStorage.setItem("ClientName", data.ClientName);
+                        localStorage.setItem("oldpassword", password);
+                        localStorage.setItem("Refid", data.Refid);
+                        localStorage.setItem("MobileNo", data.MobileNo);
+                        localStorage.setItem("EmailId", data.EmailId);
+                        localStorage.setItem("IsMCXTrade", data.IsMCXTrade);
+                        localStorage.setItem("IsNSETrade", data.IsNSETrade);
+                        localStorage.setItem("IsCDSTrade", data.IsCDSTrade);
+                        localStorage.setItem("trademcxunits", data.TradeMCXUnits);
+                        localStorage.setItem("tradeequityunits", data.TradeEquityUnits);
+                        localStorage.setItem("tradecdsunits", data.TradeCDSUnits);
+                        localStorage.setItem("profittradestoptime", data.profittradestoptime);
+                        localStorage.setItem("CreditLimit", data.CreditLimit);
+                        localStorage.setItem("LedgerBalance", data.LedgerBalance);
+                        localStorage.setItem("TotalActive", data.TotalActive);
+                        localStorage.setItem("TotalPending", data.TotalPending);
+                        localStorage.setItem("TotalClosed", data.TotalClosed);
+                        localStorage.setItem("AllowOrdersCurrentBid", data.AllowOrdersCurrentBid);
+                        localStorage.setItem("AllowFreshEntryHighAndBelow", data.AllowFreshEntryHighAndBelow);
+                        localStorage.setItem("AllowOrdersHighLow", data.AllowOrdersHighLow);
+                        localStorage.setItem("AutoCloseTradesLossesLimit", data.AutoCloseTradesLossesLimit);
+                        localStorage.setItem("auto_close_all_active_trades_when_the_losses_reach", data.auto_close_all_active_trades_when_the_losses_reach);
+
+                        //MCX Brokerage
+                        localStorage.setItem("Mcx_Brokerage_Type", data.Mcx_Brokerage_Type);
+                        localStorage.setItem("MCX_brokerage_per_crore", data.MCX_brokerage_per_crore);
+                        localStorage.setItem("BULLDEX_brokerage", data.BULLDEX_brokerage);
+                        localStorage.setItem("GOLD_brokerage", data.GOLD_brokerage);
+                        localStorage.setItem("SILVER_brokerage", data.SILVER_brokerage);
+                        localStorage.setItem("CRUDEOIL_brokerage", data.CRUDEOIL_brokerage);
+                        localStorage.setItem("COPPER_brokerage", data.COPPER_brokerage);
+                        localStorage.setItem("NICKEL_brokerage", data.NICKEL_brokerage);
+                        localStorage.setItem("ZINC_brokerage", data.ZINC_brokerage);
+                        localStorage.setItem("LEAD_brokerage", data.LEAD_brokerage)
+                        localStorage.setItem("NATURALGAS_brokerage", data.NATURALGAS_brokerage);
+                        localStorage.setItem("ALUMINIUM_brokerage", data.ALUMINIUM_brokerage);
+                        localStorage.setItem("MENTHAOIL_brokerage", data.MENTHAOIL_brokerage);
+                        localStorage.setItem("COTTON_brokerage", data.COTTON_brokerage);
+                        localStorage.setItem("CPO_brokerage", data.CPO_brokerage);
+                        localStorage.setItem("GOLDM_brokerage", data.GOLDM_brokerage);
+                        localStorage.setItem("SILVERMINI_brokerage", data.SILVERMINI_brokerage);
+                        localStorage.setItem("SILVERMIC_brokerage", data.SILVERMIC_brokerage);
+
+                        //MCX Intrday
+                        localStorage.setItem("Mcx_Exposure_Type", data.Mcx_Exposure_Type);
+                        localStorage.setItem("Intraday_Exposure_Margin_MCX", data.Intraday_Exposure_Margin_MCX);
+                        localStorage.setItem("Holding_Exposure_Margin_MCX", data.Holding_Exposure_Margin_MCX);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Intraday", data.MCX_Exposure_Lot_wise_BULLDEX_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Holding", data.MCX_Exposure_Lot_wise_BULLDEX_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Intraday", data.MCX_Exposure_Lot_wise_GOLD_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Holding", data.MCX_Exposure_Lot_wise_GOLD_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Intraday", data.MCX_Exposure_Lot_wise_SILVER_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Holding", data.MCX_Exposure_Lot_wise_SILVER_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Intraday", data.MCX_Exposure_Lot_wise_CRUDEOIL_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Holding", data.MCX_Exposure_Lot_wise_CRUDEOIL_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Intraday", data.MCX_Exposure_Lot_wise_COPPER_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Holding", data.MCX_Exposure_Lot_wise_COPPER_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Intraday", data.MCX_Exposure_Lot_wise_NICKEL_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Holding", data.MCX_Exposure_Lot_wise_NICKEL_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Intraday", data.MCX_Exposure_Lot_wise_ZINC_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Holding", data.MCX_Exposure_Lot_wise_ZINC_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Intraday", data.MCX_Exposure_Lot_wise_LEAD_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Holding", data.MCX_Exposure_Lot_wise_LEAD_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Intraday", data.MCX_Exposure_Lot_wise_NATURALGAS_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Holding", data.MCX_Exposure_Lot_wise_NATURALGAS_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Intraday", data.MCX_Exposure_Lot_wise_ALUMINIUM_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Holding", data.MCX_Exposure_Lot_wise_ALUMINIUM_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Intraday", data.MCX_Exposure_Lot_wise_MENTHAOIL_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Holding", data.MCX_Exposure_Lot_wise_MENTHAOIL_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Intraday", data.MCX_Exposure_Lot_wise_COTTON_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Holding", data.MCX_Exposure_Lot_wise_COTTON_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Intraday", data.MCX_Exposure_Lot_wise_CPO_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Holding", data.MCX_Exposure_Lot_wise_CPO_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Intraday", data.MCX_Exposure_Lot_wise_GOLDM_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Holding", data.MCX_Exposure_Lot_wise_GOLDM_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Intraday", data.MCX_Exposure_Lot_wise_SILVERM_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Holding", data.MCX_Exposure_Lot_wise_SILVERM_Holding);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Intraday", data.MCX_Exposure_Lot_wise_SILVERMIC_Intraday);
+                        localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Holding", data.MCX_Exposure_Lot_wise_SILVERMIC_Holding);
+
+                        //NSE
+
+                        localStorage.setItem("NSE_Brokerage_Type", data.NSE_Brokerage_Type);
+                        localStorage.setItem("Equity_brokerage_per_crore", data.Equity_brokerage_per_crore);
+
+                        localStorage.setItem("NSE_Exposure_Type", data.NSE_Exposure_Type);
+                        localStorage.setItem("Intraday_Exposure_Margin_Equity", data.Intraday_Exposure_Margin_EQUITY);
+                        localStorage.setItem("Holding_Exposure_Margin_Equity", data.Holding_Exposure_Margin_EQUITY);
+
+                        //CDS
+                        localStorage.setItem("CDS_Brokerage_Type", data.CDS_Brokerage_Type);
+                        localStorage.setItem("CDS_brokerage_per_crore", data.CDS_brokerage_per_crore);
+
+                        localStorage.setItem("CDS_Exposure_Type", data.CDS_Exposure_Type);
+                        localStorage.setItem("Intraday_Exposure_Margin_CDS", data.Intraday_Exposure_Margin_CDS);
+                        localStorage.setItem("Holding_Exposure_Margin_CDS", data.Holding_Exposure_Margin_CDS);
+
+                       // var tkendata = token;
+                        //localStorage.setItem("token", tkendata);
+                        var isdesktop = checkscreensize();
+                        if (data.FirstTimeLogin == "true") {
+                            localStorage.setItem("FirstTimeLogin", "true");
+                            location.href = "/home/accounts";
+                        } else {
+                            localStorage.setItem("FirstTimeLogin", "false");
+                            if (isdesktop == "true") {
+                                if (data.IsMCXTrade == "true") {
+                                    location.href = "/home/mcxfuture";
+                                } else if (data.IsNSETrade == "true") {
+                                    location.href = "/home/nsefuture";
+                                } else if (data.IsCDSTrade == "true") {
+                                    location.href = "/home/cdsfuture";
+                                } else {
+                                    location.href = "/home/tradedetails";
+                                }
+                            } else {
+                                location.href = "/home/marketwatchapp";
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+    </script>
+
+</body>
+</html>

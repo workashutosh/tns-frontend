@@ -1,0 +1,14 @@
+﻿@{
+    ViewBag.Title = "Send Payment Request";
+}
+
+<h2>Payment Request Response</h2>
+
+@if (ViewBag.ResponseData != null)
+{
+    <pre>@ViewBag.ResponseData</pre>
+}
+
+<p>
+    <a href="@Url.Action("SendPaymentRequest")">Try Again</a>
+</p>

@@ -1,0 +1,667 @@
+﻿
+@{
+    if (Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+    {
+        Context.Response.Headers["Location"] = Context.Request.RawUrl;
+        Context.Response.Headers["Cache-Control"] = "no-store";
+    }
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    @*<script src="~/Content/js/sweetalert2.all.min.js"></script>*@
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.5, maximum-scale=1.0, user-scalable=no" />
+    <title>@ViewBag.Title </title>
+    <link rel="icon" id="faviconicon" href="#" type="image/png" />
+    <!-- themefy CSS
+
+    <!-- text editor css
+    -->
+    <!-- plugins CSS -->
+    @*
+        <link rel="stylesheet" href="~/Content/vendors/material_icon/material-icons.css" />
+        <link rel="stylesheet" href="~/Content/vendors/themefy_icon/themify-icons.css" />
+        <link rel="stylesheet" href="~/Content/vendors/font_awesome/css/all.min.css" />
+    *@
+
+    <!-- Media CSS -->
+   
+    <style>
+    </style>
+    <script>
+        (function () {
+            let script = document.createElement('script');
+            script.src = "/Content/js/sweetalert2.all.min.js";
+            document.head.append(script);
+        })();
+
+        (function () {
+            var cssMain = document.createElement('link');
+            cssMain.href = '/Content/css/bootstrap.min.css';
+            cssMain.rel = 'stylesheet';
+            cssMain.type = 'text/css';
+            document.getElementsByTagName('head')[0].appendChild(cssMain);
+        })();
+
+        (function () {
+            var cssMain = document.createElement('link');
+            cssMain.href = '/Content/css/plugins.css';
+            cssMain.rel = 'stylesheet';
+            cssMain.type = 'text/css';
+            document.getElementsByTagName('head')[0].appendChild(cssMain);
+        })();
+    </script>
+
+</head>
+<body oncontextmenu="return false" class="crm_body_bg">
+
+    <div id="userprofile" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content" style="border:1px solid #2f8aa2">
+                <div class="modal-header">
+                    <table class="table">
+                        <tr>
+                            <td>
+                                <b>User Profile</b>
+                            </td>
+                            <td>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-body" style="text-align:center">
+                    <table id="userprofiledata" width="100%" class="table table-bordered table-striped">
+                    </table>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" data-dismiss="modal" onclick="closesellmodel()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="sidebar vertical-scroll  ps-container ps-theme-default ps-active-y">
+        <div class="logo side-logo">
+            <a href="#"><img src="" id="applogo" alt=""></a>
+            <div class="sidebar_close_icon d-lg-none">
+                <i class="ti-close"></i>
+            </div>
+        </div>
+        <ul id="sidebar_menu">
+
+
+
+            <li class="">
+                <a class="has-arrow" href="/home/tradedetails" aria-expanded="false">
+                    <div class="icon_menu">
+                        <img src="~/Content/img/menu-icon/3.svg" alt="">
+                    </div>
+                    <span>TRADES</span>
+                </a>
+            </li>
+            <li class="">
+                <a class="has-arrow" href="/home/accounts" aria-expanded="false">
+
+                    <div class="icon_menu">
+                        <img src="~/Content/img/menu-icon/4.svg" alt="">
+                    </div>
+                    <span>ACCOUNT</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+
+
+    <section class="main_content dashboard_part">
+        <!-- menu -->
+        <div class="container-fluid">
+            <div class="row">
+
+            </div>
+        </div>
+        <div class="mobile-nav">
+            <a href="/home/marketwatchapp" id="marketwatchapp">
+                <svg height="20px" width="30px" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path class="st0" d="M318.213,66.588h107.818L465.37,0H85.969L46.63,66.588h145.727c32.137,9.476,58.259,28.504,72.702,52.656 H85.969l-39.34,66.588h227.316c-13.482,45.473-65.618,79.365-127.924,79.365H68.313v60.013L288.818,512h96.012v-23.222 L183.333,321.936c84.557-3.351,153.634-61.218,166.283-136.105h76.415l39.339-66.588H345.687 C340.062,100.028,330.637,82.256,318.213,66.588z"></path> </g> </g></svg>
+                <br />
+
+                <b>Watchlist</b>
+            </a>
+            <a href="/home/tradedetailsapp" id="tradedetailsapp">
+
+                <svg height="22px" width="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill="#white" d="M287.03 20c-39.133.48-79.73 15.297-117 45.938h80.47v43.188c52.76-29.75 114.592-31.588 163.938.03l-18.188 9.72 64.688 50.72-3.75-83.314-26.407 14.126C395.99 48.792 345.038 20.644 290.907 20c-1.288-.015-2.583-.016-3.875 0zm-268 64.625v212.75h212.782V84.625H19.032zm50.282 26.03H205.78v138.939h-18.718v-120.25H69.313v-18.688zm3.344 38.126l90.094 91.845-13.344 13.094-90.094-91.845 13.344-13.094zm206.656 61.75v212.782h212.75v-212.78h-212.75zm50.25 26.064h136.469V375.5h-18.686V255.28h-117.78l-.002-18.686zm3.344 38.094l90.125 91.875-13.342 13.062-90.125-91.844 13.343-13.092zm-278.53 63.656l3.75 83.312 23.312-12.47c60.927 88.637 169.99 106.485 259.625 32.814h-80.439v-43.188c-52.08 29.38-113 31.544-162.03 1.188l20.436-10.938-64.655-50.718z"></path></g></svg>
+                <br />
+
+                <b>Trades</b>
+            </a>
+            <a href="/home/portfolioapp" id="portfolioapp">
+
+                <svg fill="#ffffff" height="20px" width="30px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <rect x="232.727" y="294.788" width="46.545" height="46.545"></rect> </g> </g> <g> <g> <path d="M488.727,93.091H356.849V23.273C356.849,10.42,346.429,0,333.576,0H178.424c-12.853,0-23.273,10.42-23.273,23.273v69.818 H23.273C10.42,93.091,0,103.509,0,116.364v78.798l23.273,5.818l23.273,5.818l165.775,41.444h87.361l165.773-41.446l23.273-5.818 L512,195.16v-78.797C512,103.509,501.58,93.091,488.727,93.091z M310.303,93.091H201.697V46.545h108.606V93.091z"></path> </g> </g> <g> <g> <path d="M488.727,248.958l-23.273,5.818l-139.636,34.909v74.921c0,12.851-10.42,23.273-23.273,23.273h-93.091 c-12.853,0-23.273-10.422-23.273-23.273v-74.921L46.545,254.776l-23.273-5.818L0,243.14v245.588C0,501.58,10.42,512,23.273,512 h465.455C501.58,512,512,501.58,512,488.727V243.14L488.727,248.958z"></path> </g> </g> </g></svg>
+                <br />
+                <b>Portfolio</b>
+            </a>
+            <a href="/home/accounts" id="accounts">
+                <svg height="22" version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-6.4 -6.4 76.80 76.80" enable-xml:space="preserve" fill="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M56,0H8C5.789,0,4,1.789,4,4v56c0,2.211,1.789,4,4,4h48c2.211,0,4-1.789,4-4V4C60,1.789,58.211,0,56,0z M24,20h8c2.211,0,4,1.789,4,4s-1.789,4-4,4h-8c-2.211,0-4-1.789-4-4S21.789,20,24,20z M40,44H24c-2.211,0-4-1.789-4-4s1.789-4,4-4 h16c2.211,0,4,1.789,4,4S42.211,44,40,44z"></path> </g></svg>
+                <br />
+
+                <b>Account</b>
+            </a>
+        </div>
+        <!--/ menu  -->
+        @RenderBody()
+    </section>
+
+    <div id="back-top" style="display: none;">
+        <a title="Go to Top" href="#">
+            <i class="ti-angle-up"></i>
+        </a>
+    </div>
+    @*<iframe style="display:none" id="IframeAdm" name="IFrameAdm" width="100%" height="100%" border="none" src="/Home/Autosqarapartialview"></iframe>
+        <iframe style="display:none" id="Iframeptoa" name="IFrameAdm" width="100%" height="100%" border="none" src="/Home/AutosqaraPendingToActive"></iframe>*@
+
+    <!-- popper js -->
+    <!-- bootstarp js -->
+    <script src="~/Content/js/jquery-3.4.1.min.js"></script>
+    <script src="~/Content/js/performance-monitor.js"></script>
+
+    <script>
+
+
+        function logout() {
+            localStorage.removeItem("userid");
+            localStorage.clear();
+            location.href = "/login/index";
+        }
+
+        function getdeviceip() {
+            $.ajax({
+                url: "https://api.ipify.org",
+                type: "get",
+                success: function (resp) {
+                    localStorage.setItem("devip", resp);
+                }
+            });
+
+
+        }
+
+        $(window).on('load', function () {
+            getdeviceip();
+            $("#applogo").attr("src", localStorage.getItem("appicon"));
+            $("#faviconicon").attr("href", localStorage.getItem("appicon"));
+            document.title = document.title + " | " + localStorage.getItem("apptitle");
+
+          //  changeactivestatus();
+            //setInterval(changeactivestatus, 10000);
+            var locationname = location.pathname
+            if (locationname == "/home/marketwatchapp") {
+                $("#marketwatchapp").addClass("active");
+            } else if (locationname == "/home/tradedetailsapp") {
+                $("#tradedetailsapp").addClass("active");
+            } else if (locationname == "/home/portfolioapp") {
+                $("#portfolioapp").addClass("active");
+            } else if (locationname == "/home/accounts") {
+                $("#accounts").addClass("active");
+            }
+
+            userprofile();
+
+            var ismcxtrade = localStorage.getItem("IsMCXTrade");
+            if (ismcxtrade == "true") {
+                var data = "<li id='mcxmenu'>";
+                data += "<a class='has-arrow' href = '/home/mcxfuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='/Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN MCX</span>";
+                data += " </a>";
+                data += " </li >";
+                $("#sidebar_menu").append(data);
+
+            }
+
+            var isnsetrade = localStorage.getItem("IsNSETrade");
+            if (isnsetrade == "true") {
+                var data = "<li id='nsemenu'>";
+                data += "<a class='has-arrow' href = '/home/nsefuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='/Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN NSE</span>";
+                data += " </a>";
+                data += " </li >";
+                $("#sidebar_menu").append(data);
+            }
+
+            var iscdstrade = localStorage.getItem("IsCDSTrade");
+            if (iscdstrade == "true") {
+                var data = "<li id='cdsmenu'>";
+                data += "<a class='has-arrow' href = '/home/cdsfuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='/Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN OPTION</span>";
+                data += " </a>";
+                data += " </li>";
+
+                $("#sidebar_menu").append(data);
+            }
+
+            var usrnam = localStorage.getItem("ClientName");
+            $("#username").html(usrnam);
+            $("#usernameh1").html(usrnam);
+        });
+
+        function changeactivestatus() {
+            var pdeviceid = localStorage.getItem("pdeviceid");
+            var userid = localStorage.getItem("userid");
+            $.ajax({
+                url: "/api/changeactivestatus/?userid=" + userid,
+                type: "get",
+                success: function (response) {
+                    if (!pdeviceid.includes(response)) {
+                        //localStorage.removeItem("userid");
+                        //location.href = "/login/index";
+                    }
+                }
+            });
+        }
+
+
+        function getdeviceid() {
+            let machineId = "192.168.1.1";
+            return machineId;
+        }
+
+        function logincheck() {
+            var devip = localStorage.getItem("devip");
+            var userid = localStorage.getItem("userid");
+            getdeviceip();
+            $.ajax({
+                url: "/api/refreshdata/?userid=" + userid + "&devip=" + devip,
+                type: "get",
+                success: function (response) {
+
+                    if (response == "false") {
+                        logout();
+                        return;
+                    }
+                    else if (response == "Bloked") {
+                        alert("Account has been Bloked. Please contact to Admin");
+                        logout();
+                        return;
+                    }
+                    var data = JSON.parse(response);
+                    //Check ValidTill
+                    console.log("refdata", data)
+                    localStorage.setItem("IsRazorpayAllowornot", data.IsRazorpayAllowornot);
+                    localStorage.setItem("IsMCXTrade", data.IsMCXTrade);
+                    localStorage.setItem("IsNSETrade", data.IsNSETrade);
+                    localStorage.setItem("IsCDSTrade", data.IsCDSTrade);
+                    localStorage.setItem("isonlinepayment", data.IsOnlinePayment);
+                    localStorage.setItem("checkprevtrade", data.checkprevtrade);
+                    localStorage.setItem("bankname", data.BankName);
+                    localStorage.setItem("accountmno", data.AccountNo);
+                    localStorage.setItem("ifsccode", data.IFSCCode);
+                    localStorage.setItem("accountholdername", data.AccountHolderName);
+
+                    localStorage.setItem("trademcxunits", data.TradeMCXUnits);
+                    localStorage.setItem("tradeequityunits", data.TradeEquityUnits);
+                    localStorage.setItem("tradecdsunits", data.TradeCDSUnits);
+                    localStorage.setItem("profittradestoptime", data.profittradestoptime);
+                    localStorage.setItem("IsSellAllowed", data.IsSellAllowed);
+                    localStorage.setItem("IsStopTrading", data.IsStopTrading);
+                    localStorage.setItem("userid", data.UserId);
+                    localStorage.setItem("ClientName", data.ClientName);
+                    localStorage.setItem("Refid", data.Refid);
+                    localStorage.setItem("MobileNo", data.MobileNo);
+                    localStorage.setItem("EmailId", data.EmailId);
+                    localStorage.setItem("CreditLimit", data.CreditLimit);
+                    localStorage.setItem("LedgerBalance", data.LedgerBalance);
+                    localStorage.setItem("TotalActive", data.TotalActive);
+                    localStorage.setItem("TotalPending", data.TotalPending);
+                    localStorage.setItem("TotalClosed", data.TotalClosed);
+                    localStorage.setItem("AllowOrdersCurrentBid", data.AllowOrdersCurrentBid);
+                    localStorage.setItem("AllowFreshEntryHighAndBelow", data.AllowFreshEntryHighAndBelow);
+
+
+                    localStorage.setItem("AllowOrdersHighLow", data.AllowOrdersHighLow);
+                    localStorage.setItem("AutoCloseTradesLossesLimit", data.AutoCloseTradesLossesLimit);
+                    localStorage.setItem("auto_close_all_active_trades_when_the_losses_reach", data.auto_close_all_active_trades_when_the_losses_reach);
+
+                    //MCX Brokerage
+                    localStorage.setItem("Mcx_Brokerage_Type", data.Mcx_Brokerage_Type);
+                    localStorage.setItem("MCX_brokerage_per_crore", data.MCX_brokerage_per_crore);
+                    localStorage.setItem("BULLDEX_brokerage", data.BULLDEX_brokerage);
+                    localStorage.setItem("GOLD_brokerage", data.GOLD_brokerage);
+                    localStorage.setItem("SILVER_brokerage", data.SILVER_brokerage);
+                    localStorage.setItem("CRUDEOIL_brokerage", data.CRUDEOIL_brokerage);
+                    localStorage.setItem("COPPER_brokerage", data.COPPER_brokerage);
+                    localStorage.setItem("NICKEL_brokerage", data.NICKEL_brokerage);
+                    localStorage.setItem("ZINC_brokerage", data.ZINC_brokerage);
+                    localStorage.setItem("LEAD_brokerage", data.LEAD_brokerage)
+                    localStorage.setItem("NATURALGAS_brokerage", data.NATURALGAS_brokerage);
+                    localStorage.setItem("ALUMINIUM_brokerage", data.ALUMINIUM_brokerage);
+                    localStorage.setItem("MENTHAOIL_brokerage", data.MENTHAOIL_brokerage);
+                    localStorage.setItem("COTTON_brokerage", data.COTTON_brokerage);
+                    localStorage.setItem("CPO_brokerage", data.CPO_brokerage);
+                    localStorage.setItem("GOLDM_brokerage", data.GOLDM_brokerage);
+                    localStorage.setItem("SILVERMINI_brokerage", data.SILVERMINI_brokerage);
+                    localStorage.setItem("SILVERMIC_brokerage", data.SILVERMIC_brokerage);
+
+                    localStorage.setItem("ALUMINI_brokerage", data.ALUMINI_brokerage);
+                    localStorage.setItem("CRUDEOILM_brokerage", data.CRUDEOILM_brokerage);
+                    localStorage.setItem("LEADMINI_brokerage", data.LEADMINI_brokerage);
+                    localStorage.setItem("NATGASMINI_brokerage", data.NATGASMINI_brokerage);
+                    localStorage.setItem("ZINCMINI_brokerage", data.ZINCMINI_brokerage);
+
+                    //MCX Intrday
+                    localStorage.setItem("Mcx_Exposure_Type", data.Mcx_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_MCX", data.Intraday_Exposure_Margin_MCX);
+                    localStorage.setItem("Holding_Exposure_Margin_MCX", data.Holding_Exposure_Margin_MCX);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Intraday", data.MCX_Exposure_Lot_wise_BULLDEX_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Holding", data.MCX_Exposure_Lot_wise_BULLDEX_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Intraday", data.MCX_Exposure_Lot_wise_GOLD_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Holding", data.MCX_Exposure_Lot_wise_GOLD_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Intraday", data.MCX_Exposure_Lot_wise_SILVER_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Holding", data.MCX_Exposure_Lot_wise_SILVER_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Intraday", data.MCX_Exposure_Lot_wise_CRUDEOIL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Holding", data.MCX_Exposure_Lot_wise_CRUDEOIL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Intraday", data.MCX_Exposure_Lot_wise_COPPER_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Holding", data.MCX_Exposure_Lot_wise_COPPER_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Intraday", data.MCX_Exposure_Lot_wise_NICKEL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Holding", data.MCX_Exposure_Lot_wise_NICKEL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Intraday", data.MCX_Exposure_Lot_wise_ZINC_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Holding", data.MCX_Exposure_Lot_wise_ZINC_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Intraday", data.MCX_Exposure_Lot_wise_LEAD_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Holding", data.MCX_Exposure_Lot_wise_LEAD_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Intraday", data.MCX_Exposure_Lot_wise_NATURALGAS_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Holding", data.MCX_Exposure_Lot_wise_NATURALGAS_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Intraday", data.MCX_Exposure_Lot_wise_ALUMINIUM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Holding", data.MCX_Exposure_Lot_wise_ALUMINIUM_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Intraday", data.MCX_Exposure_Lot_wise_MENTHAOIL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Holding", data.MCX_Exposure_Lot_wise_MENTHAOIL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Intraday", data.MCX_Exposure_Lot_wise_COTTON_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Holding", data.MCX_Exposure_Lot_wise_COTTON_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Intraday", data.MCX_Exposure_Lot_wise_CPO_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Holding", data.MCX_Exposure_Lot_wise_CPO_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Intraday", data.MCX_Exposure_Lot_wise_GOLDM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Holding", data.MCX_Exposure_Lot_wise_GOLDM_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Intraday", data.MCX_Exposure_Lot_wise_SILVERM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Holding", data.MCX_Exposure_Lot_wise_SILVERM_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Intraday", data.MCX_Exposure_Lot_wise_SILVERMIC_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Holding", data.MCX_Exposure_Lot_wise_SILVERMIC_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINI_Intraday", data.MCX_Exposure_Lot_wise_ALUMINI_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINI_Holding", data.MCX_Exposure_Lot_wise_ALUMINI_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOILM_Intraday", data.MCX_Exposure_Lot_wise_CRUDEOILM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOILM_Holding", data.MCX_Exposure_Lot_wise_CRUDEOILM_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEADMINI_Intraday", data.MCX_Exposure_Lot_wise_LEADMINI_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEADMINI_Holding", data.MCX_Exposure_Lot_wise_LEADMINI_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATGASMINI_Intraday", data.MCX_Exposure_Lot_wise_NATGASMINI_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATGASMINI_Holding", data.MCX_Exposure_Lot_wise_NATGASMINI_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINCMINI_Intraday", data.MCX_Exposure_Lot_wise_ZINCMINI_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINCMINI_Holding", data.MCX_Exposure_Lot_wise_ZINCMINI_Holding);
+
+
+                    //NSE
+
+                    localStorage.setItem("NSE_Brokerage_Type", data.NSE_Brokerage_Type);
+                    localStorage.setItem("Equity_brokerage_per_crore", data.Equity_brokerage_per_crore);
+
+                    localStorage.setItem("NSE_Exposure_Type", data.NSE_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_Equity", data.Intraday_Exposure_Margin_EQUITY);
+                    localStorage.setItem("Holding_Exposure_Margin_Equity", data.Holding_Exposure_Margin_EQUITY);
+
+                    //CDS
+                    localStorage.setItem("CDS_Brokerage_Type", data.CDS_Brokerage_Type);
+                    localStorage.setItem("CDS_brokerage_per_crore", data.CDS_brokerage_per_crore);
+
+                    localStorage.setItem("CDS_Exposure_Type", data.CDS_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_CDS", data.Intraday_Exposure_Margin_CDS);
+                    localStorage.setItem("Holding_Exposure_Margin_CDS", data.Holding_Exposure_Margin_CDS);
+
+
+                    var Password_ = data.Password_;
+                    var oldpassword = localStorage.getItem("oldpassword");
+                    if (oldpassword != Password_) {
+                        alert("Your Password has been Changed. Please login again");
+                        logout();
+                        return;
+                    }
+                    if (data.IsMCXTrade == "false") {
+                        $("#mcxmenu").hide();
+                        $("#mcxtabmenu").hide();
+
+                    }
+                    else {
+                        $("#mcxmenu").show();
+                        $("#mcxtabmenu").show();
+                        tabchange('MCX')
+                        globaltype = "mcx";
+                        _starttime = mcxtradetimestart;
+                        _endttime = mcxtradetimeend;
+
+                        $("#mcxtab").addClass("show active");
+                        $("#nsetab").removeClass("show active");
+                        $("#cdstab").removeClass("show active");
+                    }
+                    if (data.IsNSETrade == "false") {
+                        $("#nsemenu").hide();
+                        $("#nsetabmenu").hide();
+                    }
+                    else {
+                        if (data.IsMCXTrade == "false") {
+                            $("#nsemenu").show();
+                            $("#nsetabmenu").show();
+                            tabchange('NSE')
+                            globaltype = "nse";
+                            _starttime = nsetradetimestart;
+                            _endttime = nsetradetimeend;
+                            $("#mcxtab").removeClass("show active");
+                            $("#nsetab").addClass("show active");
+                            $("#cdstab").removeClass("show active");
+                        }
+
+                    }
+                    if (data.IsCDSTrade == "false") {
+                        $("#cdsmenu").hide();
+                        $("#cdstabmenu").hide();
+                    }
+                    else {
+
+                        if (data.IsCDSTrade == "true" && data.IsMCXTrade == "false" && data.IsNSETrade == "false") {
+                            tabchange('CDS')
+                            globaltype = "cds";
+                            _starttime = cdstradetimestart;
+                            _endttime = cdstradetimeend;
+                            $("#cdsmenu").show();
+                            $("#cdstabmenu").show();
+                            $("#mcxtab").removeClass("show active");
+                            $("#nsetab").removeClass("show active");
+                            $("#cdstab").addClass("show active");
+                        }
+
+                    }
+
+
+                    var LedgerBalance = localStorage.getItem("LedgerBalance");
+                    var TotalActive = localStorage.getItem("TotalActive");
+                    var TotalPending = localStorage.getItem("TotalPending");
+                    var TotalClosed = localStorage.getItem("TotalClosed");
+                    var username = localStorage.getItem("ClientName");
+                    LedgerBalance = parseFloat(LedgerBalance).toFixed(2);
+                    $("#ldgb").html(LedgerBalance);
+                    $("#ta").html(TotalActive);
+                    $("#tp").html(TotalPending);
+                    $("#tc").html(TotalClosed);
+                    $("#usernamess").html(username);
+                }
+            });
+        }
+
+        function setsymbol(val) {
+            if (val == "ALUMINI") { return "ALUMINI"; }
+            else if (val == "ALUMINIUM") {
+                return "ALUMINIUM";
+            } else if (val == "ALUMINIUMINI") {
+                return "ALUMINIUM";
+            }
+            if (val == "COPPER") {
+                return "COPPER";
+            } else if (val == "COPPERMINI") {
+                return "COPPER";
+            } else if (val == "CRUDEOIL") {
+                return "CRUDEOIL";
+            } else if (val == "CRUDEMINI") {
+                return "CRUDEOIL";
+            } else if (val == "CRUDEOILM") {
+                return "CRUDEOILM";
+            } else if (val == "GOLD") {
+                return "GOLD";
+            } else if (val == "GOLDM") {
+                return "GOLDM";
+            } else if (val == "GOLDMINI") {
+                return "GOLDM";
+            }
+            else if (val == "LEAD") {
+                return "LEAD";
+            } else if (val == "LEADMINI") {
+                return "LEADMINI";
+            } else if (val == "LEADM") {
+                return "LEAD";
+            } else if (val == "MENTHAOIL") {
+                return "MENTHAOIL";
+            }
+            else if (val == "NATURALGAS") {
+                return "NATURALGAS";
+            }
+            else if (val == "NATGASMINI") {
+                return "NATGASMINI";
+            } else if (val == "NATURALGASM") {
+                return "NATURALGAS";
+            }
+            else if (val == "NICKEL") {
+                return "NICKEL";
+            }
+            else if (val == "SILVER") {
+                return "SILVER";
+            }
+            else if (val == "SILVERM") {
+                return "SILVERM";
+            }
+            else if (val == "SILVERMINI") {
+                return "SILVERM";
+            }
+            else if (val == "SILVERMIC") {
+                return "SILVERMIC";
+            }
+
+            else if (val == "ZINC") {
+                return "ZINC";
+            }
+            else if (val == "ZINCM") {
+                return "ZINC";
+            } else if (val == "ZINCMINI") {
+                return "ZINCMINI";
+            }
+
+            return val;
+        }
+        function checkprevtrade() {
+            return localStorage.getItem("checkprevtrade");
+        }
+        function checkisonlinepagment() {
+            return localStorage.getItem("isonlinepayment");
+        }
+        function checkIsSellAllowed() {
+            return localStorage.getItem("IsSellAllowed");
+        }
+        function checkIsStopTrading() {
+            return localStorage.getItem("IsStopTrading");
+        }
+
+        function checktrademethod(exchangetype) {
+            if (exchangetype == "MCX") {
+                return localStorage.getItem("trademcxunits");
+            }
+            if (exchangetype == "NSE") {
+                return localStorage.getItem("tradeequityunits");
+            }
+            if (exchangetype == "OPT" || exchangetype == "CDS") {
+                return localStorage.getItem("tradecdsunits");
+            }
+        }
+
+        function userprofile() {
+            logincheck();
+
+            var userid = localStorage.getItem("userid");
+            $.ajax({
+                url: "/api/userprofile/?userid=" + userid,
+                type: "get",
+                success: function (response) {
+                    var data = JSON.parse(response);
+                    var usrbalnce = "";
+                    $.each(data, function (i, item) {
+                        var FirstName = data[i].FirstName;
+                        var LastName = data[i].LastName;
+                        var UserName = data[i].UserName;
+                        var CreditLimit = data[i].CreditLimit;
+                        var LedgerBalance = data[i].LedgerBalance;
+                        var MobileNo = data[i].MobileNo;
+                        var EmailId = data[i].EmailId;
+                        var AadharNo = data[i].AadharNo;
+                        var PanNo = data[i].PanNo;
+                        var City = data[i].City;
+                        var Address = data[i].Address;
+
+                        usrbalnce += "<tr><td>First Name</td><td   align='left'>" + FirstName + "</td></tr>";
+                        usrbalnce += "<tr><td>Last Name</td><td  align='left'>" + LastName + "</td></tr>";
+                        usrbalnce += "<tr><td>User Name</td><td   align='left'>" + UserName + "</td></tr>";
+                        usrbalnce += "<tr><td>Credit Limit</td><td   align='left'>" + CreditLimit + "</td></tr>";
+                        usrbalnce += "<tr><td>Ledger Balance</td><td   align='left'>" + LedgerBalance + "</td></tr>";
+                        usrbalnce += "<tr><td>Mobile No</td><td   align='left'>" + MobileNo + "</td></tr>";
+                        usrbalnce += "<tr><td>Email Id</td><td   align='left'>" + EmailId + "</td></tr>";
+                        usrbalnce += "<tr><td>Aadhar No</td><td   align='left'>" + AadharNo + "</td></tr>";
+                        usrbalnce += "<tr><td>PanNo.</td><td   align='left'>" + PanNo + "</td></tr>";
+                        usrbalnce += "<tr><td>City</td><td   align='left'>" + City + "</td></tr>";
+                        usrbalnce += "<tr><td>Address</td><td   align='left'>" + Address + "</td></tr>";
+
+                    });
+                    $("#userprofiledata").html(usrbalnce);
+                }
+            });
+        }
+
+    </script>
+    @*<script src="~/Content/js/bootstrap.min.js"></script>*@
+    <script>
+
+
+
+
+
+
+        (function () {
+            let script = document.createElement('script');
+            script.src = "/Content/js/bootstrap.min.js";
+            document.body.append(script);
+        })();
+
+    </script>
+</body>
+</html>

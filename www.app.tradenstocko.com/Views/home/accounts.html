@@ -1,0 +1,2705 @@
+﻿
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.5, maximum-scale=1.0, user-scalable=no" />
+    <title>accounts </title>
+    <link rel="icon" id="faviconicon" href="#" type="image/png" />
+    <!-- themefy CSS
+
+    <!-- text editor css
+    -->
+    <!-- plugins CSS -->
+    
+
+    <!-- Media CSS -->
+   
+    <style>
+    </style>
+    <script>
+        (function () {
+            let script = document.createElement('script');
+            script.src = "/Content/js/sweetalert2.all.min.js";
+            document.head.append(script);
+        })();
+
+        (function () {
+            var cssMain = document.createElement('link');
+            cssMain.href = '/Content/css/bootstrap.min.css';
+            cssMain.rel = 'stylesheet';
+            cssMain.type = 'text/css';
+            document.getElementsByTagName('head')[0].appendChild(cssMain);
+        })();
+
+        (function () {
+            var cssMain = document.createElement('link');
+            cssMain.href = '/Content/css/plugins.css';
+            cssMain.rel = 'stylesheet';
+            cssMain.type = 'text/css';
+            document.getElementsByTagName('head')[0].appendChild(cssMain);
+        })();
+    </script>
+
+</head>
+<body oncontextmenu="return false" class="crm_body_bg">
+
+    <div id="userprofile" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content" style="border:1px solid #2f8aa2">
+                <div class="modal-header">
+                    <table class="table">
+                        <tr>
+                            <td>
+                                <b>User Profile</b>
+                            </td>
+                            <td>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-body" style="text-align:center">
+                    <table id="userprofiledata" width="100%" class="table table-bordered table-striped">
+                    </table>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" data-dismiss="modal" onclick="closesellmodel()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="sidebar vertical-scroll  ps-container ps-theme-default ps-active-y">
+        <div class="logo side-logo">
+            <a href="#"><img src="" id="applogo" alt=""></a>
+            <div class="sidebar_close_icon d-lg-none">
+                <i class="ti-close"></i>
+            </div>
+        </div>
+        <ul id="sidebar_menu">
+
+
+
+            <li class="">
+                <a class="has-arrow" href="/home/tradedetails" aria-expanded="false">
+                    <div class="icon_menu">
+                        <img src="/Content/img/menu-icon/3.svg" alt="">
+                    </div>
+                    <span>TRADES</span>
+                </a>
+            </li>
+            <li class="">
+                <a class="has-arrow" href="/home/accounts" aria-expanded="false">
+
+                    <div class="icon_menu">
+                        <img src="/Content/img/menu-icon/4.svg" alt="">
+                    </div>
+                    <span>ACCOUNT</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+
+
+    <section class="main_content dashboard_part">
+        <!-- menu -->
+        <div class="container-fluid">
+            <div class="row">
+
+            </div>
+        </div>
+        <div class="mobile-nav">
+            <a href="/home/marketwatchapp" id="marketwatchapp">
+                <svg height="20px" width="30px" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path class="st0" d="M318.213,66.588h107.818L465.37,0H85.969L46.63,66.588h145.727c32.137,9.476,58.259,28.504,72.702,52.656 H85.969l-39.34,66.588h227.316c-13.482,45.473-65.618,79.365-127.924,79.365H68.313v60.013L288.818,512h96.012v-23.222 L183.333,321.936c84.557-3.351,153.634-61.218,166.283-136.105h76.415l39.339-66.588H345.687 C340.062,100.028,330.637,82.256,318.213,66.588z"></path> </g> </g></svg>
+                <br />
+
+                <b>Watchlist</b>
+            </a>
+            <a href="/home/tradedetailsapp" id="tradedetailsapp">
+
+                <svg height="22px" width="30px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill="#white" d="M287.03 20c-39.133.48-79.73 15.297-117 45.938h80.47v43.188c52.76-29.75 114.592-31.588 163.938.03l-18.188 9.72 64.688 50.72-3.75-83.314-26.407 14.126C395.99 48.792 345.038 20.644 290.907 20c-1.288-.015-2.583-.016-3.875 0zm-268 64.625v212.75h212.782V84.625H19.032zm50.282 26.03H205.78v138.939h-18.718v-120.25H69.313v-18.688zm3.344 38.126l90.094 91.845-13.344 13.094-90.094-91.845 13.344-13.094zm206.656 61.75v212.782h212.75v-212.78h-212.75zm50.25 26.064h136.469V375.5h-18.686V255.28h-117.78l-.002-18.686zm3.344 38.094l90.125 91.875-13.342 13.062-90.125-91.844 13.343-13.092zm-278.53 63.656l3.75 83.312 23.312-12.47c60.927 88.637 169.99 106.485 259.625 32.814h-80.439v-43.188c-52.08 29.38-113 31.544-162.03 1.188l20.436-10.938-64.655-50.718z"></path></g></svg>
+                <br />
+
+                <b>Trades</b>
+            </a>
+            <a href="/home/portfolioapp" id="portfolioapp">
+
+                <svg fill="#ffffff" height="20px" width="30px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <rect x="232.727" y="294.788" width="46.545" height="46.545"></rect> </g> </g> <g> <g> <path d="M488.727,93.091H356.849V23.273C356.849,10.42,346.429,0,333.576,0H178.424c-12.853,0-23.273,10.42-23.273,23.273v69.818 H23.273C10.42,93.091,0,103.509,0,116.364v78.798l23.273,5.818l23.273,5.818l165.775,41.444h87.361l165.773-41.446l23.273-5.818 L512,195.16v-78.797C512,103.509,501.58,93.091,488.727,93.091z M310.303,93.091H201.697V46.545h108.606V93.091z"></path> </g> </g> <g> <g> <path d="M488.727,248.958l-23.273,5.818l-139.636,34.909v74.921c0,12.851-10.42,23.273-23.273,23.273h-93.091 c-12.853,0-23.273-10.422-23.273-23.273v-74.921L46.545,254.776l-23.273-5.818L0,243.14v245.588C0,501.58,10.42,512,23.273,512 h465.455C501.58,512,512,501.58,512,488.727V243.14L488.727,248.958z"></path> </g> </g> </g></svg>
+                <br />
+                <b>Portfolio</b>
+            </a>
+            <a href="/home/accounts" id="accounts">
+                <svg height="22" version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-6.4 -6.4 76.80 76.80" enable-xml:space="preserve" fill="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M56,0H8C5.789,0,4,1.789,4,4v56c0,2.211,1.789,4,4,4h48c2.211,0,4-1.789,4-4V4C60,1.789,58.211,0,56,0z M24,20h8c2.211,0,4,1.789,4,4s-1.789,4-4,4h-8c-2.211,0-4-1.789-4-4S21.789,20,24,20z M40,44H24c-2.211,0-4-1.789-4-4s1.789-4,4-4 h16c2.211,0,4,1.789,4,4S42.211,44,40,44z"></path> </g></svg>
+                <br />
+
+                <b>Account</b>
+            </a>
+        </div>
+        <!--/ menu  -->
+        
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+    .m-red-m {
+        color: red;
+    }
+
+    #tblbillinfo td {
+        border: 1px solid 10px;
+        padding: 10px;
+    }
+
+    .mob-head th {
+        color: white;
+    }
+
+    .text-dark {
+        color: #d6d6d6;
+    }
+
+    .td1 {
+        padding: 3px;
+        border: 1px solid #cee7e7;
+    }
+
+    .td2 {
+        padding: 3px;
+        border: 1px solid #cee7e7;
+        color: white;
+        background-color: #212529;
+        font-size: 18px;
+    }
+
+    .m-green-m {
+        color: green;
+    }
+
+    th {
+        background-color: #212529;
+        text-align: center;
+        color: white;
+        vertical-align: top;
+    }
+</style>
+<div id="profilemodel" class="ser-popup  modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content user-profile">
+            <div class="modal-header">
+                <h4 class="text-white">User Trade Profile</h4>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="mob-head">
+                <button type="button" class="close" data-dismiss="modal">
+                    <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+                </button>
+                <h5 class="mb-0">User Trade Profile</h5>
+                <span>&nbsp;&nbsp;&nbsp;</span>
+            </div>
+            <div class="modal-body" style="text-align:center">
+
+                <div class="row" style="background-color:#d6d6d6;" id="MCXBlockData">
+                    <div class="col-lg-12" style="background-color:#d6d6d6">
+                        <h5 style="margin-top:5px;"><b>MCX</b> </h5>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <b style="padding:10px;color:darkcyan">Brokerage Type :</b>
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <span style="padding:10px" id="MCXBrokerageType">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <b style="padding:10px;color:darkcyan">Brokerage Value :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <span style="padding:10px;font-size:12px;" id="MCXbrokerageValue">Per Lot</span>
+                    </div>
+
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Exposure Type :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding:10px" id="MCXExposureType">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Margin Intraday :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 12px;" id="MCXMarginIndradayvalue">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Margin Holding :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 12px;" id="MCXMarginHoldingValue">Per Lot</span>
+                    </div>
+                </div>
+
+                <div class="row" style="background-color: #d6d6d6; margin-top: 10px" id="NSEBlockdata">
+                    <div class="col-lg-12" style="background-color:#d6d6d6"><h5 style="margin-top:5px;"><b>NSE</b> </h5></div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Brokerage</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEbrokeragevalue"></span>/
+                            <span id="NSEBrokeragetype"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left ">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Intraday</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEMarginIndradayvalue"></span>/
+                            <span id="NSEMarginIndradayType"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Holding</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEMarginIndradayHoldingvalue"></span>/
+                            <span id="NSEMarginIndradayHoldingType"></span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row" style="background-color: #d6d6d6; margin-top: 10px" id="CDSBlockdata">
+                    <div class="col-lg-12" style="background-color:#d6d6d6"><h5 style="margin-top:5px;"><b>NFO-OPT</b> </h5></div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Brokerage</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSbrokeragevalue"></span>/
+                            <span id="CDSBrokeragetype"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left ">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Intraday</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSMarginIndradayvalue"></span>/
+                            <span id="CDSMarginIndradayType"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Holding</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSMarginIndradayHoldingvalue"></span>/
+                            <span id="CDSMarginIndradayHoldingType"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="personalprofilemodel" class="ser-popup modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content user-profile bg-white">
+            <div class="modal-header">
+                <h4 class="text-white">User Details</h4>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="mob-head">
+                <button type="button" class="close" data-dismiss="modal">
+                    <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+                </button>
+                <h5 class="mb-0">User Details</h5>
+                <span>&nbsp;&nbsp;&nbsp;</span>
+            </div>
+            <div class="modal-body" style="text-align:center">
+
+                <div class="row" style="background-color: #d6d6d6; margin-top: 10px" id="MCXBlockData">
+
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <b style="padding:10px;color:darkcyan">UserName :</b>
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_username">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <b style="padding:10px;color:darkcyan">Name :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6;text-align:left">
+                        <span style="padding:10px;font-size:14px;" id="per_fnamelname">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Mobile No. :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_mobileno">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Email Id :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_email">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Aadhar No :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_aadharno">-</span>
+                    </div>
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">PAN No :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_panno">-</span>
+                    </div>
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">City :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_city">-</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Address :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #d6d6d6; text-align: left">
+                        <span style="padding: 10px; font-size: 14px;" id="per_add">-</span>
+                    </div>
+                    <!--Only For Infinity Trade-->
+                    
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="withdrawonlinemodel" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4 class="text-white">Withdraw Online</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Withdraw Online</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+
+                <table class="table table-borderd" style="margin-top:10px;">
+
+
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Enter Amount</span>
+                            <input type="number" required id="withtxttransamount" class="custom-input" autocomplete="off" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Enter Remarks</span>
+                            <textarea rows="2" required cols="1" id="withtxttransremark" class="custom-input" autocomplete="off">
+                                 </textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td>
+                                        <input type="button" class="btn btn-success form-control" value="Submit" onclick="savewithdraw()" />
+                                    </td>
+                                    <td>
+                                        <input type="button" class="btn btn-danger form-control" data-dismiss="modal" value="Close" />
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="payonlinemodel" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+            <h4 class="text-white">Pay Online</h4>
+            <button type="button" class="close text-white" data-dismiss="modal" onclick="closechangepass()">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Pay Online </h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <div class="modal-content" id="manualpay">
+            <div class="modal-body" style="text-align:center">
+                <div class="row">
+                    <div class="col-lg-7" style="border-right:1px solid #cee7e7">
+                        <a id="payupi" href="" class="upi-pay1">
+                            <img id="payimg" width="270" src="#" class="img-responsive" />
+                        </a>
+                        <br />
+                        <h4 style="margin-top:20px">UPI ID : <span id="upiiduser"></span></h4>
+                    </div>
+                    <div class="col-lg-5">
+                        <h3>Account Details</h3>
+                        <table style="background-color:white" class="table">
+                            <tr>
+                                <td align="left"><b>Name:</b></td>
+                                <td align="left" id="accholder"></td>
+                            </tr>
+                            <tr>
+                                <td align="left"><b>Account No:</b></td>
+                                <td align="left" id="accno"></td>
+                            </tr>
+                            <tr>
+                                <td align="left"><b>IFSC Code:</b></td>
+                                <td align="left" id="accifsc"></td>
+                            </tr>
+                        </table>
+                        <hr />
+                        <table class="table table-borderd" style="margin-top:10px;">
+                            <tr>
+                                <td style="text-align:left">
+                                    <p>
+                                        <b> Please fill the details after payment for payment approval.</b>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <hr />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Transaction Id</span>
+                                    <input type="text" id="txttransid" class="custom-input" autocomplete="off" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Amount</span>
+                                    <input type="number" id="txttransamount" required class="custom-input" autocomplete="off" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Remarks</span>
+                                    <textarea rows="5" cols="1" required id="txttransremark" class="custom-input" autocomplete="off">
+                                 </textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="button" required class="btn btn-success form-control" value="Submit" onclick="submitpaymentdetails()" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-content" id="gatewaypay">
+            <div class="modal-body" style="text-align:center">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h3>Amount Details</h3>
+                        <hr />
+                        <table class="table table-borderd" style="margin-top:10px;">
+
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Transaction ID</span>
+                                    <input type="text" id="gatwaytxnid" readonly class="custom-input" autocomplete="off" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Amount To Be Deposit</span>
+                                    <input type="number" id="gatwaytxttransamount" required class="custom-input" autocomplete="off" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="button" required class="btn btn-success form-control" value="Submit" id="payBtn" onclick="submitpaymentdetails1()" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="funddetails" class="modal fade ser-popup funds-popup" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h4 class="text-white">Transaction History</h4>
+            <button type="button" style="color:white;" class="close text-white" data-dismiss="modal">&times;</button>
+
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" style="color:white;">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0" style="color:white;">Transaction History</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+
+                <table width="100%" class="table">
+                    <thead style="color:white">
+                        <tr>
+                            <th align="left" colspan="2">
+                                <b style="color:white"> User Current Balance </b>
+                            </th>
+                            <th align="right" style="text-align:right;">
+                                <span style="color:white"><b id="userbalancemodel">0</b></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="sellordervalue">
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="changepassword" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4 class="text-white">Change Password</h4>
+            <button type="button" class="close text-white" data-dismiss="modal" onclick="closechangepass()">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Change Password</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+       <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+
+                <table width="100%" class="table">
+                    <thead style="color:white">
+                        <tr>
+                            <th align="left" colspan="2">
+                                <b style="color:white"> User Current Balance </b>
+                            </th>
+                            <th align="right" style="text-align:right;">
+                                <span style="color:white"><b id="userbalancemodel">0</b></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="sellordervalue"></tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="noti-popup" class="ser-popup raise-comp noti-popup modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h4 class="text-white">Notifications</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Notifications</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <table width="100%" style="height:100vh">
+                <tbody id="tblnoti">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<div id="payonlnpopdiv" class="ser-popup raise-comp  modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h4 class="text-white">Pay Online</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+            </button>
+            <h5 class="mb-0">Pay Online</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content" id="payonlnpoparea">
+            <div class="modal-body" style="text-align:center">
+
+
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="PayCustomerName" name="PayCustomerName" readonly placeholder="CustomerName" autofocus="" required="" />
+                </div>
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="PayCustomerPhoneNo" name="PayCustomerPhoneNo" placeholder="MobileNo" readonly autofocus="" required="" />
+                </div>
+                <div class="form-group floating-label-group mb-60">
+                    <input type="tel" class="custom-input" autocomplete="off" id="CustomerEmailID" name="CustomerEmailID" placeholder="Email" readonly autofocus="" required="" />
+                </div>
+                <div class="form-group floating-label-group mb-60">
+                    <input type="tel" class="custom-input" autocomplete="off" id="PayCartAmount" name="PayCartAmount" placeholder="Amount" autofocus="" value="1" />
+                </div>
+
+                <input type="button" class="login-btn" id="payfinal" value="Send" onclick="paynow()" />
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div id="invoicebill" class="ser-popup raise-comp noti-popup modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+            <h4 class="text-white">Bill & Invoice </h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+
+            </button>
+            <h5 class="mb-0">Bill & Invoice</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <table width="100%" class="table-responsive" style="height:100vh">
+                <thead>
+                    <tr>
+                        <th>S.No&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>Script Name <br />Order Category,Lot</th>
+                        <th>Order Price <br />Date & Time</th>
+                        <th>Close Price <br />Date & Time</th>
+                        <th>Profit/Loss&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>Brokerage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                    </tr>
+                </thead>
+
+
+                <tbody id="tblbillinfo">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div id="raise-comp" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4 class="text-white">Raise Complaint</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" id="btnhide" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+
+            </button>
+            <h5 class="mb-0">Raise Complaint</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="name" name="name" autofocus="" required="" />
+                    <label class="floating-label">Name</label>
+                </div>
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="callno" name="callno" autofocus="" required="" />
+                    <label class="floating-label">Phone No.</label>
+                </div>
+                <div class="form-group floating-label-group mb-60">
+                    <input type="tel" class="custom-input" autocomplete="off" id="whatsappno" name="whatsappno" autofocus="" required="" />
+                    <label class="floating-label">Whatsapp No.</label>
+                </div>
+                <div class="form-group floating-label-group text-area" name="name">
+                    <textarea class="custom-input" name="message" id="message" placeholder=""></textarea>
+                    <label class="floating-label">Description</label>
+                </div>
+                <input type="button" class="login-btn" value="Send" onclick="save()" />
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="intradayhistorypopup" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+            <h4 class="text-white"> Intraday History</h4>
+            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" id="btnhide" data-dismiss="modal">
+                <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
+
+
+            </button>
+            <h5 class="mb-0">Intraday History</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align: center; background-color: white;height:100vh">
+                <div class="row" style="background-color:white">
+                    <div class="col-lg-3 col-sm-3 col-md-3" style="margin-top:5px;">
+                        <select id="exchname" class="form-control" onchange="getscript()">
+                            <option value="Select Exchange">Select Exchange</option>
+                            <option value="MCX">MCX</option>
+                            <option value="NSE">NSE</option>
+                            <option value="OPT">OPT</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-sm-3 col-md-3" style="margin-top:5px;">
+                        <input list="scriptlistdata" class="form-control" id="scriptlist" placeholder="Select Script" onchange="datac()">
+                        <datalist id="scriptlistdata">
+                        </datalist>
+                    </div>
+
+                    <div class="col-lg-3 col-sm-3 col-md-3" style="margin-top:5px;">
+                        <select class="form-control" id="intervaldrop">
+                            <option value="Select Interval">Select Interval</option>
+                            <option value="1M">1M</option>
+                            <option value="2M">2M</option>
+                            <option value="3M">3M</option>
+                            <option value="4M">4M</option>
+                            <option value="5M">5M</option>
+                            <option value="10M">10M</option>
+                            <option value="15M">15M</option>
+                            <option value="30M">30M</option>
+                            <option value="1H">1H</option>
+                            <option value="2H">2H</option>
+                            <option value="3H">3H</option>
+                            <option value="4H">4H</option>
+                            <option value="1D">1D</option>
+
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-sm-3 col-md-3" style="margin-top:5px;">
+                        <div class="btn-group">
+                            <input type="button" value="Search" onclick="btnsrchchart()" class="btn btn-danger form-control" />
+                            <input type="button" value="Reset" onclick="resetchrt()" class="btn btn-success  form-control" />
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row" style="margin-top:10px;background-color:white">
+                    <div class="col-lg-12 table-responsive">
+                        <table width="100%" class=" table-bordered table-striped" style="margin-top:10px;width:100%" cellpadding="5">
+                            <thead>
+                                <tr>
+                                    <td>Timing</td>
+                                    <td>High</td>
+                                    <td>Low</td>
+                                    <td>Volume</td>
+                                    <td>Open</td>
+                                    <td>Close</td>
+                                </tr>
+                            </thead>
+                            <tbody id="chrttbl">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="main_content_iner ">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="white_card card_height_100 mb_30 QA_section minus-mx-15 acount-src">
+                    <div class="white_card_header">
+                        <div class="box_header m-0">
+                            <div class="main-title">
+                                <h3 class="m-0">ACCOUNT</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="white_card_body px-15 pt-3 pb-0">
+                        <div class="row mx-0 h-vh">
+
+                            <div class="col-lg-6 account-left">
+                                <div class="bg-white p-10" style="background-image:linear-gradient(#000,#c9e918)">
+                                    <table class="table lager-table" cellpadding="5" align="center">
+                                        <tr>
+                                            <td align="center" style="color:#fff">
+                                                Ledger Balance <strong id="userbalance">0</strong>
+                                            </td>
+                                            <td align="center" style="color:#fff">
+                                                Margin Available <strong id="marginavl">0</strong>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td align="center" style="color:#fff">
+                                                Active P/L <strong id="activepl">0</strong>
+                                            </td>
+                                            <td align="center" style="color:#fff">
+                                                M2M (Equity) <strong id="m2m">0</strong>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div id="activeorder" class="active-order">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 acount-right" style="background-image:linear-gradient(#212529,#000)">
+                                <div class="bg-blue"></div>
+                                <div class="wel-head text-dark" style="margin-top: 5px">
+                                    <h3 style="color:#d6d6d6;text-align:center;"><b>Welcome, <span id="usernameh1"></span></b></h3>
+                                </div>
+                                <table class="table">
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="intradayhitory" class="btn-default" data-toggle='modal' data-target='#intradayhistorypopup' style="color:#d6d6d6;font-weight:bold">Intraday History </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#d6d6d6" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <a href="#" data-toggle='modal' data-target='#funddetails' class=" btn-default" style="color:#d6d6d6;font-weight:bold">Funds </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg fill="#d6d6d6" width="30px" height="30px" viewBox="-4.5 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="m15.307 5.83v1.738.021c0 .29-.235.525-.525.525-.007 0-.015 0-.022 0h.001-2.864c-.23 1.609-1.032 2.998-2.19 3.981l-.009.008c-1.288 1.041-2.904 1.723-4.673 1.873l-.032.002q2.846 3.034 7.824 9.136c.086.085.139.202.139.332 0 .092-.026.177-.072.249l.001-.002c-.076.182-.252.308-.459.308-.013 0-.025 0-.037-.001h.002-3.324c-.006 0-.014 0-.021 0-.166 0-.313-.08-.404-.204l-.001-.001q-5.216-6.256-8.489-9.733c-.095-.093-.154-.222-.154-.365 0-.004 0-.007 0-.011v.001-2.167c.004-.3.246-.542.545-.546h1.909c.099.005.214.007.33.007 1.196 0 2.328-.273 3.338-.76l-.046.02c.855-.428 1.49-1.188 1.742-2.107l.005-.023h-7.28c-.006 0-.014 0-.021 0-.29 0-.525-.235-.525-.525 0-.007 0-.015 0-.022v.001-1.738c0-.006 0-.014 0-.021 0-.29.235-.525.525-.525h.022-.001 7.04q-.971-1.926-4.568-1.926h-2.471c-.3-.004-.542-.246-.546-.545v-2.268c0-.006 0-.014 0-.021 0-.29.235-.525.525-.525h.022-.001 14.182.021c.29 0 .525.235.525.525v.022-.001 1.738.021c0 .29-.235.525-.525.525-.007 0-.015 0-.022 0h.001-3.971c.526.689.908 1.516 1.085 2.417l.006.037h2.914.021c.29 0 .525.235.525.525v.022-.001z"></path></g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="billinvoice" class="btn-default" data-toggle='modal' data-target='#invoicebill' style="color:#d6d6d6;font-weight:bold">Bill & Invoice </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <rect fill="#d6d6d6" height="3" width="7" x="2.5" y="8.5"></rect> <polygon fill="#d6d6d6" points="10,3 10,0.5 3.5,0.5 2,2 2,3 "></polygon> <path d="M10.5,4h-9C0.6728516,4,0,4.6728516,0,5.5V10h1.5V7.5h9V10H12V5.5C12,4.6728516,11.3271484,4,10.5,4z M10,6.5H9v-1h1V6.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" data-toggle='modal' data-target='#profilemodel' class="btn-default" style="color:#d6d6d6;font-weight:bold">Profile </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#d6d6d6"></path> <circle cx="6" cy="3.5" fill="#d6d6d6" r="3.5"></circle> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <a href="#" data-toggle='modal' data-target='#personalprofilemodel' class="btn-default" style="color:#d6d6d6;font-weight:bold">User Details </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#d6d6d6"></path> <circle cx="6" cy="3.5" fill="#d6d6d6" r="3.5"></circle> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    
+                                    <tr>
+                                        <td>
+                                            <a href="#" class=" btn-default" data-toggle='modal' data-target='#noti-popup' style="color:#d6d6d6;font-weight:bold">Notifications</a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <polygon fill="#d6d6d6" points="6,6.3818359 12,2.0180664 12,1 0,1 0,2.0181274 "></polygon> <polygon fill="#d6d6d6" points="6,7.6181641 0,3.2543335 0,11 12,11 12,3.2542725 "></polygon> </g> </g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="chgpass" class="btn-default" data-toggle='modal' data-target='#changepassword' style="color:#d6d6d6;font-weight:bold">Change Password </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#d6d6d6" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+
+                                    <!--For id="menupayonline" Payment-->
+
+                                    <tr id="menupayonline">
+                                        <td>
+                                            <a href="#" class="btn-default" data-toggle='modal' data-target='#payonlinemodel' onclick="getdepositdetails()" style="color:#d6d6d6;font-weight:bold">Deposit Online </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#d6d6d6" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <tr id="withmenupayonline">
+                                        <td>
+                                            <a href="#" class="btn-default" data-toggle='modal' data-target='#withdrawonlinemodel' style="color:#d6d6d6;font-weight:bold">Withdraw Online </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#d6d6d6" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#d6d6d6"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <!--For Payment-->
+
+
+                                    <tr>
+                                        <td>
+                                            <a href="#" onclick="logout();" class=" btn-default" style="color:#d6d6d6;font-weight:bold">Logout </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><polygon fill="#d6d6d6" points="9,2 9,0 1,0 1,12 9,12 9,10 8,10 8,11 2,11 2,1 8,1 8,2 "></polygon><polygon fill="#d6d6d6" points="8.2929688,3.2929688 7.5859375,4 9.0859375,5.5 5,5.5 5,6.5 9.0859375,6.5 7.5859375,8 8.2929688,8.7070313 11,6 "></polygon></g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" class=" btn-default" style="color:#d6d6d6;font-weight:bold">Version</a>
+                                        </td>
+                                        <td align="right">3.1.0</td>
+                                    </tr>
+
+                                </table><br /><br />
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/Content/js/jquery-3.4.1.min.js"></script>
+
+<script>
+
+    $(document).on('click', '.toggle-password1', function () {
+        $(this).toggleClass("fa-eye fa-eye-slash");
+        var input = $("#oldpass");
+        input.attr('type') === 'password' ? input.attr('type', 'text') : input.attr('type', 'password')
+    });
+
+
+    $(document).on('click', '.toggle-password2', function () {
+        $(this).toggleClass("fa-eye fa-eye-slash");
+        var input = $("#newpass");
+        input.attr('type') === 'password' ? input.attr('type', 'text') : input.attr('type', 'password')
+    });
+
+    $(document).on('click', '.toggle-password3', function () {
+        $(this).toggleClass("fa-eye fa-eye-slash");
+        var input = $("#connewpass");
+        input.attr('type') === 'password' ? input.attr('type', 'text') : input.attr('type', 'password')
+    });
+
+
+
+    function paymentonline() {
+        $("#payonlnpopdiv").modal("show");
+        var ClientName = localStorage.getItem("ClientName");
+        var MobileNo = localStorage.getItem("MobileNo");
+        var EmailId = localStorage.getItem("EmailId");
+        $("#PayCustomerName").val(ClientName);
+        $("#PayCustomerPhoneNo").val(MobileNo);
+        $("#CustomerEmailID").val(EmailId);
+    }
+
+
+
+
+    function paynow() {
+
+        $("#payfinal").html(
+            `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...`
+        );
+
+        var PayCustomerName = $("#PayCustomerName").val();
+        var PayCustomerPhoneNo = $("#PayCustomerPhoneNo").val();
+        var CustomerEmailID = $("#CustomerEmailID").val();
+        var PayCartAmount = $("#PayCartAmount").val();
+        var currentDomain = window.location.hostname;
+        if (currentDomain == "localhost") {
+            var port = window.location.port;
+            currentDomain = "http://" + currentDomain + ":" + port;
+        } else {
+            currentDomain = "https://" + currentDomain;
+        }
+        var refid = localStorage.getItem("Refid");
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getformconetntAsync/?PayCustomerName=" + PayCustomerName + "&PayCustomerPhoneNo=" + PayCustomerPhoneNo + "&CustomerEmailID=" + CustomerEmailID + "&PayCartAmount=" + PayCartAmount + "&baseuri=" + currentDomain + "&userid=" + userid + "&refid=" + refid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                console.log(data);
+                $("#payonlnpoparea").html(data.PreparePOSTForm);
+            }
+        });
+    }
+
+
+    function editbank() {
+        $("#per_accholdername").css("border", "1px solid gray");
+        $("#per_bankname").css("border", "1px solid gray");
+        $("#per_accno").css("border", "1px solid gray");
+        $("#per_ifsc").css("border", "1px solid gray");
+
+        $("#per_accholdername").removeAttr("readonly");
+        $("#per_bankname").removeAttr("readonly");
+        $("#per_accno").removeAttr("readonly");
+        $("#per_ifsc").removeAttr("readonly");
+
+
+        $("#btneditgroup").css("display", "block");
+    }
+
+    function validateIndianBankAccount(accountNumber) {
+        // Regular expression for Indian bank account number validation
+        var accountRegex = /^\d{9,18}$/;
+        // Check if the provided account number matches the regular expression
+        if (accountNumber.match(accountRegex)) {
+            return true; // Valid account number format
+        } else {
+            return false; // Invalid account number format
+        }
+    }
+
+    function validateIFSC(ifsc) {
+        // Regular expression for IFSC code validation
+        var ifscRegex = /^[A-Za-z]{4}[0][\d]{6}$/;
+        // Check if the provided IFSC matches the regular expression
+        if (ifsc.match(ifscRegex)) {
+            return true; // Valid IFSC code
+        } else {
+            return false; // Invalid IFSC code
+        }
+    }
+
+
+
+
+    function Savebankdetails() {
+        var userid = localStorage.getItem("userid");
+        var per_accholdername = $("#per_accholdername").val();
+        var per_bankname = $("#per_bankname").val();
+        var per_accno = $("#per_accno").val();
+        var per_ifsc = $("#per_ifsc").val();
+        var per_mobileno = $("#per_mobileno").html();
+        var per_email = $("#per_email").html();
+        var per_add = $("#per_add").html();
+        if (validateIFSC(per_ifsc) == false) {
+            swal("Error", "Invalid IFSC Code", "error");
+            return;
+        }
+
+        if (validateIndianBankAccount(per_accno) == false) {
+            swal("Error", "Invalid Account No.", "error");
+            return;
+        }
+        $.ajax({
+            url: "https://app.tradewingss.com/api/updateuserbankdetails/?userid=" + userid + "&bankname=" + per_bankname + "&accno=" + per_accno + "&ifsccode=" + per_ifsc + "&accountholder=" + per_accholdername + "&mob=" + per_mobileno + "&email=" + per_email + "&address=" + per_add,
+            type: "get",
+            success: function (response) {
+                if (response == "true") {
+                    swal("Success", "Bank Details Updated", "success");
+                }
+            }
+        });
+    }
+
+    function canceleditbank() {
+        $("#per_accholdername").css("border", "0px solid gray");
+        $("#per_bankname").css("border", "0px solid gray");
+        $("#per_accno").css("border", "0px solid gray");
+        $("#per_ifsc").css("border", "0px solid gray");
+
+        $("#per_accholdername").attr("readonly", true);
+        $("#per_bankname").attr("readonly", true);
+        $("#per_accno").attr("readonly", true);
+        $("#per_ifsc").attr("readonly", true);
+        $("#btneditgroup").css("display", "none");
+    }
+
+    function generateTransactionId() {
+        return 'txn_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    }
+
+    $(document).ready(function () {
+
+       // manualpay, gatewaypay
+
+        getuserbalance();
+        getuserbilldetails();
+        getpersonaldetails();
+        getactiveorder();
+        getnotification();
+        userprofiledata();
+
+        var IsRazorpayAllowornot = localStorage.getItem("IsRazorpayAllowornot");
+        if (IsRazorpayAllowornot == "No") {
+            $("#gatewaypay").hide();
+            $("#manualpay").show();
+        } else {
+            $("#gatewaypay").show();
+            $("#manualpay").hide();
+        }
+
+
+
+    })
+    function datac() {
+        var dat = $("#scriptlist").val();
+
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getscripttoken/?scriptname=" + dat,
+            type: "get",
+            success: function (response) {
+                localStorage.setItem("instokn", response);
+            }
+        });
+    }
+
+    function save() {
+
+        var name = $("#name").val();
+        var callno = $("#callno").val();
+        var whatsappno = $("#whatsappno").val();
+        var message = $("#message").val();
+        var postdata = { name: name, callno: callno, whatsappno: whatsappno, message: message, others: 'Complaint' };
+        $.ajax({
+            url: "https://app.tradewingss.com/api/contactus/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Thank you for connecting with us.");
+                $("#btnhide").trigger('click');
+            }
+        });
+    }
+
+
+    function submitpaymentdetails1() {
+        var userid = localStorage.getItem("userid");
+        var txttransid = $("#gatwaytxnid").val();
+        var txttransamount = $("#gatwaytxttransamount").val();
+
+
+        var refid = localStorage.getItem("Refid");
+        if (txttransamount == "") {
+            swal("Error", "Please fill required details.");
+            return;
+        }
+
+        var options = {
+            "key": "rzp_live_qWx0VAFWmsbaU4", // Replace with your Razorpay API Key ID (Not Secret!)
+            "amount": parseInt(txttransamount) * 100, // Amount in paise = ₹500
+            "currency": "INR",
+            "name": "BullBazaar",
+            "description": "Deposit Amount",
+            "image": "https://bullbazaar.in/Content/img/bullbazar.png",
+            "handler": function (response)
+            {
+                console.log(response);
+                localStorage.setItem("razorpay_payment_id",response.razorpay_payment_id);
+               
+                var postdata = { userid: userid, txttransid: txttransid, txttransamount: txttransamount, txttransremark: "Deposit By User RazorpayId" + response.razorpay_payment_id, refid: refid };
+                $.ajax({
+                    url: "https://app.tradewingss.com/api/savetransaction/",
+                    type: "post",
+                    data: postdata,
+                    success: function (response) {
+                        location.href = "/Payment/Success/?pid=" + response.razorpay_payment_id;
+                    }
+                });
+            },
+            "prefill": {
+                "name": localStorage.getItem("ClientName"),
+                "email": localStorage.getItem("EmailId"),
+                "contact": localStorage.getItem("MobileNo")
+            },
+            "theme": {
+                "color": "#3399cc"
+            }
+        };
+        var rzp1 = new Razorpay(options);
+        rzp1.open();
+        e.preventDefault();
+
+
+
+
+
+
+
+      
+    }
+
+
+
+
+    function submitpaymentdetails() {
+        var userid = localStorage.getItem("userid");
+        var txttransid = $("#txttransid").val();
+        var txttransamount = $("#txttransamount").val();
+        var txttransremark = $("#txttransremark").val();
+        var refid = localStorage.getItem("Refid");
+        if (txttransamount == "" || txttransremark == "" || txttransid == "") {
+            swal("Error", "Please fill required details.");
+            return;
+        }
+        var postdata = { userid: userid, txttransid: txttransid, txttransamount: txttransamount, txttransremark: txttransremark, refid: refid };
+        $.ajax({
+            url: "https://app.tradewingss.com/api/savetransaction/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Transaction Details Saved Successfully.");
+                $("#payonlinemodel").modal('hide');
+            }
+        });
+    }
+
+
+
+
+    function prefix0(value) {
+        var val = ((parseInt(value)) > 9) ? (parseInt(value)) : "0" + (parseInt(value));
+        return val;
+    }
+
+    function filterchartdata(token, interval) {
+        var chartData = [];
+        var instoken = token;
+        var date1 = new Date();
+        var yy = date1.getFullYear();
+        var mm = ((date1.getMonth() + 1) > 9) ? (date1.getMonth() + 1) : "0" + (date1.getMonth() + 1);
+        var dd = ((date1.getDate()) > 9) ? (date1.getDate()) : "0" + (date1.getDate());
+
+        var hh = ((date1.getHours()) > 9) ? (date1.getHours()) : "0" + (date1.getHours());
+        var mmm = ((date1.getMinutes()) > 9) ? (date1.getMinutes()) : "0" + (date1.getMinutes());
+        var ss = ((date1.getSeconds()) > 9) ? (date1.getSeconds()) : "0" + (date1.getSeconds());
+
+
+        var fromdatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+        var todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+
+        var intrvl = "";
+        if (interval == "1M" || interval == "2M" || interval == "3M" || interval == "4M" || interval == "5M" || interval == "10M" || interval == "15M" || interval == "30M") {
+            var actualmin = mmm;
+            var mint = interval + "".replace("M", "");
+            intrvl = mint.replace("M", "") + "minute";
+            if (intrvl == "1minute") {
+                intrvl = "minute";
+            }
+            var newmmm = parseInt(mmm) - parseInt(mint);
+            var newmmt = prefix0(newmmm);
+            fromdatetime = yy + "-" + mm + "-" + dd + "+" + "09" + ":" + "00" + ":" + "00";
+            todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + actualmin + ":" + ss + "";
+        }
+        else if (interval == "1H" || interval == "2H" || interval == "3H" || interval == "4H" || interval == "5H") {
+            var actualhh = hh;
+            var hhh = interval + "".replace("H", "");
+            intrvl = hhh.replace("H", "") + "hour";
+            if (intrvl == "1hour") {
+                intrvl = "hour";
+            }
+            var newhh = parseInt(dd) - parseInt(7);
+            var d = new Date();
+            var prey = d.getFullYear();
+            var premm = prefix0((d.getMonth() + 1));
+            var predd = prefix0(d.getDate());
+
+            fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+            todatetime = yy + "-" + mm + "-" + dd + "+" + actualhh + ":" + mmm + ":" + ss + "";
+        }
+        else if (interval == "1D") {
+            var actualdd = dd;
+            var dddd = interval + "".replace("D", "");
+            intrvl = "day";
+            var d = new Date();
+            var prey = d.getFullYear();
+            var premm = prefix0((d.getMonth() + 1));
+            var predd = prefix0(d.getDate());
+
+            fromdatetime = prey + "-" + premm + "-" + predd + "+" + "09" + ":" + "00" + ":" + "00";
+            todatetime = yy + "-" + mm + "-" + dd + "+" + hh + ":" + mmm + ":" + ss;
+        }
+
+        instoken = instoken.replace("D", "");
+
+        $.ajax({
+            url: "https://app.tradewingss.com/api/gethistorydata?interval=" + intrvl + "&instrumenttoken=" + instoken + "&fromdatetime=" + fromdatetime + "&todatetime=" + todatetime,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+
+                var chrtdata = "";
+
+                $.each(data.data.candles, function (i, item) {
+                    //[timestamp, open, high, low, close, volume]
+                    var actualtime = data.data.candles[i][0];
+                    var date = new Date(actualtime);
+                    var timestamp = date.getTime();
+                    var date = new Date(timestamp);
+                    var hours = date.getHours();
+                    var minutes = "0" + date.getMinutes();
+                    var seconds = "0" + date.getSeconds();
+                    var ddts = prefix0(date.getDate()) + "-" + prefix0(date.getMonth()) + "-" + date.getFullYear();
+                    var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+
+                    var open = data.data.candles[i][1];
+                    var high = data.data.candles[i][2];
+                    var low = data.data.candles[i][3];
+                    var close = data.data.candles[i][4];
+                    var volume = data.data.candles[i][5];
+                    chrtdata += "<tr>";
+                    chrtdata += "<td>" + formattedTime + "</td>";
+                    chrtdata += "<td>" + high + "</td>";
+                    chrtdata += "<td>" + low + "</td>";
+                    chrtdata += "<td>" + volume + "</td>";
+                    chrtdata += "<td>" + open + "</td>";
+                    chrtdata += "<td>" + close + "</td>";
+                    chrtdata += "</tr>";
+                });
+                $("#chrttbl").html(chrtdata)
+            }
+        });
+    }
+
+    function btnsrchchart() {
+        var tokenno = localStorage.getItem("instokn");
+
+        var interval = $("#intervaldrop :selected").val();
+        filterchartdata(tokenno, interval);
+    }
+    function resetchrt() {
+        $("#scriptlist").val("");
+        $("#intervaldrop").val("Select Interval");
+        $("#exchname").val("Select Exchange");
+        $("#chrttbl").html("")
+    }
+
+    function getscript() {
+        var exchname = $("#exchname :selected").val();
+        //
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getscript?exchangename=" + exchname,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var optionval = "<option value='Select Script'>";
+                $.each(data, function (i, item) {
+                    var symbolname = data[i].symbolname;
+                    var instrument_token = data[i].instrument_token;
+                    optionval += "<option tag='" + instrument_token + "' value='" + symbolname + "'>";
+                });
+                $("#scriptlistdata").html(optionval);
+            }
+        });
+    }
+
+    function savewithdraw() {
+        var txttransamount = $("#withtxttransamount").val();
+        if (txttransamount == "") {
+            $("#withtxttransamount").val("");
+            swal("Error", "Please Enter Amount.");
+            return;
+        }
+        var userbalance = $("#userbalance").html();
+        var txttransremark = $("#withtxttransremark").val();
+        if (parseInt(txttransamount) > parseInt(userbalance)) {
+            $("#withtxttransamount").val("");
+            swal("Error", "Amount should be less then ledgerbalance");
+            return;
+        }
+
+        var userid = localStorage.getItem("userid");
+        var txttransid = "Withdraw";
+        var refid = localStorage.getItem("Refid");
+
+
+        if (txttransamount == "" || txttransremark == "") {
+            swal("Success", "Please fill required details.");
+            return;
+        }
+        var postdata = { userid: userid, txttransid: txttransid, txttransamount: txttransamount, txttransremark: txttransremark, refid: refid };
+        $.ajax({
+            url: "https://app.tradewingss.com/api/savetransaction/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Withdrawl Request Sent Successfully.");
+                $("#withdrawonlinemodel").modal('hide');
+            }
+        });
+    }
+
+
+
+    function getdepositdetails()
+    {
+        var IsRazorpayAllowornot = localStorage.getItem("IsRazorpayAllowornot");
+        if (IsRazorpayAllowornot == "No") {
+            $("#gatewaypay").hide();
+            $("#manualpay").show();
+        } else {
+            $("#gatewaypay").show();
+            $("#manualpay").hide();
+        }
+     
+
+        $("#gatwaytxnid").val(generateTransactionId());
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getpaymentimage/?refid=" + refid,
+            type: "get",
+            success: function (response) {
+                if (response != "") {
+                    var data = JSON.parse(response);
+                    var upiid = data.upiid;
+                    var imgurl = data.imgurl;
+                    $("#accbank").html(data.BankName);
+                    $("#accno").html(data.AccountNo);
+                    $("#accifsc").html(data.IFSCCode);
+                    $("#accholder").html(data.AccountHolderName);
+                    $("#upiiduser").html(upiid)
+                    $("#payupi").attr('href', "upi://pay?pa=" + upiid + "&pn=KingdomExch&cu=INR");
+                    $("#payimg").attr('src', imgurl);
+
+                }
+            }
+        });
+    }
+
+    $(window).on('load', function () {
+
+        //$("#btnhide").trigger('click');
+        if (localStorage.getItem("FirstTimeLogin") == "true") {
+            $("#chgpass")[0].click();
+        }
+        $("#menupayonline").hide();
+        $("#withmenupayonline").hide();
+        var ispayonline = checkisonlinepagment();
+
+        if (ispayonline == "true") {
+            $("#menupayonline").show();
+            $("#withmenupayonline").show();
+            var refid = localStorage.getItem("Refid");
+
+            $.ajax({
+                url: "https://app.tradewingss.com/api/getpaymentimage/?refid=" + refid,
+                type: "get",
+                success: function (response) {
+                    if (response != "") {
+                        var data = JSON.parse(response);
+                        var upiid = data.upiid;
+                        var imgurl = data.imgurl;
+                        $("#accbank").html(data.BankName);
+                        $("#accno").html(data.AccountNo);
+                        $("#accifsc").html(data.IFSCCode);
+                        $("#accholder").html(data.AccountHolderName);
+                        $("#upiiduser").html(upiid)
+                        $("#payupi").attr('href', "upi://pay?pa=" + upiid + "&pn=KingdomExch&cu=INR");
+                        $("#payimg").attr('src', imgurl);
+
+                    }
+                }
+            });
+
+        }
+        //WebSocketTest();
+    });
+
+
+    function getpersonaldetails() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "https://app.tradewingss.com/api/userprofile/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                $.each(data, function (i, item) {
+                    var FirstName = data[i].FirstName;
+                    var LastName = data[i].LastName;
+                    var UserName = data[i].UserName;
+                    var CreditLimit = data[i].CreditLimit;
+                    var LedgerBalance = data[i].LedgerBalance;
+                    var MobileNo = data[i].MobileNo;
+                    var EmailId = data[i].EmailId;
+                    var AadharNo = data[i].AadharNo;
+                    var PanNo = data[i].PanNo;
+                    var City = data[i].City;
+                    var Address = data[i].Address;
+
+                    var AccountHolderName = data[i].AccountHolderName;
+                    var BankName = data[i].BankName;
+                    var AccountNo = data[i].AccountNo;
+                    var IFSCCode = data[i].IFSCCode;
+
+                    if (AadharNo == "0" || AadharNo == "") {
+                        AadharNo = "xxxx-xxxx-xxxx";
+                    }
+                    $("#per_username").html(UserName);
+                    $("#per_fnamelname").html(FirstName + " " + LastName);
+                    $("#per_mobileno").html(MobileNo);
+                    $("#per_email").html(EmailId);
+                    $("#per_aadharno").html(AadharNo);
+                    $("#per_panno").html(PanNo);
+                    $("#per_city").html(City);
+                    $("#per_add").html(Address);
+
+                    $("#per_accholdername").val(AccountHolderName);
+                    $("#per_bankname").val(BankName);
+                    $("#per_accno").val(AccountNo);
+                    $("#per_ifsc").val(IFSCCode);
+                });
+            }
+        });
+
+
+
+    }
+
+
+
+    function getuserbilldetails() {
+        //tblbillinfo
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getuserbill/?UserId=" + userid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                var totalpl = 0;
+                var totalbrkg = 0;
+
+                $.each(data, function (i, item) {
+                    var ScriptName = data[i].ScriptName;
+                    var OrderCategory = data[i].OrderCategory;
+                    var Lot = data[i].Lot;
+                    var OrderDate = data[i].OrderDate;
+                    var OrderTime = data[i].OrderTime;
+                    var OrderPrice = data[i].OrderPrice;
+                    var BroughtBy = data[i].BroughtBy;
+                    var ClosedAt = data[i].ClosedAt;
+                    var ClosedTime = data[i].ClosedTime;
+                    var P_L = parseInt(data[i].P_L);
+                    var Brokerage = parseInt(data[i].Brokerage);
+                    totalpl += parseInt(P_L);
+                    totalbrkg += parseInt(Brokerage);
+                    usrbalnce += "<tr>";
+                    usrbalnce += "<td class='td1' >" + (i + 1) + "</td>";
+                    usrbalnce += "<td class='td1'  align='left' width='250px'><b>" + ScriptName + "</b><br>" + OrderCategory + "(" + Lot + ")</td>";
+                    usrbalnce += "<td class='td1'  align='center' width='180px'>" + OrderPrice + "<br>" + OrderDate + " <br> " + OrderTime + "</td>";
+                    usrbalnce += "<td class='td1'  align='center' width='180px'>" + BroughtBy + "<br>" + ClosedAt + "<br> " + ClosedTime + "</td>";
+                    usrbalnce += "<td class='td1'  align='right'>" + P_L + "</td>";
+                    usrbalnce += "<td class='td1'  align='right'>" + Brokerage + "</td>";
+                    usrbalnce += "</tr>";
+                });
+
+                usrbalnce += "<tr>";
+                usrbalnce += "<td class='td2' align='center' colspan='4'> <b>Total of Profit & Loss and Brokerage</b></td>";
+                usrbalnce += "<td class='td2'  align='right'><b>" + totalpl + "</b></td>";
+                usrbalnce += "<td class='td2'  align='right'><b>" + totalbrkg + "</b></td>";
+                usrbalnce += "</tr>";
+                usrbalnce += "<tr >";
+                usrbalnce += "<td class='td2' align='center' colspan='4'> <b>Net Profit & Loss </b></td>";
+
+                usrbalnce += "<td class='td2' colspan='2'  align='right'><b>" + (totalpl - totalbrkg) + "</b></td>";
+                usrbalnce += "</tr>";
+
+                $("#tblbillinfo").html(usrbalnce);
+            }
+        });
+
+    }
+
+    function getuserbalance() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getledgerbalance/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                response = parseFloat(response).toFixed(2);
+                $("#userbalance").html(parseInt(response));
+                var activepl = $("#activepl").html();
+                var newm2m = Math.round($("#userbalance").html()) - Math.round(activepl);
+                var creditlimit = localStorage.getItem("CreditLimit");
+                var m2m = Math.round($("#userbalance").html()) + 0 + Math.round(creditlimit);
+                $("#m2m").html(parseInt(m2m));
+                $("#marginavl").html(m2m - 0);
+                //  $("#m2m").html(newm2m);
+                $("#userbalancemodel").html(parseInt(response));
+            }
+        });
+
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getuserbalanceledger/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                $("#sellordervalue").html('');
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                $.each(data, function (i, item) {
+                    var Amount = data[i].Amount;
+                    var OrderId = data[i].OrderId;
+                    var ScriptName = data[i].ScriptName;
+                    var TokenNo = data[i].TokenNo;
+                    var Lot = data[i].Lot;
+                    var OrderCategory = data[i].OrderCategory;
+
+
+                    var TransactionType = data[i].TransactionType;
+                    if (TransactionType == "Credit") {
+                        TransactionType = "Deposit";
+                    }
+                    else if (TransactionType == "Loss") {
+                        TransactionType = "Loss";
+                    }
+                    else if (TransactionType == "Profit") {
+                        TransactionType = "Profit";
+                    }
+                    else {
+                        TransactionType = "Withdrawal";
+                    }
+
+                    var CreatedDate = data[i].CreatedDate;
+                    usrbalnce += "<tr>";
+                    //usrbalnce += "<td   align='left'><span><b>Order No: </b>" + OrderId + " (" + ScriptName + ")</span><br><span><b>Lot: </b>" + Lot + " (" + OrderCategory + ")</span><br><span><b>Date: </b> " + CreatedDate + "</span></td>";
+                    if (TransactionType == "Profit" || TransactionType == "Loss") {
+                        usrbalnce += "<td   align='left'><span><b>Order No: </b>" + OrderId + " (" + ScriptName + ")</span><br><span><b>Date: </b> " + CreatedDate + "</span></td>";
+                    } else {
+                        usrbalnce += "<td   align='left'><span><b>Date: </b> " + CreatedDate + "</span></td>";
+                    }
+
+                    usrbalnce += "<td  align='center'>" + TransactionType + "</td>";
+                    if (TransactionType == "Withdrawal" || TransactionType == "Loss") {
+                        usrbalnce += "<td   align='right'><span class='bedge-t' style='color:red'>" + parseInt(Amount) + "</span></td>";
+                    } else {
+                        usrbalnce += "<td   align='right'><span class='bedge-t'>" + parseInt(Amount) + "</span></td>";
+                    }
+
+                    usrbalnce += "</tr>";
+                });
+                $("#sellordervalue").html(usrbalnce);
+            }
+        });
+    }
+
+    function userprofiledata() {
+
+        var userid = localStorage.getItem("userid");
+
+        $.ajax({
+            url: "https://app.tradewingss.com/api/profiledata/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                //For MCX
+                var Holding_Exposure_Margin_MCX = data["MCX"].Holding_Exposure_Margin_MCX;
+                var Intraday_Exposure_Margin_MCX = data["MCX"].Intraday_Exposure_Margin_MCX;
+                var IsMCXTrade = data["MCX"].IsMCXTrade;
+                var MCX_brokerage_per_crore = data["MCX"].MCX_brokerage_per_crore;
+                var Mcx_Brokerage_Type = data["MCX"].Mcx_Brokerage_Type;
+                var Mcx_Exposure_Type = data["MCX"].Mcx_Exposure_Type;
+                if (IsMCXTrade == "true") {
+                    $("#MCXBlockData").show();
+                    $("#MCXBrokerageType").html(Mcx_Brokerage_Type);
+
+                    console.log("MCX_brokerage_per_crore", MCX_brokerage_per_crore);
+
+                    if (Mcx_Brokerage_Type == "per_lot") {
+                        var brkd = "{";
+                        $(MCX_brokerage_per_crore).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        console.log("ss")
+                        $("#MCXbrokerageValue").html(brkd);
+                    }
+                    else {
+
+                        $("#MCXbrokerageValue").html(MCX_brokerage_per_crore);
+                    }
+
+                    $("#MCXExposureType").html(Mcx_Exposure_Type);
+                    if (Mcx_Exposure_Type == "per_turnover") {
+                        $("#MCXMarginIndradayvalue").html(Intraday_Exposure_Margin_MCX);
+                    }
+                    else {
+                        var brkd = "{";
+                        $(Intraday_Exposure_Margin_MCX).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        $("#MCXMarginIndradayvalue").html(brkd);
+                    }
+
+
+
+
+                    if (Mcx_Exposure_Type == "per_turnover") {
+                        $("#MCXMarginHoldingValue").html(Holding_Exposure_Margin_MCX);
+                    }
+                    else {
+                        var brkd = "{";
+                        $(Holding_Exposure_Margin_MCX).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        $("#MCXMarginHoldingValue").html(brkd);
+                    }
+
+
+
+
+                } else {
+                    $("#MCXBlockData").hide();
+                }
+                //For NSE
+
+                var IsNSETrade = data["NSE"].IsNSETrade;
+                var NSE_Brokerage_Type = data["NSE"].NSE_Brokerage_Type;
+                var Equity_brokerage_per_crore = data["NSE"].Equity_brokerage_per_crore;
+                var NSE_Exposure_Type = data["NSE"].NSE_Exposure_Type;
+                var Intraday_Exposure_Margin_Equity = data["NSE"].Intraday_Exposure_Margin_Equity;
+                var Holding_Exposure_Margin_Equity = data["NSE"].Holding_Exposure_Margin_Equity;
+
+                if (IsNSETrade == "true") {
+                    $("#NSEBlockdata").show();
+                    $("#NSEbrokeragevalue").html(Equity_brokerage_per_crore);
+                    $("#NSEBrokeragetype").html(NSE_Brokerage_Type);
+                    $("#NSEMarginIndradayType").html(NSE_Exposure_Type);
+                    $("#NSEMarginIndradayvalue").html(Intraday_Exposure_Margin_Equity);
+                    $("#NSEMarginIndradayHoldingType").html(NSE_Exposure_Type);
+                    $("#NSEMarginIndradayHoldingvalue").html(Holding_Exposure_Margin_Equity);
+                }
+                else {
+                    $("#NSEBlockdata").hide();
+                }
+
+                //For CDS
+
+
+                var IsCDSTrade = data["CDS"].IsCDSTrade;
+                var CDS_Brokerage_Type = data["CDS"].CDS_Brokerage_Type;
+                var CDS_brokerage_per_crore = data["CDS"].CDS_brokerage_per_crore;
+                var CDS_Exposure_Type = data["CDS"].CDS_Exposure_Type;
+                var Intraday_Exposure_Margin_CDS = data["CDS"].Intraday_Exposure_Margin_CDS;
+                var Holding_Exposure_Margin_CDS = data["CDS"].Holding_Exposure_Margin_CDS;
+
+                if (IsCDSTrade == "true") {
+                    $("#CDSBlockdata").show();
+                    $("#CDSbrokeragevalue").html(CDS_brokerage_per_crore);
+                    $("#CDSBrokeragetype").html(CDS_Brokerage_Type);
+                    $("#CDSMarginIndradayType").html(CDS_Exposure_Type);
+                    $("#CDSMarginIndradayvalue").html(Intraday_Exposure_Margin_CDS);
+                    $("#CDSMarginIndradayHoldingType").html(CDS_Exposure_Type);
+                    $("#CDSMarginIndradayHoldingvalue").html(Holding_Exposure_Margin_CDS);
+                }
+                else {
+                    $("#CDSBlockdata").hide();
+                }
+
+                //$.each(data, function (i, item) {
+                //    var FirstName = data[i].FirstName;
+                //});
+                $("#userprofiledata").html(usrbalnce);
+            }
+        });
+    }
+
+    function changepass() {
+        var userid = localStorage.getItem("userid");
+        var oldpass = $("#oldpass").val();
+        var newpass = $("#newpass").val();
+        var connewpass = $("#connewpass").val();
+        if (connewpass != newpass) {
+            alert("Confirm Password Should Be Same as New Password");
+            return;
+        }
+        $.ajax({
+            url: "https://app.tradewingss.com/api/changepassword/?userid=" + userid + "&oldpass=" + oldpass + "&newpass=" + newpass,
+            type: "get",
+            success: function (response) {
+                if (response == 'true') {
+                    alert("Password Changed Successfully");
+                    localStorage.setItem("FirstTimeLogin", "false");
+                    location.reload();
+                } else {
+                    alert("Please Enter Correct Old Password.");
+                }
+            }
+        });
+    }
+    function closechangepass() {
+
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "https://app.tradewingss.com/api/closechangepass/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+                localStorage.setItem("FirstTimeLogin", "false");
+            }
+        });
+    }
+    var totalmarginused = 0;
+    function getactiveorder() {
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getconsolidatedtrade/?uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                if (data.length != 0) {
+                    var pendingorderdata = "";
+                    var tokens = "";
+                    $.each(data, function (i, item) {
+                        var OrderId = data[i].Id;
+                        var OrderCategory = data[i].OrderCategory;
+                        var TokenNo = data[i].TokenNo;
+                        tokens += TokenNo + ",";
+                        var OrderType = data[i].OrderType;
+                        var lot = data[i].Lot;
+                        var selectedlotsize = data[i].selectedlotsize;
+                        var SymbolType = data[i].SymbolType
+                        var OrderDate = data[i].OrderDate;
+                        var cmp = data[i].cmp;
+                        var OrderTime = data[i].OrderTime;
+                        var ScriptName = data[i].ScriptName;
+                        var ActionType = data[i].ActionType;
+                        var OrderPrice = data[i].OrderPrice;
+                        OrderPrice = parseFloat(OrderPrice).toFixed(2);
+                        //let op = OrderPrice;
+                        //OrderPrice = op.tofixed(2);
+                        var MarginUsed = data[i].MarginUsed;
+                        totalmarginused += Math.round(MarginUsed);
+                        var HoldingMarginReq = data[i].HoldingMarginReq;
+                        var OrderStatus = data[i].OrderStatus;
+                        pendingorderdata += "<div class='act-box'>";
+                        pendingorderdata += "<table width='100%'>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2' align='left'><span class='scrip-name' style='color:#000'><b>" + ScriptName + "</b></span></td>";
+                        if (OrderCategory == "SELL") {
+                            pendingorderdata += "<td align='right'><span class='m-red-m'><strong id='ordercat" + TokenNo + "'>" + OrderCategory + "</strong></span>&nbsp;&nbsp;&nbsp;<span><strong class='color-bluest m-red-m'>" + lot + " @ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                        } else {
+                            pendingorderdata += "<td align='right'><span class='m-green-m'><strong id='ordercat" + TokenNo + "'>" + OrderCategory + "</strong></span>&nbsp;&nbsp;&nbsp;<span><strong class='color-bluest m-green-m'>" + lot + " @ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                        }
+
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2'><span  style='color:#000'>Margin : <strong class='color-bluest' style='color:#000'>" + parseInt(MarginUsed) + "</strong></span></td> <td colspan='2' align='right'><span style=''><strong class='color-bluest' id='diffpric" + TokenNo + "'>0</strong></span></td>";
+                        pendingorderdata += "</tr>";
+                        pendingorderdata += "<tr style='margin-top:3px;'>";
+                        pendingorderdata += "<td  colspan='2' align='left'><a href='#' onclick=closetrade('" + uid + "','" + OrderCategory + "','" + TokenNo + "','" + SymbolType + "') class='btn-danger' style='padding:4px;font-size:13px;font-weight:bold;margin-top:5px;' >Close Trade</a></td>";
+                        pendingorderdata += "<td  colspan='2' align='right'>CMP : <span class='color-bluest' id='bid" + TokenNo + "'  style='color:#000' ><strong style='color:#000'>" + cmp + "</strong></span></td>";
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "</table>";
+                        pendingorderdata += "</div>";
+
+
+                    });
+                    $("#activeorder").html(pendingorderdata);
+                    tokens = tokens.slice(0, -1);
+                    WebSocketTest(tokens);
+                }
+
+            }
+        });
+    }
+
+    var uri = "wss://ws.tradewingss.comhttps://app.tradewingss.comhttps://app.tradewingss.com/api/webapiwebsoc";
+    //var uri = "wss://103.220.223.27https://app.tradewingss.comhttps://app.tradewingss.com/api/webapiwebsoc";
+    websocket = new WebSocket(uri);
+    function readvalues() {
+
+
+        var ws;
+
+        //Initialize socket
+
+        if (websocket.readyState == WebSocket.CLOSED) {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        else {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        //Open socket and send message
+
+        //Socket error handler
+        websocket.onerror = function (event) {
+            $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+        };
+
+        var totalactivepl = 0;
+        var lotokn = localStorage.getItem("tkn");
+        //Socket message handler  +
+        websocket.onmessage = function (event) {
+            if (event.data != "" && event.data != "true") {
+
+
+                var datax = JSON.parse(event.data);
+                if (datax.bid == "0") {
+                    datax.bid = datax.last_price;
+                }
+                if (datax.ask == "0") {
+                    datax.ask = datax.last_price;
+                }
+
+                var Bid = datax.bid;
+                var scriptname = datax.instrument_token;
+                var Ask = datax.ask;
+                var cmp = 0;
+                var newamtdeff = 0;
+
+                var ordercat = $("#ordercat" + scriptname).html();
+                if (ordercat == "SELL") {
+                    cmp = Ask;
+                    newamtdeff = (parseFloat($("#oldpr" + scriptname).html()) - parseFloat(cmp)).toFixed(2);
+                    console.log("newamtdeff1", newamtdeff);
+                }
+                else {
+                    cmp = Bid;
+                    newamtdeff = parseFloat(cmp) - parseFloat($("#oldpr" + scriptname).html());
+                    console.log("newamtdeff2", newamtdeff);
+                }
+
+                $("#bid" + scriptname).html("<b>" + cmp + "</b>");
+                var newval = parseInt($("#sellotsize" + scriptname).html()) * newamtdeff;
+                newval = parseFloat(newval).toFixed(2);
+                totalactivepl += newval;
+                if (parseInt(newval) < 0) {
+                    $("#diffpric" + scriptname).addClass("m-red-m");
+                } else {
+                    $("#diffpric" + scriptname).addClass("m-green-m");
+                }
+                $("#diffpric" + scriptname).html(parseInt(newval));
+                calcm2m(lotokn);
+            }
+        };
+    }
+
+    function calcm2m(token) {
+        var totalactivepl = 0;
+        var tokarr = token.split(',');
+        for (var x = 0; x < tokarr.length; x++) {
+            var tokn = tokarr[x];
+            var acpl = $("#diffpric" + tokn).html();
+            totalactivepl += parseFloat(acpl);
+        }
+        totalactivepl = parseFloat(totalactivepl).toFixed(2);
+        $("#activepl").html(parseInt(totalactivepl));
+        var userbalance = $("#userbalance").html();
+        var creditlimit = localStorage.getItem("CreditLimit");
+        var m2m = (parseFloat(userbalance) + parseFloat(totalactivepl) + parseFloat(creditlimit)).toFixed(2);
+        $("#m2m").html(parseInt(m2m));
+        var newmaginavailable = (parseFloat(m2m - totalmarginused)).toFixed(2);
+        $("#marginavl").html(parseInt(newmaginavailable));
+    }
+
+    function WebSocketTest(token) {
+        localStorage.setItem("tkn", token);
+        readvalues();
+    }
+
+    function closetrade(userid, ordercategory, tokenno, exchangetype) {
+        var confrm = confirm("Do you want to close these trades?")
+        if (confrm == true) {
+            var refid = localStorage.getItem("Refid");
+            $.ajax({
+                url: "https://app.tradewingss.com/api/getmarkettime/?Exchange=" + exchangetype + "&refid=" + refid,
+                type: "get",
+                success: function (resp) {
+                    var data = resp.split('|');
+                    var starttime = data[0] + ":00";
+                    var endttime = data[1] + ":00";
+                    var _starttime = starttime;
+                    var _endttime = endttime;
+                    var today = new Date();
+                    if (today.getDay() == 6 || today.getDay() == 0) {
+                        swal("Market not open.");
+                        //return;
+                    }
+                    else {
+                        var date = new Date();
+                        var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                        //current
+                        var currenttime_sec = ctime.split(':');
+                        var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                        //_starttime
+                        var Startcurrenttime_sec = _starttime.split(':');
+                        var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+
+                        //_endtime
+                        var Endcurrenttime_sec = _endttime.split(':');
+                        var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                        if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                            var cmp = $("#bid" + tokenno).html();
+                            cmp = cmp.replace("<b>", "");
+                            cmp = cmp.replace("</b>", "");
+                            cmp = cmp.trim();
+                            $.ajax({
+                                url: "https://app.tradewingss.com/api/closetrade_from_account_portfolio/?userid=" + userid + "&ordercat=" + ordercategory + "&tokenno=" + tokenno + "&cmpval=" + cmp,
+                                type: "get",
+                                success: function (response) {
+
+                                    var data = JSON.parse(response);
+                                    swal({
+                                        title: "Trade Closed!",
+                                        text: data.ResponseMessage,
+                                        type: "success"
+                                    }).then(function () {
+                                        location.reload();
+                                    });
+                                }
+                            });
+                        }
+                        else {
+                            swal("Market not open.");
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function getnotification() {
+        var userid = localStorage.getItem("userid");
+        var refid = localStorage.getItem("Refid");
+        $.ajax({
+            url: "https://app.tradewingss.com/api/getnotification/?userid=" + userid + "&refid=" + refid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var innerdata = "";
+                $.each(data, function (i, item) {
+                    var Title = data[i].Title;
+                    var Message = data[i].Message;
+                    var CreatedDate = data[i].CreatedDate;
+                    innerdata += "<tr>";
+                    innerdata += "<td>";
+                    innerdata += " <strong>" + Title + " (" + CreatedDate + ")</strong><br>" + Message + "</td>";
+                    innerdata += "</tr>";
+                });
+                $("#tblnoti").html(innerdata);
+            }
+        });
+    }
+
+
+
+
+
+    //
+</script>
+
+    </section>
+
+    <div id="back-top" style="display: none;">
+        <a title="Go to Top" href="#">
+            <i class="ti-angle-up"></i>
+        </a>
+    </div>
+    
+
+    <!-- popper js -->
+    <!-- bootstarp js -->
+    <script src="/Content/js/jquery-3.4.1.min.js"></script>
+
+    <script>
+
+
+        function logout() {
+            localStorage.removeItem("userid");
+            localStorage.clear();
+            location.href = "/login/index";
+        }
+
+        function getdeviceip() {
+            $.ajax({
+                url: "https://api.ipify.org",
+                type: "get",
+                success: function (resp) {
+                    localStorage.setItem("devip", resp);
+                }
+            });
+
+
+        }
+
+        $(window).on('load', function () {
+            getdeviceip();
+            $("#applogo").attr("src", localStorage.getItem("appicon"));
+            $("#faviconicon").attr("href", localStorage.getItem("appicon"));
+            document.title = document.title + " | " + localStorage.getItem("apptitle");
+
+          //  changeactivestatus();
+            //setInterval(changeactivestatus, 10000);
+            var locationname = location.pathname
+            if (locationname == "/home/marketwatchapp") {
+                $("#marketwatchapp").addClass("active");
+            } else if (locationname == "/home/tradedetailsapp") {
+                $("#tradedetailsapp").addClass("active");
+            } else if (locationname == "/home/portfolioapp") {
+                $("#portfolioapp").addClass("active");
+            } else if (locationname == "/home/accounts") {
+                $("#accounts").addClass("active");
+            }
+
+            userprofile();
+
+            var ismcxtrade = localStorage.getItem("IsMCXTrade");
+            if (ismcxtrade == "true") {
+                var data = "<li id='mcxmenu'>";
+                data += "<a class='has-arrow' href = '/home/mcxfuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='/Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN MCX</span>";
+                data += " </a>";
+                data += " </li >";
+                $("#sidebar_menu").append(data);
+
+            }
+
+            var isnsetrade = localStorage.getItem("IsNSETrade");
+            if (isnsetrade == "true") {
+                var data = "<li id='nsemenu'>";
+                data += "<a class='has-arrow' href = '/home/nsefuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='/Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN NSE</span>";
+                data += " </a>";
+                data += " </li >";
+                $("#sidebar_menu").append(data);
+            }
+
+            var iscdstrade = localStorage.getItem("IsCDSTrade");
+            if (iscdstrade == "true") {
+                var data = "<li id='cdsmenu'>";
+                data += "<a class='has-arrow' href = '/home/cdsfuture' aria-expanded='false'>";
+                data += "<div class='icon_menu'>";
+                data += " <img src='/Content/img/menu-icon/5.svg' alt=''>";
+                data += "</div>";
+                data += " <span>TRADE IN OPTION</span>";
+                data += " </a>";
+                data += " </li>";
+
+                $("#sidebar_menu").append(data);
+            }
+
+            var usrnam = localStorage.getItem("ClientName");
+            $("#username").html(usrnam);
+            $("#usernameh1").html(usrnam);
+        });
+
+        function changeactivestatus() {
+            var pdeviceid = localStorage.getItem("pdeviceid");
+            var userid = localStorage.getItem("userid");
+            $.ajax({
+                url: "https://app.tradewingss.com/api/changeactivestatus/?userid=" + userid,
+                type: "get",
+                success: function (response) {
+                    if (!pdeviceid.includes(response)) {
+                        //localStorage.removeItem("userid");
+                        //location.href = "/login/index";
+                    }
+                }
+            });
+        }
+
+
+        function getdeviceid() {
+            let machineId = "192.168.1.1";
+            return machineId;
+        }
+
+        function logincheck() {
+            var devip = localStorage.getItem("devip");
+            var userid = localStorage.getItem("userid");
+            getdeviceip();
+            $.ajax({
+                url: "https://app.tradewingss.com/api/refreshdata/?userid=" + userid + "&devip=" + devip,
+                type: "get",
+                success: function (response) {
+
+                    if (response == "false") {
+                        logout();
+                        return;
+                    }
+                    else if (response == "Bloked") {
+                        alert("Account has been Bloked. Please contact to Admin");
+                        logout();
+                        return;
+                    }
+                    var data = JSON.parse(response);
+                    //Check ValidTill
+                    console.log("refdata", data)
+                    localStorage.setItem("IsRazorpayAllowornot", data.IsRazorpayAllowornot);
+                    localStorage.setItem("IsMCXTrade", data.IsMCXTrade);
+                    localStorage.setItem("IsNSETrade", data.IsNSETrade);
+                    localStorage.setItem("IsCDSTrade", data.IsCDSTrade);
+                    localStorage.setItem("isonlinepayment", data.IsOnlinePayment);
+                    localStorage.setItem("checkprevtrade", data.checkprevtrade);
+                    localStorage.setItem("bankname", data.BankName);
+                    localStorage.setItem("accountmno", data.AccountNo);
+                    localStorage.setItem("ifsccode", data.IFSCCode);
+                    localStorage.setItem("accountholdername", data.AccountHolderName);
+
+                    localStorage.setItem("trademcxunits", data.TradeMCXUnits);
+                    localStorage.setItem("tradeequityunits", data.TradeEquityUnits);
+                    localStorage.setItem("tradecdsunits", data.TradeCDSUnits);
+                    localStorage.setItem("profittradestoptime", data.profittradestoptime);
+                    localStorage.setItem("IsSellAllowed", data.IsSellAllowed);
+                    localStorage.setItem("IsStopTrading", data.IsStopTrading);
+                    localStorage.setItem("userid", data.UserId);
+                    localStorage.setItem("ClientName", data.ClientName);
+                    localStorage.setItem("Refid", data.Refid);
+                    localStorage.setItem("MobileNo", data.MobileNo);
+                    localStorage.setItem("EmailId", data.EmailId);
+                    localStorage.setItem("CreditLimit", data.CreditLimit);
+                    localStorage.setItem("LedgerBalance", data.LedgerBalance);
+                    localStorage.setItem("TotalActive", data.TotalActive);
+                    localStorage.setItem("TotalPending", data.TotalPending);
+                    localStorage.setItem("TotalClosed", data.TotalClosed);
+                    localStorage.setItem("AllowOrdersCurrentBid", data.AllowOrdersCurrentBid);
+                    localStorage.setItem("AllowFreshEntryHighAndBelow", data.AllowFreshEntryHighAndBelow);
+
+
+                    localStorage.setItem("AllowOrdersHighLow", data.AllowOrdersHighLow);
+                    localStorage.setItem("AutoCloseTradesLossesLimit", data.AutoCloseTradesLossesLimit);
+                    localStorage.setItem("auto_close_all_active_trades_when_the_losses_reach", data.auto_close_all_active_trades_when_the_losses_reach);
+
+                    //MCX Brokerage
+                    localStorage.setItem("Mcx_Brokerage_Type", data.Mcx_Brokerage_Type);
+                    localStorage.setItem("MCX_brokerage_per_crore", data.MCX_brokerage_per_crore);
+                    localStorage.setItem("BULLDEX_brokerage", data.BULLDEX_brokerage);
+                    localStorage.setItem("GOLD_brokerage", data.GOLD_brokerage);
+                    localStorage.setItem("SILVER_brokerage", data.SILVER_brokerage);
+                    localStorage.setItem("CRUDEOIL_brokerage", data.CRUDEOIL_brokerage);
+                    localStorage.setItem("COPPER_brokerage", data.COPPER_brokerage);
+                    localStorage.setItem("NICKEL_brokerage", data.NICKEL_brokerage);
+                    localStorage.setItem("ZINC_brokerage", data.ZINC_brokerage);
+                    localStorage.setItem("LEAD_brokerage", data.LEAD_brokerage)
+                    localStorage.setItem("NATURALGAS_brokerage", data.NATURALGAS_brokerage);
+                    localStorage.setItem("ALUMINIUM_brokerage", data.ALUMINIUM_brokerage);
+                    localStorage.setItem("MENTHAOIL_brokerage", data.MENTHAOIL_brokerage);
+                    localStorage.setItem("COTTON_brokerage", data.COTTON_brokerage);
+                    localStorage.setItem("CPO_brokerage", data.CPO_brokerage);
+                    localStorage.setItem("GOLDM_brokerage", data.GOLDM_brokerage);
+                    localStorage.setItem("SILVERMINI_brokerage", data.SILVERMINI_brokerage);
+                    localStorage.setItem("SILVERMIC_brokerage", data.SILVERMIC_brokerage);
+
+                    localStorage.setItem("ALUMINI_brokerage", data.ALUMINI_brokerage);
+                    localStorage.setItem("CRUDEOILM_brokerage", data.CRUDEOILM_brokerage);
+                    localStorage.setItem("LEADMINI_brokerage", data.LEADMINI_brokerage);
+                    localStorage.setItem("NATGASMINI_brokerage", data.NATGASMINI_brokerage);
+                    localStorage.setItem("ZINCMINI_brokerage", data.ZINCMINI_brokerage);
+
+                    //MCX Intrday
+                    localStorage.setItem("Mcx_Exposure_Type", data.Mcx_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_MCX", data.Intraday_Exposure_Margin_MCX);
+                    localStorage.setItem("Holding_Exposure_Margin_MCX", data.Holding_Exposure_Margin_MCX);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Intraday", data.MCX_Exposure_Lot_wise_BULLDEX_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_BULLDEX_Holding", data.MCX_Exposure_Lot_wise_BULLDEX_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Intraday", data.MCX_Exposure_Lot_wise_GOLD_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLD_Holding", data.MCX_Exposure_Lot_wise_GOLD_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Intraday", data.MCX_Exposure_Lot_wise_SILVER_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVER_Holding", data.MCX_Exposure_Lot_wise_SILVER_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Intraday", data.MCX_Exposure_Lot_wise_CRUDEOIL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOIL_Holding", data.MCX_Exposure_Lot_wise_CRUDEOIL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Intraday", data.MCX_Exposure_Lot_wise_COPPER_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COPPER_Holding", data.MCX_Exposure_Lot_wise_COPPER_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Intraday", data.MCX_Exposure_Lot_wise_NICKEL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NICKEL_Holding", data.MCX_Exposure_Lot_wise_NICKEL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Intraday", data.MCX_Exposure_Lot_wise_ZINC_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINC_Holding", data.MCX_Exposure_Lot_wise_ZINC_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Intraday", data.MCX_Exposure_Lot_wise_LEAD_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEAD_Holding", data.MCX_Exposure_Lot_wise_LEAD_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Intraday", data.MCX_Exposure_Lot_wise_NATURALGAS_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATURALGAS_Holding", data.MCX_Exposure_Lot_wise_NATURALGAS_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Intraday", data.MCX_Exposure_Lot_wise_ALUMINIUM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINIUM_Holding", data.MCX_Exposure_Lot_wise_ALUMINIUM_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Intraday", data.MCX_Exposure_Lot_wise_MENTHAOIL_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_MENTHAOIL_Holding", data.MCX_Exposure_Lot_wise_MENTHAOIL_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Intraday", data.MCX_Exposure_Lot_wise_COTTON_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_COTTON_Holding", data.MCX_Exposure_Lot_wise_COTTON_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Intraday", data.MCX_Exposure_Lot_wise_CPO_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CPO_Holding", data.MCX_Exposure_Lot_wise_CPO_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Intraday", data.MCX_Exposure_Lot_wise_GOLDM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_GOLDM_Holding", data.MCX_Exposure_Lot_wise_GOLDM_Holding);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Intraday", data.MCX_Exposure_Lot_wise_SILVERM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERM_Holding", data.MCX_Exposure_Lot_wise_SILVERM_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Intraday", data.MCX_Exposure_Lot_wise_SILVERMIC_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_SILVERMIC_Holding", data.MCX_Exposure_Lot_wise_SILVERMIC_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINI_Intraday", data.MCX_Exposure_Lot_wise_ALUMINI_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ALUMINI_Holding", data.MCX_Exposure_Lot_wise_ALUMINI_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOILM_Intraday", data.MCX_Exposure_Lot_wise_CRUDEOILM_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_CRUDEOILM_Holding", data.MCX_Exposure_Lot_wise_CRUDEOILM_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEADMINI_Intraday", data.MCX_Exposure_Lot_wise_LEADMINI_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_LEADMINI_Holding", data.MCX_Exposure_Lot_wise_LEADMINI_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATGASMINI_Intraday", data.MCX_Exposure_Lot_wise_NATGASMINI_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_NATGASMINI_Holding", data.MCX_Exposure_Lot_wise_NATGASMINI_Holding);
+
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINCMINI_Intraday", data.MCX_Exposure_Lot_wise_ZINCMINI_Intraday);
+                    localStorage.setItem("MCX_Exposure_Lot_wise_ZINCMINI_Holding", data.MCX_Exposure_Lot_wise_ZINCMINI_Holding);
+
+
+                    //NSE
+
+                    localStorage.setItem("NSE_Brokerage_Type", data.NSE_Brokerage_Type);
+                    localStorage.setItem("Equity_brokerage_per_crore", data.Equity_brokerage_per_crore);
+
+                    localStorage.setItem("NSE_Exposure_Type", data.NSE_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_Equity", data.Intraday_Exposure_Margin_EQUITY);
+                    localStorage.setItem("Holding_Exposure_Margin_Equity", data.Holding_Exposure_Margin_EQUITY);
+
+                    //CDS
+                    localStorage.setItem("CDS_Brokerage_Type", data.CDS_Brokerage_Type);
+                    localStorage.setItem("CDS_brokerage_per_crore", data.CDS_brokerage_per_crore);
+
+                    localStorage.setItem("CDS_Exposure_Type", data.CDS_Exposure_Type);
+                    localStorage.setItem("Intraday_Exposure_Margin_CDS", data.Intraday_Exposure_Margin_CDS);
+                    localStorage.setItem("Holding_Exposure_Margin_CDS", data.Holding_Exposure_Margin_CDS);
+
+
+                    var Password_ = data.Password_;
+                    var oldpassword = localStorage.getItem("oldpassword");
+                    if (oldpassword != Password_) {
+                        alert("Your Password has been Changed. Please login again");
+                        logout();
+                        return;
+                    }
+                    if (data.IsMCXTrade == "false") {
+                        $("#mcxmenu").hide();
+                        $("#mcxtabmenu").hide();
+
+                    }
+                    else {
+                        $("#mcxmenu").show();
+                        $("#mcxtabmenu").show();
+                        tabchange('MCX')
+                        globaltype = "mcx";
+                        _starttime = mcxtradetimestart;
+                        _endttime = mcxtradetimeend;
+
+                        $("#mcxtab").addClass("show active");
+                        $("#nsetab").removeClass("show active");
+                        $("#cdstab").removeClass("show active");
+                    }
+                    if (data.IsNSETrade == "false") {
+                        $("#nsemenu").hide();
+                        $("#nsetabmenu").hide();
+                    }
+                    else {
+                        if (data.IsMCXTrade == "false") {
+                            $("#nsemenu").show();
+                            $("#nsetabmenu").show();
+                            tabchange('NSE')
+                            globaltype = "nse";
+                            _starttime = nsetradetimestart;
+                            _endttime = nsetradetimeend;
+                            $("#mcxtab").removeClass("show active");
+                            $("#nsetab").addClass("show active");
+                            $("#cdstab").removeClass("show active");
+                        }
+
+                    }
+                    if (data.IsCDSTrade == "false") {
+                        $("#cdsmenu").hide();
+                        $("#cdstabmenu").hide();
+                    }
+                    else {
+
+                        if (data.IsCDSTrade == "true" && data.IsMCXTrade == "false" && data.IsNSETrade == "false") {
+                            tabchange('CDS')
+                            globaltype = "cds";
+                            _starttime = cdstradetimestart;
+                            _endttime = cdstradetimeend;
+                            $("#cdsmenu").show();
+                            $("#cdstabmenu").show();
+                            $("#mcxtab").removeClass("show active");
+                            $("#nsetab").removeClass("show active");
+                            $("#cdstab").addClass("show active");
+                        }
+
+                    }
+
+
+                    var LedgerBalance = localStorage.getItem("LedgerBalance");
+                    var TotalActive = localStorage.getItem("TotalActive");
+                    var TotalPending = localStorage.getItem("TotalPending");
+                    var TotalClosed = localStorage.getItem("TotalClosed");
+                    var username = localStorage.getItem("ClientName");
+                    LedgerBalance = parseFloat(LedgerBalance).toFixed(2);
+                    $("#ldgb").html(LedgerBalance);
+                    $("#ta").html(TotalActive);
+                    $("#tp").html(TotalPending);
+                    $("#tc").html(TotalClosed);
+                    $("#usernamess").html(username);
+                }
+            });
+        }
+
+        function setsymbol(val) {
+            if (val == "ALUMINI") { return "ALUMINI"; }
+            else if (val == "ALUMINIUM") {
+                return "ALUMINIUM";
+            } else if (val == "ALUMINIUMINI") {
+                return "ALUMINIUM";
+            }
+            if (val == "COPPER") {
+                return "COPPER";
+            } else if (val == "COPPERMINI") {
+                return "COPPER";
+            } else if (val == "CRUDEOIL") {
+                return "CRUDEOIL";
+            } else if (val == "CRUDEMINI") {
+                return "CRUDEOIL";
+            } else if (val == "CRUDEOILM") {
+                return "CRUDEOILM";
+            } else if (val == "GOLD") {
+                return "GOLD";
+            } else if (val == "GOLDM") {
+                return "GOLDM";
+            } else if (val == "GOLDMINI") {
+                return "GOLDM";
+            }
+            else if (val == "LEAD") {
+                return "LEAD";
+            } else if (val == "LEADMINI") {
+                return "LEADMINI";
+            } else if (val == "LEADM") {
+                return "LEAD";
+            } else if (val == "MENTHAOIL") {
+                return "MENTHAOIL";
+            }
+            else if (val == "NATURALGAS") {
+                return "NATURALGAS";
+            }
+            else if (val == "NATGASMINI") {
+                return "NATGASMINI";
+            } else if (val == "NATURALGASM") {
+                return "NATURALGAS";
+            }
+            else if (val == "NICKEL") {
+                return "NICKEL";
+            }
+            else if (val == "SILVER") {
+                return "SILVER";
+            }
+            else if (val == "SILVERM") {
+                return "SILVERM";
+            }
+            else if (val == "SILVERMINI") {
+                return "SILVERM";
+            }
+            else if (val == "SILVERMIC") {
+                return "SILVERMIC";
+            }
+
+            else if (val == "ZINC") {
+                return "ZINC";
+            }
+            else if (val == "ZINCM") {
+                return "ZINC";
+            } else if (val == "ZINCMINI") {
+                return "ZINCMINI";
+            }
+
+            return val;
+        }
+        function checkprevtrade() {
+            return localStorage.getItem("checkprevtrade");
+        }
+        function checkisonlinepagment() {
+            return localStorage.getItem("isonlinepayment");
+        }
+        function checkIsSellAllowed() {
+            return localStorage.getItem("IsSellAllowed");
+        }
+        function checkIsStopTrading() {
+            return localStorage.getItem("IsStopTrading");
+        }
+
+        function checktrademethod(exchangetype) {
+            if (exchangetype == "MCX") {
+                return localStorage.getItem("trademcxunits");
+            }
+            if (exchangetype == "NSE") {
+                return localStorage.getItem("tradeequityunits");
+            }
+            if (exchangetype == "OPT" || exchangetype == "CDS") {
+                return localStorage.getItem("tradecdsunits");
+            }
+        }
+
+        function userprofile() {
+            logincheck();
+
+            var userid = localStorage.getItem("userid");
+            $.ajax({
+                url: "https://app.tradewingss.com/api/userprofile/?userid=" + userid,
+                type: "get",
+                success: function (response) {
+                    var data = JSON.parse(response);
+                    var usrbalnce = "";
+                    $.each(data, function (i, item) {
+                        var FirstName = data[i].FirstName;
+                        var LastName = data[i].LastName;
+                        var UserName = data[i].UserName;
+                        var CreditLimit = data[i].CreditLimit;
+                        var LedgerBalance = data[i].LedgerBalance;
+                        var MobileNo = data[i].MobileNo;
+                        var EmailId = data[i].EmailId;
+                        var AadharNo = data[i].AadharNo;
+                        var PanNo = data[i].PanNo;
+                        var City = data[i].City;
+                        var Address = data[i].Address;
+
+                        usrbalnce += "<tr><td>First Name</td><td   align='left'>" + FirstName + "</td></tr>";
+                        usrbalnce += "<tr><td>Last Name</td><td  align='left'>" + LastName + "</td></tr>";
+                        usrbalnce += "<tr><td>User Name</td><td   align='left'>" + UserName + "</td></tr>";
+                        usrbalnce += "<tr><td>Credit Limit</td><td   align='left'>" + CreditLimit + "</td></tr>";
+                        usrbalnce += "<tr><td>Ledger Balance</td><td   align='left'>" + LedgerBalance + "</td></tr>";
+                        usrbalnce += "<tr><td>Mobile No</td><td   align='left'>" + MobileNo + "</td></tr>";
+                        usrbalnce += "<tr><td>Email Id</td><td   align='left'>" + EmailId + "</td></tr>";
+                        usrbalnce += "<tr><td>Aadhar No</td><td   align='left'>" + AadharNo + "</td></tr>";
+                        usrbalnce += "<tr><td>PanNo.</td><td   align='left'>" + PanNo + "</td></tr>";
+                        usrbalnce += "<tr><td>City</td><td   align='left'>" + City + "</td></tr>";
+                        usrbalnce += "<tr><td>Address</td><td   align='left'>" + Address + "</td></tr>";
+
+                    });
+                    $("#userprofiledata").html(usrbalnce);
+                }
+            });
+        }
+
+    </script>
+    
+    <script>
+
+
+
+
+
+
+        (function () {
+            let script = document.createElement('script');
+            script.src = "/Content/js/bootstrap.min.js";
+            document.body.append(script);
+        })();
+
+    </script>
+</body>
+</html>

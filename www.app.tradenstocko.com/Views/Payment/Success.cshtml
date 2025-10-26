@@ -1,0 +1,35 @@
+﻿@{
+    ViewBag.Title = "Payment Successful";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Optional: Include layout if using one
+}
+
+<div class="payment-success-container" style="text-align: center; padding: 40px;background-color:#fff;height:100vh">
+    <img src="https://i0.wp.com/www.pathwayproductions.in/wp-content/uploads/2022/03/thank.gif?fit=281%2C281&ssl=1" width="150" />
+    <h3 style="color: #28a745;">Payment Successful!</h3>
+
+    <p style="font-size: 1.2em; margin-top: 20px;">
+        Thank you for the payment! Your payment has been successfully processed.
+    </p>
+
+    <div style="margin: 30px 0; font-size: 1.1em;">
+        <strong>Transaction ID:</strong> <p id="pid"></p>
+    </div>
+
+    <a href="/home/accounts"
+       style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; border-radius: 5px; text-decoration: none;">
+        🏠 Return to Account
+    </a>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#pid").html(localStorage.getItem("razorpay_payment_id"));
+    })
+    function getParameterByName(name, url = window.location.href) {
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+</script>

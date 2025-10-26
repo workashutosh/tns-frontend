@@ -1,0 +1,1268 @@
+﻿
+
+@{
+    ViewBag.Title = "accounts";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .m-red-m {
+        color: red;
+    }
+
+    #tblbillinfo td {
+        border: 1px solid 10px;
+        padding: 10px;
+    }
+
+    .mob-head th {
+        color: white;
+    }
+
+    .td1 {
+        padding: 3px;
+        border: 1px solid #cee7e7;
+    }
+
+    .td2 {
+        padding: 3px;
+        border: 1px solid #cee7e7;
+        color: white;
+        background-color: #212529;
+        font-size: 18px;
+    }
+
+    .m-green-m {
+        color: green;
+    }
+
+    th {
+        background-color: #212529;
+        text-align: center;
+        color: white;
+        vertical-align: top;
+    }
+</style>
+<div id="profilemodel" class="ser-popup modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content user-profile bg-white">
+            <div class="modal-header">
+                <h4>User Trade Profile</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="mob-head">
+                <button type="button" class="close" data-dismiss="modal">
+                    <img src="~/Content/img/backarrow.png" />
+                </button>
+                <h5 class="mb-0">User Trade Profile</h5>
+                <span>&nbsp;&nbsp;&nbsp;</span>
+            </div>
+            <div class="modal-body" style="text-align:center">
+
+                <div class="row" style="background-color:#f4f4f4;" id="MCXBlockData">
+                    <div class="col-lg-12" style="background-color:#f4f4f4">
+                        <h5 style="margin-top:5px;"><b>MCX</b> </h5>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #f4f4f4;text-align:left">
+                        <b style="padding:10px;color:darkcyan">Brokerage Type :</b>
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #f4f4f4;text-align:left">
+                        <span style="padding:10px" id="MCXBrokerageType">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #f4f4f4;text-align:left">
+                        <b style="padding:10px;color:darkcyan">Brokerage Value :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #f4f4f4;text-align:left">
+                        <span style="padding:10px;font-size:12px;" id="MCXbrokerageValue">Per Lot</span>
+                    </div>
+
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Exposure Type :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <span style="padding:10px" id="MCXExposureType">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Margin Intraday :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <span style="padding: 10px; font-size: 12px;" id="MCXMarginIndradayvalue">Per Lot</span>
+                    </div>
+
+                    <div class="col-lg-3" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <b style="padding:10px;color:darkcyan">Margin Holding :</b><br />
+                    </div>
+                    <div class="col-lg-9" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <span style="padding: 10px; font-size: 12px;" id="MCXMarginHoldingValue">Per Lot</span>
+                    </div>
+                </div>
+
+                <div class="row" style="background-color: #f4f4f4; margin-top: 10px" id="NSEBlockdata">
+                    <div class="col-lg-12" style="background-color:#f4f4f4"><h5 style="margin-top:5px;"><b>NSE</b> </h5></div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Brokerage</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEbrokeragevalue"></span>/
+                            <span id="NSEBrokeragetype"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #f4f4f4; text-align: left ">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Intraday</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEMarginIndradayvalue"></span>/
+                            <span id="NSEMarginIndradayType"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Holding</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="NSEMarginIndradayHoldingvalue"></span>/
+                            <span id="NSEMarginIndradayHoldingType"></span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row" style="background-color: #f4f4f4; margin-top: 10px" id="CDSBlockdata">
+                    <div class="col-lg-12" style="background-color:#f4f4f4"><h5 style="margin-top:5px;"><b>NFO-OPT</b> </h5></div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Brokerage</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSbrokeragevalue"></span>/
+                            <span id="CDSBrokeragetype"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #f4f4f4; text-align: left ">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Intraday</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSMarginIndradayvalue"></span>/
+                            <span id="CDSMarginIndradayType"></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 m-dflex" style="background-color: white; border: 1px solid #f4f4f4; text-align: left">
+                        <div class="nse-left">
+                            <b style="padding:10px;color:darkcyan">Margin Holding</b>
+                        </div>
+                        <div class="nse-right">
+                            <span id="CDSMarginIndradayHoldingvalue"></span>/
+                            <span id="CDSMarginIndradayHoldingType"></span>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="withdrawonlinemodel" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4>Withdraw Online</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <img src="~/Content/img/backarrow.png" />
+            </button>
+            <h5 class="mb-0">Withdraw Online</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+
+                <table class="table table-borderd" style="margin-top:10px;">
+
+
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Enter Amount</span>
+                            <input type="text" required id="withtxttransamount" class="custom-input" autocomplete="off" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Enter Remarks</span>
+                            <textarea rows="5" required cols="1" id="withtxttransremark" class="custom-input" autocomplete="off">
+                                 </textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td>
+                                        <input type="button" class="btn btn-success form-control" value="Submit" onclick="savewithdraw()" />
+                                    </td>
+                                    <td>
+                                        <input type="button" class="btn btn-danger form-control" data-dismiss="modal" value="Close" />
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="payonlinemodel" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+            <h4>Pay Online</h4>
+            <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">
+                <img src="~/Content/img/backarrow.png" />
+            </button>
+            <h5 class="mb-0">Pay Online </h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+                <div class="row">
+                    <div class="col-lg-7" style="border-right:1px solid #cee7e7">
+                        <a id="payupi" href="" class="upi-pay1">
+                            <img id="payimg" width="300" src="https://admin.kingdomexch.com/uploaddocs/qr.png" class="img-responsive" />
+                        </a>
+                    </div>
+                    <div class="col-lg-5">
+                        <h3>Account Details</h3>
+                        <table style="background-color:white" class="table">
+                            <tr>
+                                <td align="left"><b>Name:</b></td>
+                                <td align="left" id="accholder"></td>
+                            </tr>
+                            <tr>
+                                <td align="left"><b>Account No:</b></td>
+                                <td align="left" id="accno"></td>
+                            </tr>
+                            <tr>
+                                <td align="left"><b>IFSC Code:</b></td>
+                                <td align="left" id="accifsc"></td>
+                            </tr>
+                        </table>
+                        <hr />
+                        <table class="table table-borderd" style="margin-top:10px;">
+                            <tr>
+                                <td style="text-align:left">
+                                    <p>
+                                        <b> Please fill the details after payment for payment approval.</b>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <hr />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Transaction Id</span>
+                                    <input type="text" id="txttransid" class="custom-input" autocomplete="off" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Amount</span>
+                                    <input type="text" id="txttransamount" required class="custom-input" autocomplete="off" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:left">
+                                    <span>Enter Remarks</span>
+                                    <textarea rows="5" cols="1" required id="txttransremark" class="custom-input" autocomplete="off">
+                                 </textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="button" required class="btn btn-success form-control" value="Submit" onclick="submitpaymentdetails()" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="funddetails" class="modal fade ser-popup funds-popup" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h4>Transaction History</h4>
+            <button type="button" style="color:white;" class="close" data-dismiss="modal">&times;</button>
+
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" style="color:white;">
+                <img src="~/Content/img/backarrow.png" />
+            </button>
+            <h5 class="mb-0" style="color:white;">Transaction History</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+
+                <table width="100%" class="table">
+                    <thead style="color:white">
+                        <tr>
+                            <th align="left" colspan="2">
+                                <b style="color:white"> User Current Balance </b>
+                            </th>
+                            <th align="right" style="text-align:right;">
+                                <span style="color:white"><b id="userbalancemodel">0</b></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="sellordervalue">
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="changepassword" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4>Change Password</h4>
+            <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">
+                <img src="~/Content/img/backarrow.png" />
+            </button>
+            <h5 class="mb-0">Change Password</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+                <div class="form-group floating-label-group">
+
+                    <input type="password" id="oldpass" class="custom-input" autocomplete="off" autofocus="" required="" />
+                    <label class="floating-label">Current Password</label>
+                </div>
+                <div class="form-group floating-label-group mb-4">
+                    <input type="password" id="newpass" class="custom-input" autocomplete="off" autofocus="" required="" />
+                    <label class="floating-label">New Password</label>
+                </div>
+                <div class="form-group floating-label-group mb-3">
+                    <input type="password" id="connewpass" class="custom-input" autocomplete="off" autofocus="" required="" />
+                    <label class="floating-label">Confirm New Password</label>
+                </div>
+
+                <table class="table" align="center">
+                    <tr>
+                        <td align="center">
+                            <input type="button" class="btn btn-success form-control" value="Change Password" onclick="changepass()" />
+
+                        </td>
+                        <td align="center">
+                            <input type="button" class="btn btn-danger form-control" data-dismiss="modal" value="Not Required" onclick="closechangepass()" />
+
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="noti-popup" class="ser-popup raise-comp noti-popup modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h4>Notifications</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal">
+                <img src="~/Content/img/backarrow.png" />
+            </button>
+            <h5 class="mb-0">Notifications</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <table width="100%" class="table">
+                <tbody id="tblnoti">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="invoicebill" class="ser-popup raise-comp noti-popup modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-header">
+            <h4>Bill & Invoice </h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" data-dismiss="modal"> <img src="~/Content/img/backarrow.png" /></button>
+            <h5 class="mb-0">Bill & Invoice</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <table width="100%" class="table table-responsive">
+                <thead>
+                    <tr>
+                        <th>S.No&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>Script Name <br />Order Category,Lot</th>
+                        <th>Order Price <br />Date & Time</th>
+                        <th>Close Price <br />Date & Time</th>
+                        <th>Profit/Loss&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>Brokerage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                    </tr>
+                </thead>
+
+
+                <tbody id="tblbillinfo">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div id="raise-comp" class="ser-popup raise-comp modal fade" role="dialog">
+    <div class="modal-dialog pass-popup">
+        <div class="modal-header">
+            <h4>Raise Complaint</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="mob-head">
+            <button type="button" class="close" id="btnhide" data-dismiss="modal"> <img src="~/Content/img/backarrow.png" /></button>
+            <h5 class="mb-0">Raise Complaint</h5>
+            <span>&nbsp;&nbsp;&nbsp;</span>
+        </div>
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body" style="text-align:center">
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="name" name="name" autofocus="" required="" />
+                    <label class="floating-label">Name</label>
+                </div>
+                <div class="form-group floating-label-group">
+                    <input type="text" class="custom-input" autocomplete="off" id="callno" name="callno" autofocus="" required="" />
+                    <label class="floating-label">Phone No.</label>
+                </div>
+                <div class="form-group floating-label-group mb-60">
+                    <input type="tel" class="custom-input" autocomplete="off" id="whatsappno" name="whatsappno" autofocus="" required="" />
+                    <label class="floating-label">Whatsapp No.</label>
+                </div>
+                <div class="form-group floating-label-group text-area" name="name">
+                    <textarea class="custom-input" name="message" id="message" placeholder=""></textarea>
+                    <label class="floating-label">Description</label>
+                </div>
+                <input type="button" class="login-btn" value="Send" onclick="save()" />
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="main_content_iner ">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="white_card card_height_100 mb_30 QA_section minus-mx-15 acount-src">
+                    <div class="white_card_header">
+                        <div class="box_header m-0">
+                            <div class="main-title">
+                                <h3 class="m-0">Account</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="white_card_body px-15 pt-3 pb-0">
+                        <div class="row mx-0 h-vh">
+
+                            <div class="col-lg-6 account-left">
+                                <div class="bg-white p-10">
+                                    <table class="table lager-table" cellpadding="5" align="center">
+                                        <tr>
+                                            <td align="center">
+                                                Ledger Balance <strong id="userbalance">0</strong>
+                                            </td>
+                                            <td align="center">
+                                                Margin Available <strong id="marginavl">0</strong>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td align="center">
+                                                Active P/L <strong id="activepl">0</strong>
+                                            </td>
+                                            <td align="center">
+                                                M2M (Equity) <strong id="m2m">0</strong>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div id="activeorder" class="active-order">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 acount-right">
+                                <div class="bg-blue"></div>
+                                <div class="wel-head">
+                                    <h4>Welcome, <span id="usernameh1"></span></h4>
+                                </div>
+                                <table class="table">
+                                    <tr>
+                                        <td>
+                                            <a href="#" data-toggle='modal' data-target='#funddetails' class=" btn-default">Funds </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg fill="#cfcfcf" width="30px" height="30px" viewBox="-4.5 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="m15.307 5.83v1.738.021c0 .29-.235.525-.525.525-.007 0-.015 0-.022 0h.001-2.864c-.23 1.609-1.032 2.998-2.19 3.981l-.009.008c-1.288 1.041-2.904 1.723-4.673 1.873l-.032.002q2.846 3.034 7.824 9.136c.086.085.139.202.139.332 0 .092-.026.177-.072.249l.001-.002c-.076.182-.252.308-.459.308-.013 0-.025 0-.037-.001h.002-3.324c-.006 0-.014 0-.021 0-.166 0-.313-.08-.404-.204l-.001-.001q-5.216-6.256-8.489-9.733c-.095-.093-.154-.222-.154-.365 0-.004 0-.007 0-.011v.001-2.167c.004-.3.246-.542.545-.546h1.909c.099.005.214.007.33.007 1.196 0 2.328-.273 3.338-.76l-.046.02c.855-.428 1.49-1.188 1.742-2.107l.005-.023h-7.28c-.006 0-.014 0-.021 0-.29 0-.525-.235-.525-.525 0-.007 0-.015 0-.022v.001-1.738c0-.006 0-.014 0-.021 0-.29.235-.525.525-.525h.022-.001 7.04q-.971-1.926-4.568-1.926h-2.471c-.3-.004-.542-.246-.546-.545v-2.268c0-.006 0-.014 0-.021 0-.29.235-.525.525-.525h.022-.001 14.182.021c.29 0 .525.235.525.525v.022-.001 1.738.021c0 .29-.235.525-.525.525-.007 0-.015 0-.022 0h.001-3.971c.526.689.908 1.516 1.085 2.417l.006.037h2.914.021c.29 0 .525.235.525.525v.022-.001z"></path></g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="billinvoice" class="btn-default" data-toggle='modal' data-target='#invoicebill'>Bill & Invoice </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <rect fill="#cfcfcf" height="3" width="7" x="2.5" y="8.5"></rect> <polygon fill="#cfcfcf" points="10,3 10,0.5 3.5,0.5 2,2 2,3 "></polygon> <path d="M10.5,4h-9C0.6728516,4,0,4.6728516,0,5.5V10h1.5V7.5h9V10H12V5.5C12,4.6728516,11.3271484,4,10.5,4z M10,6.5H9v-1h1V6.5z" fill="#cfcfcf"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" data-toggle='modal' data-target='#profilemodel' class="btn-default">Profile </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#cfcfcf"></path> <circle cx="6" cy="3.5" fill="#cfcfcf" r="3.5"></circle> </g> </g></svg>
+                                        </td>
+                                    </tr>
+                                    @*<tr>
+                                            <td>
+                                                <a href="#" class=" btn-default" data-toggle='modal' data-target='#raise-comp'>Raise Complaint</a>
+                                            </td>
+                                            <td align="right"><i class="ti-comment-alt"></i></td>
+                                        </tr>*@
+                                    <tr>
+                                        <td>
+                                            <a href="#" class=" btn-default" data-toggle='modal' data-target='#noti-popup'>Notifications</a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <polygon fill="#cfcfcf" points="6,6.3818359 12,2.0180664 12,1 0,1 0,2.0181274 "></polygon> <polygon fill="#cfcfcf" points="6,7.6181641 0,3.2543335 0,11 12,11 12,3.2542725 "></polygon> </g> </g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="chgpass" class="btn-default" data-toggle='modal' data-target='#changepassword'>Change Password </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#cfcfcf" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#cfcfcf"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+
+                                    <!--For Payment-->
+
+                                    <tr id="menupayonline">
+                                        <td>
+                                            <a href="#" class="btn-default" data-toggle='modal' data-target='#payonlinemodel'>Deposit Online </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#cfcfcf" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#cfcfcf"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <tr id="withmenupayonline">
+                                        <td>
+                                            <a href="#" class="btn-default" data-toggle='modal' data-target='#withdrawonlinemodel'>Withdraw Online </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <circle cx="6" cy="6" fill="#cfcfcf" r="1.5"></circle> <path d="M6,2C4,2,2,3,0,6c2,3,4,4,6,4s4-1,6-4C10,3,8,2,6,2z M6,8.5C4.621582,8.5,3.5,7.3789063,3.5,6 S4.621582,3.5,6,3.5S8.5,4.6210938,8.5,6S7.378418,8.5,6,8.5z" fill="#cfcfcf"></path> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+
+
+
+
+                                    <!--For Payment-->
+
+
+                                    <tr>
+                                        <td>
+                                            <a href="#" onclick="logout();" class=" btn-default">Logout </a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><polygon fill="#cfcfcf" points="9,2 9,0 1,0 1,12 9,12 9,10 8,10 8,11 2,11 2,1 8,1 8,2 "></polygon><polygon fill="#cfcfcf" points="8.2929688,3.2929688 7.5859375,4 9.0859375,5.5 5,5.5 5,6.5 9.0859375,6.5 7.5859375,8 8.2929688,8.7070313 11,6 "></polygon></g></svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="#" class=" btn-default">Version</a>
+                                        </td>
+                                        <td align="right">3.1.0</td>
+                                    </tr>
+
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function save() {
+
+        var name = $("#name").val();
+        var callno = $("#callno").val();
+        var whatsappno = $("#whatsappno").val();
+        var message = $("#message").val();
+        var postdata = { name: name, callno: callno, whatsappno: whatsappno, message: message, others: 'Complaint' };
+        $.ajax({
+            url: "/api/contactus/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Thank you for connecting with us.");
+                $("#btnhide").trigger('click');
+            }
+        });
+    }
+
+    function submitpaymentdetails() {
+        var userid = localStorage.getItem("userid");
+        var txttransid = $("#txttransid").val();
+        var txttransamount = $("#txttransamount").val();
+        var txttransremark = $("#txttransremark").val();
+        if (txttransamount == "" || txttransremark == "" || txttransid == "") {
+            swal("Success", "Please fill required details.");
+            return;
+        }
+        var postdata = { userid: userid, txttransid: txttransid, txttransamount: txttransamount, txttransremark: txttransremark };
+        $.ajax({
+            url: "/api/savetransaction/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Transaction Details Saved Successfully.");
+                $("#payonlinemodel").modal('hide');
+            }
+        });
+    }
+
+    function savewithdraw() {
+        var userid = localStorage.getItem("userid");
+        var txttransid = "Withdraw";
+        var txttransamount = $("#withtxttransamount").val();
+        var txttransremark = $("#withtxttransremark").val();
+        if (txttransamount == "" || txttransremark == "") {
+            swal("Success", "Please fill required details.");
+            return;
+        }
+        var postdata = { userid: userid, txttransid: txttransid, txttransamount: txttransamount, txttransremark: txttransremark };
+        $.ajax({
+            url: "/api/savetransaction/",
+            type: "post",
+            data: postdata,
+            success: function (response) {
+                swal("Success", "Withdrawl Request Sent Successfully.");
+                $("#withdrawonlinemodel").modal('hide');
+            }
+        });
+    }
+
+    $(window).on('load', function () {
+        getuserbalance();
+        getuserbilldetails();
+
+        getactiveorder();
+        getnotification();
+        userprofiledata();
+        //$("#btnhide").trigger('click');
+        if (localStorage.getItem("FirstTimeLogin") == "true") {
+            $("#chgpass")[0].click();
+        }
+        $("#menupayonline").hide();
+        $("#withmenupayonline").hide();
+        var ispayonline = checkisonlinepagment();
+        if (ispayonline == "true") {
+
+            var refid = localStorage.getItem("Refid");
+            $.ajax({
+                url: "/api/getpaymentimage/?refid=" + refid,
+                type: "get",
+                success: function (response) {
+                    if (response != "") {
+                        var data = JSON.parse(response);
+                        var upiid = data.upiid;
+                        var imgurl = data.imgurl;
+                        $("#accbank").html(data.BankName);
+                        $("#accno").html(data.AccountNo);
+                        $("#accifsc").html(data.IFSCCode);
+                        $("#accholder").html(data.AccountHolderName);
+                        $("#payupi").attr('href', "upi://pay?pa=" + upiid + "&pn=KingdomExch&cu=INR");
+                        $("#payimg").attr('src', imgurl);
+                        $("#menupayonline").show();
+                        $("#withmenupayonline").show();
+                    }
+                }
+            });
+
+        }
+        //WebSocketTest();
+    });
+
+    function getuserbilldetails() {
+        //tblbillinfo
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getuserbill/?UserId=" + userid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                var totalpl = 0;
+                var totalbrkg = 0;
+
+                $.each(data, function (i, item) {
+                    var ScriptName = data[i].ScriptName;
+                    var OrderCategory = data[i].OrderCategory;
+                    var Lot = data[i].Lot;
+                    var OrderDate = data[i].OrderDate;
+                    var OrderTime = data[i].OrderTime;
+                    var OrderPrice = data[i].OrderPrice;
+                    var BroughtBy = data[i].BroughtBy;
+                    var ClosedAt = data[i].ClosedAt;
+                    var ClosedTime = data[i].ClosedTime;
+                    var P_L = parseInt(data[i].P_L);
+                    var Brokerage = parseInt(data[i].Brokerage);
+                    totalpl += parseInt(P_L);
+                    totalbrkg += parseInt(Brokerage);
+                    usrbalnce += "<tr>";
+                    usrbalnce += "<td class='td1' >" + (i + 1) + "</td>";
+                    usrbalnce += "<td class='td1'  align='left' width='250px'><b>" + ScriptName + "</b><br>" + OrderCategory + "(" + Lot + ")</td>";
+                    usrbalnce += "<td class='td1'  align='center' width='180px'>" + OrderPrice + "<br>" + OrderDate + " <br> " + OrderTime + "</td>";
+                    usrbalnce += "<td class='td1'  align='center' width='180px'>" + BroughtBy + "<br>" + ClosedAt + "<br> " + ClosedTime + "</td>";
+                    usrbalnce += "<td class='td1'  align='right'>" + P_L + "</td>";
+                    usrbalnce += "<td class='td1'  align='right'>" + Brokerage + "</td>";
+                    usrbalnce += "</tr>";
+                });
+
+                usrbalnce += "<tr>";
+                usrbalnce += "<td class='td2' align='center' colspan='4'> <b>Total of Profit & Loss and Brokerage</b></td>";
+                usrbalnce += "<td class='td2'  align='right'><b>" + totalpl + "</b></td>";
+                usrbalnce += "<td class='td2'  align='right'><b>" + totalbrkg + "</b></td>";
+                usrbalnce += "</tr>";
+                usrbalnce += "<tr >";
+                usrbalnce += "<td class='td2' align='center' colspan='4'> <b>Net Profit & Loss </b></td>";
+
+                usrbalnce += "<td class='td2' colspan='2'  align='right'><b>" + (totalpl - totalbrkg) + "</b></td>";
+                usrbalnce += "</tr>";
+
+                $("#tblbillinfo").html(usrbalnce);
+            }
+        });
+
+    }
+
+    function getuserbalance() {
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getledgerbalance/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                response = parseFloat(response).toFixed(2);
+                $("#userbalance").html(parseInt(response));
+                var activepl = $("#activepl").html();
+                var newm2m = Math.round($("#userbalance").html()) - Math.round(activepl);
+                var creditlimit = localStorage.getItem("CreditLimit");
+                var m2m = Math.round($("#userbalance").html()) + 0 + Math.round(creditlimit);
+                $("#m2m").html(parseInt(m2m));
+                $("#marginavl").html(m2m - 0);
+                //  $("#m2m").html(newm2m);
+                $("#userbalancemodel").html(parseInt(response));
+            }
+        });
+
+        $.ajax({
+            url: "/api/getuserbalanceledger/?uid=" + userid,
+            type: "get",
+            success: function (response) {
+                $("#sellordervalue").html('');
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                $.each(data, function (i, item) {
+                    var Amount = data[i].Amount;
+                    var TransactionType = data[i].TransactionType;
+                    if (TransactionType == "Credit") {
+                        TransactionType = "Deposit";
+                    }
+                    else {
+                        TransactionType = "Withdrawal";
+                    }
+                    var CreatedDate = data[i].CreatedDate;
+                    usrbalnce += "<tr>";
+                    usrbalnce += "<td   align='left'>" + CreatedDate + "</td>";
+                    usrbalnce += "<td  align='center'>" + TransactionType + "</td>";
+                    if (TransactionType == "Withdrawal") {
+                        usrbalnce += "<td   align='right'><span class='bedge-t' style='color:red'>" + parseInt(Amount) + "</span></td>";
+                    } else {
+                        usrbalnce += "<td   align='right'><span class='bedge-t'>" + parseInt(Amount) + "</span></td>";
+                    }
+
+                    usrbalnce += "</tr>";
+                });
+                $("#sellordervalue").html(usrbalnce);
+            }
+        });
+    }
+
+    function userprofiledata() {
+
+        var userid = localStorage.getItem("userid");
+
+        $.ajax({
+            url: "/api/profiledata/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+
+                var data = JSON.parse(response);
+                var usrbalnce = "";
+                //For MCX
+                var Holding_Exposure_Margin_MCX = data["MCX"].Holding_Exposure_Margin_MCX;
+                var Intraday_Exposure_Margin_MCX = data["MCX"].Intraday_Exposure_Margin_MCX;
+                var IsMCXTrade = data["MCX"].IsMCXTrade;
+                var MCX_brokerage_per_crore = data["MCX"].MCX_brokerage_per_crore;
+                var Mcx_Brokerage_Type = data["MCX"].Mcx_Brokerage_Type;
+                var Mcx_Exposure_Type = data["MCX"].Mcx_Exposure_Type;
+                if (IsMCXTrade == "true") {
+                    $("#MCXBlockData").show();
+                    $("#MCXBrokerageType").html(Mcx_Brokerage_Type);
+
+                    console.log("MCX_brokerage_per_crore", MCX_brokerage_per_crore);
+
+                    if (Mcx_Brokerage_Type == "per_lot") {
+                        var brkd = "{";
+                        $(MCX_brokerage_per_crore).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        console.log("ss")
+                        $("#MCXbrokerageValue").html(brkd);
+                    }
+                    else {
+
+                        $("#MCXbrokerageValue").html(MCX_brokerage_per_crore);
+                    }
+
+                    $("#MCXExposureType").html(Mcx_Exposure_Type);
+                    if (Mcx_Exposure_Type == "per_turnover") {
+                        $("#MCXMarginIndradayvalue").html(Intraday_Exposure_Margin_MCX);
+                    }
+                    else {
+                        var brkd = "{";
+                        $(Intraday_Exposure_Margin_MCX).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        $("#MCXMarginIndradayvalue").html(brkd);
+                    }
+
+
+
+
+                    if (Mcx_Exposure_Type == "per_turnover") {
+                        $("#MCXMarginHoldingValue").html(Holding_Exposure_Margin_MCX);
+                    }
+                    else {
+                        var brkd = "{";
+                        $(Holding_Exposure_Margin_MCX).each(function (i, val) {
+                            $.each(val, function (k, v) {
+                                brkd += k + " : " + v + ",";
+                            });
+                        });
+                        brkd += "}";
+                        $("#MCXMarginHoldingValue").html(brkd);
+                    }
+
+
+
+
+                } else {
+                    $("#MCXBlockData").hide();
+                }
+                //For NSE
+
+                var IsNSETrade = data["NSE"].IsNSETrade;
+                var NSE_Brokerage_Type = data["NSE"].NSE_Brokerage_Type;
+                var Equity_brokerage_per_crore = data["NSE"].Equity_brokerage_per_crore;
+                var NSE_Exposure_Type = data["NSE"].NSE_Exposure_Type;
+                var Intraday_Exposure_Margin_Equity = data["NSE"].Intraday_Exposure_Margin_Equity;
+                var Holding_Exposure_Margin_Equity = data["NSE"].Holding_Exposure_Margin_Equity;
+
+                if (IsNSETrade == "true") {
+                    $("#NSEBlockdata").show();
+                    $("#NSEbrokeragevalue").html(Equity_brokerage_per_crore);
+                    $("#NSEBrokeragetype").html(NSE_Brokerage_Type);
+                    $("#NSEMarginIndradayType").html(NSE_Exposure_Type);
+                    $("#NSEMarginIndradayvalue").html(Intraday_Exposure_Margin_Equity);
+                    $("#NSEMarginIndradayHoldingType").html(NSE_Exposure_Type);
+                    $("#NSEMarginIndradayHoldingvalue").html(Holding_Exposure_Margin_Equity);
+                }
+                else {
+                    $("#NSEBlockdata").hide();
+                }
+
+                //For CDS
+
+
+                var IsCDSTrade = data["CDS"].IsCDSTrade;
+                var CDS_Brokerage_Type = data["CDS"].CDS_Brokerage_Type;
+                var CDS_brokerage_per_crore = data["CDS"].CDS_brokerage_per_crore;
+                var CDS_Exposure_Type = data["CDS"].CDS_Exposure_Type;
+                var Intraday_Exposure_Margin_CDS = data["CDS"].Intraday_Exposure_Margin_CDS;
+                var Holding_Exposure_Margin_CDS = data["CDS"].Holding_Exposure_Margin_CDS;
+
+                if (IsCDSTrade == "true") {
+                    $("#CDSBlockdata").show();
+                    $("#CDSbrokeragevalue").html(CDS_brokerage_per_crore);
+                    $("#CDSBrokeragetype").html(CDS_Brokerage_Type);
+                    $("#CDSMarginIndradayType").html(CDS_Exposure_Type);
+                    $("#CDSMarginIndradayvalue").html(Intraday_Exposure_Margin_CDS);
+                    $("#CDSMarginIndradayHoldingType").html(CDS_Exposure_Type);
+                    $("#CDSMarginIndradayHoldingvalue").html(Holding_Exposure_Margin_CDS);
+                }
+                else {
+                    $("#CDSBlockdata").hide();
+                }
+
+                //$.each(data, function (i, item) {
+                //    var FirstName = data[i].FirstName;
+                //});
+                $("#userprofiledata").html(usrbalnce);
+            }
+        });
+    }
+
+    function changepass() {
+        var userid = localStorage.getItem("userid");
+        var oldpass = $("#oldpass").val();
+        var newpass = $("#newpass").val();
+        var connewpass = $("#connewpass").val();
+        if (connewpass != newpass) {
+            alert("Confirm Password Should Be Same as New Password");
+            return;
+        }
+        $.ajax({
+            url: "/api/changepassword/?userid=" + userid + "&oldpass=" + oldpass + "&newpass=" + newpass,
+            type: "get",
+            success: function (response) {
+                if (response == 'true') {
+                    alert("Password Changed Successfully");
+                    localStorage.setItem("FirstTimeLogin", "false");
+                    location.reload();
+                } else {
+                    alert("Please Enter Correct Old Password.");
+                }
+            }
+        });
+    }
+    function closechangepass() {
+
+        var userid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/closechangepass/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+                localStorage.setItem("FirstTimeLogin", "false");
+            }
+        });
+    }
+    var totalmarginused = 0;
+    function getactiveorder() {
+        var uid = localStorage.getItem("userid");
+        $.ajax({
+            url: "/api/getconsolidatedtrade/?uid=" + uid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                if (data.length != 0) {
+                    var pendingorderdata = "";
+                    var tokens = "";
+                    $.each(data, function (i, item) {
+                        var OrderId = data[i].Id;
+                        var OrderCategory = data[i].OrderCategory;
+                        var TokenNo = data[i].TokenNo;
+                        tokens += TokenNo + ",";
+                        var OrderType = data[i].OrderType;
+                        var lot = data[i].Lot;
+                        var selectedlotsize = data[i].selectedlotsize;
+                        var SymbolType = data[i].SymbolType
+                        var OrderDate = data[i].OrderDate;
+                        var cmp = data[i].cmp;
+                        var OrderTime = data[i].OrderTime;
+                        var ScriptName = data[i].ScriptName;
+                        var ActionType = data[i].ActionType;
+                        var OrderPrice = data[i].OrderPrice;
+                        OrderPrice = parseFloat(OrderPrice).toFixed(2);
+                        //let op = OrderPrice;
+                        //OrderPrice = op.tofixed(2);
+                        var MarginUsed = data[i].MarginUsed;
+                        totalmarginused += Math.round(MarginUsed);
+                        var HoldingMarginReq = data[i].HoldingMarginReq;
+                        var OrderStatus = data[i].OrderStatus;
+                        pendingorderdata += "<div class='act-box'>";
+                        pendingorderdata += "<table width='100%'>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2' align='left'><span class='scrip-name'><b>" + ScriptName + "</b></span></td>";
+                        if (OrderCategory == "SELL") {
+                            pendingorderdata += "<td align='right'><span class='m-red-m'><strong id='ordercat" + TokenNo + "'>" + OrderCategory + "</strong></span>&nbsp;&nbsp;&nbsp;<span><strong class='color-bluest m-red-m'>" + lot + " @@ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                        } else {
+                            pendingorderdata += "<td align='right'><span class='m-green-m'><strong id='ordercat" + TokenNo + "'>" + OrderCategory + "</strong></span>&nbsp;&nbsp;&nbsp;<span><strong class='color-bluest m-green-m'>" + lot + " @@ " + OrderPrice + "</strong></span><span style='display:none'  id='oldpr" + TokenNo + "'>" + OrderPrice + "</span><span style='display:none'  id='sellotsize" + TokenNo + "'>" + (selectedlotsize * lot) + "</span></td>";
+                        }
+
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "<tr>";
+                        pendingorderdata += "<td colspan='2'><span  style=''>Margin : <strong class='color-bluest'>" + parseInt(MarginUsed) + "</strong></span></td> <td colspan='2' align='right'><span style=''><strong class='color-bluest' id='diffpric" + TokenNo + "'>0</strong></span></td>";
+                        pendingorderdata += "</tr>";
+                        pendingorderdata += "<tr style='margin-top:3px;'>";
+                        pendingorderdata += "<td  colspan='2' align='left'><a href='#' onclick=closetrade('" + uid + "','" + OrderCategory + "','" + TokenNo + "','" + SymbolType + "') class='btn-danger' style='padding:4px;font-size:13px;font-weight:bold;margin-top:5px;' >Close Trade</a></td>";
+                        pendingorderdata += "<td  colspan='2' align='right'>CMP : <span class='color-bluest' id='bid" + TokenNo + "' ><strong>" + cmp + "</strong></span></td>";
+                        pendingorderdata += "</tr>";
+
+                        pendingorderdata += "</table>";
+                        pendingorderdata += "</div>";
+
+
+                    });
+                    $("#activeorder").html(pendingorderdata);
+                    tokens = tokens.slice(0, -1);
+                    WebSocketTest(tokens);
+                }
+
+            }
+        });
+    }
+
+    var uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    //var uri = "wss://103.220.223.27/api/webapiwebsoc";
+    websocket = new WebSocket(uri);
+    function readvalues() {
+
+
+        var ws;
+
+        //Initialize socket
+
+        if (websocket.readyState == WebSocket.CLOSED) {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        else {
+            websocket.onopen = function () {
+                websocket.send(true);
+                console.log("open");
+            };
+        }
+        //Open socket and send message
+
+        //Socket error handler
+        websocket.onerror = function (event) {
+            $('#spanStatus').prepend('<div>Ooooops! Some error occured</div>');
+        };
+
+        var totalactivepl = 0;
+        var lotokn = localStorage.getItem("tkn");
+        //Socket message handler  +
+        websocket.onmessage = function (event) {
+            if (event.data != "" && event.data != "true") {
+
+
+                var datax = JSON.parse(event.data);
+                var Bid = datax.bid;
+                var scriptname = datax.instrument_token;
+                var Ask = datax.ask;
+                var cmp = 0;
+                var newamtdeff = 0;
+
+                var ordercat = $("#ordercat" + scriptname).html();
+                if (ordercat == "SELL") {
+                    cmp = Ask;
+                    newamtdeff = (parseFloat($("#oldpr" + scriptname).html()) - parseFloat(cmp)).toFixed(2);
+                    console.log("newamtdeff1", newamtdeff);
+                }
+                else {
+                    cmp = Bid;
+                    newamtdeff = parseFloat(cmp) - parseFloat($("#oldpr" + scriptname).html());
+                    console.log("newamtdeff2", newamtdeff);
+                }
+
+                $("#bid" + scriptname).html("<b>" + cmp + "</b>");
+                var newval = parseInt($("#sellotsize" + scriptname).html()) * newamtdeff;
+                newval = parseFloat(newval).toFixed(2);
+                totalactivepl += newval;
+                if (parseInt(newval) < 0) {
+                    $("#diffpric" + scriptname).addClass("m-red-m");
+                } else {
+                    $("#diffpric" + scriptname).addClass("m-green-m");
+                }
+                $("#diffpric" + scriptname).html(parseInt(newval));
+                calcm2m(lotokn);
+            }
+        };
+    }
+
+    function calcm2m(token) {
+        var totalactivepl = 0;
+        var tokarr = token.split(',');
+        for (var x = 0; x < tokarr.length; x++) {
+            var tokn = tokarr[x];
+            var acpl = $("#diffpric" + tokn).html();
+            totalactivepl += parseFloat(acpl);
+        }
+        totalactivepl = parseFloat(totalactivepl).toFixed(2);
+        $("#activepl").html(parseInt(totalactivepl));
+        var userbalance = $("#userbalance").html();
+        var creditlimit = localStorage.getItem("CreditLimit");
+        var m2m = (parseFloat(userbalance) + parseFloat(totalactivepl) + parseFloat(creditlimit)).toFixed(2);
+        $("#m2m").html(parseInt(m2m));
+        var newmaginavailable = (parseFloat(m2m - totalmarginused) + parseFloat(creditlimit)).toFixed(2);
+        $("#marginavl").html(parseInt(newmaginavailable));
+    }
+
+    function WebSocketTest(token) {
+        localStorage.setItem("tkn", token);
+        readvalues();
+    }
+
+    function closetrade(userid, ordercategory, tokenno, exchangetype) {
+        var confrm = confirm("Do you want to close these trades?")
+        if (confrm == true) {
+            var refid = localStorage.getItem("Refid");
+            $.ajax({
+                url: "/api/getmarkettime/?Exchange=" + exchangetype + "&refid=" + refid,
+                type: "get",
+                success: function (resp) {
+                    var data = resp.split('|');
+                    var starttime = data[0] + ":00";
+                    var endttime = data[1] + ":00";
+                    var _starttime = starttime;
+                    var _endttime = endttime;
+                    var today = new Date();
+                    if (today.getDay() == 6 || today.getDay() == 0) {
+                        swal("Market not open.");
+                        //return;
+                    }
+                    else {
+                        var date = new Date();
+                        var ctime = date.getHours() + ":" + date.getMinutes() + ":" + "00";
+                        //current
+                        var currenttime_sec = ctime.split(':');
+                        var currentseconds = (+currenttime_sec[0]) * 60 * 60 + (+currenttime_sec[1]) * 60 + (+currenttime_sec[2]);
+                        //_starttime
+                        var Startcurrenttime_sec = _starttime.split(':');
+                        var startseconds = (+Startcurrenttime_sec[0]) * 60 * 60 + (+Startcurrenttime_sec[1]) * 60 + (+Startcurrenttime_sec[2]);
+
+                        //_endtime
+                        var Endcurrenttime_sec = _endttime.split(':');
+                        var endseconds = (+Endcurrenttime_sec[0]) * 60 * 60 + (+Endcurrenttime_sec[1]) * 60 + (+Endcurrenttime_sec[2]);
+                        if (currentseconds >= startseconds && currentseconds <= endseconds) {
+                            var cmp = $("#bid" + tokenno).html();
+                            cmp = cmp.replace("<b>", "");
+                            cmp = cmp.replace("</b>", "");
+                            cmp = cmp.trim();
+                            $.ajax({
+                                url: "/api/closetrade_from_account_portfolio/?userid=" + userid + "&ordercat=" + ordercategory + "&tokenno=" + tokenno + "&cmpval=" + cmp,
+                                type: "get",
+                                success: function (response) {
+
+                                    var data = JSON.parse(response);
+                                    swal({
+                                        title: "Trade Closed!",
+                                        text: data.ResponseMessage,
+                                        type: "success"
+                                    }).then(function () {
+                                        location.reload();
+                                    });
+                                }
+                            });
+                        }
+                        else {
+                            swal("Market not open.");
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function getnotification() {
+        var userid = localStorage.getItem("userid");
+
+        $.ajax({
+            url: "/api/getnotification/?userid=" + userid,
+            type: "get",
+            success: function (response) {
+                var data = JSON.parse(response);
+                var innerdata = "";
+                $.each(data, function (i, item) {
+                    var Title = data[i].Title;
+                    var Message = data[i].Message;
+                    var CreatedDate = data[i].CreatedDate;
+                    innerdata += "<tr>";
+                    innerdata += "<td>";
+                    innerdata += " <strong>" + Title + " (" + CreatedDate + ")</strong><br>" + Message + "</td>";
+                    innerdata += "</tr>";
+                });
+                $("#tblnoti").html(innerdata);
+            }
+        });
+    }
+
+
+
+
+
+    //
+</script>

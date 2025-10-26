@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+    <title>Contact Us</title>
+
+    <link rel="icon" href="~/Content/img/crazy-logo.jpg" type="image/png" />
+    <!-- themefy CSS -->
+    <link rel="stylesheet" href="~/Content/vendors/themefy_icon/themify-icons.css" />
+    <link rel="stylesheet" href="~/Content/vendors/font_awesome/css/all.min.css" />
+    <!-- datatable CSS -->
+    <!-- scrollabe  -->
+    <link rel="stylesheet" href="~/Content/vendors/scroll/scrollable.css" />
+    <!-- menu css  -->
+    <link rel="stylesheet" href="~/Content/css/metisMenu.css" />
+    <!-- style CSS -->
+    <link rel="stylesheet" href="~/Content/css/plugins.css" />
+    <!-- Media CSS -->
+    <link rel="stylesheet" href="~/Content/css/media.css" />
+</head>
+<body class="crm_body_bg login-bg">
+
+    <section class="main-login contact-us">
+        <!--/ menu  -->
+        <div class="main_content_iner d-flex align-items-center justify-content-center">
+            <form method="post" class="" id="contactfrm" name="contactfrm" action="/login/contactus/">
+                <div class="container">
+                    <div>
+                        <h3>Contact Us</h3>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <div class="form-group floating-label-group">
+                                    <input type="text" class="custom-input" id="txtname" name="name" autocomplete="off" autofocus="" required="" />
+                                    <label class="floating-label">Your Name</label>
+                                    <input type="hidden" id="txtcontactusuderid" name="txtcontactusuderid"/>      
+                                    <input type="hidden" id="txtdomainname" name="txtdomainname" />
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="form-group floating-label-group">
+                                    <input type="text" class="custom-input" id="txtmob" name="callno" autocomplete="off" autofocus="" required="" />
+                                    <label class="floating-label">Mobile No.</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 last-mb">
+                                <div class="form-group floating-label-group">
+                                    <input type="text" class="custom-input" id="txtwht" name="whatsappno" autocomplete="off" autofocus="" required="" />
+                                    <label class="floating-label">Whatsapp No.</label>
+                                </div>
+                            </div>
+
+                            @*<div class="col-lg-12">
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <div class="form-group form-check">
+                                            <input type="checkbox" name="openaccount" class="form-check-input" id="exampleCheck1" />
+                                            <label class="form-check-label" for="exampleCheck1">Open Account</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group form-check">
+                                            <input type="checkbox" name="openaccount" class="form-check-input" id="exampleCheck2" />
+                                            <label class="form-check-label" for="exampleCheck2">Rent Software</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group form-check">
+                                            <input type="checkbox" name="sharesoftware" class="form-check-input" id="exampleCheck3" />
+                                            <label class="form-check-label" for="exampleCheck3">Rent Software</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group form-check">
+                                            <input type="checkbox" name="complain" class="form-check-input" id="exampleCheck4" />
+                                            <label class="form-check-label" for="exampleCheck4">Complaint</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="form-group form-check">
+                                            <input type="checkbox" name="whitelevel" class="form-check-input" id="exampleCheck5" />
+                                            <label class="form-check-label" for="exampleCheck5">White Level</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 last-mb">
+                                        <div class="form-group form-check">
+                                            <input type="checkbox" name="others" class="form-check-input" id="exampleCheck4" />
+                                            <label class="form-check-label" for="exampleCheck4">Others</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>*@
+
+                            <div class="col-lg-12">
+                                <div class="form-group floating-label-group text-area">
+                                    <textarea type="text" class="custom-input" name="message" autocomplete="off" autofocus="" required=""></textarea>
+                                    <label class="floating-label">Message</label>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-xs-3 col-sm-6 last-mb">
+                                <input onclick="save()" type="button" class="login-btn" value="Submit" />
+                            </div>
+                            <div class="col-lg-6 col-xs-3 col-sm-6">
+                                <input type="button" href="/login/index" class="login-btn" onclick="goback()" value="Go Back">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- footer part -->
+
+    </section>
+    <!-- main content part end -->
+    <!-- ### CHAT_MESSAGE_BOX   ### -->
+    <!--/### CHAT_MESSAGE_BOX  ### -->
+    <div id="back-top" style="display: none;">
+        <a title="Go to Top" href="#">
+            <i class="ti-angle-up"></i>
+        </a>
+    </div>
+    <!-- footer  -->
+    <!-- jquery slim -->
+    <script src="~/Content/js/jquery-3.4.1.min.js"></script>
+    <!-- popper js -->
+    <script src="~/Content/js/popper.min.js"></script>
+    <!-- bootstarp js -->
+    <script src="~/Content/js/bootstrap.min.js"></script>
+    <!-- sidebar menu  -->
+    <script src="~/Content/js/metisMenu.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
+
+    <!-- scrollabe  -->
+    <script src="~/Content/vendors/scroll/perfect-scrollbar.min.js"></script>
+    <script src="~/Content/vendors/scroll/scrollable-custom.js"></script>
+
+    <!-- custom js -->
+    <script src="~/Content/js/custom.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var url = window.location.hostname;
+            $("#txtdomainname").val(url);
+            $.ajax({
+                url: "/api/getcontactususerid/?domain=" + url,
+                type: "get",
+                success: function (response) {
+                    localStorage.setItem("contusuid", response);
+                    $("#txtcontactusuderid").val(response)
+                }
+            });
+        });
+        function goback() {
+            location.href = "/login/index";
+        }
+        function save() {
+            var txtname = $("#txtname").val();
+            var txtmob = $("#txtmob").val();
+            var txtwht = $("#txtwht").val();
+            if (txtname != "" && txtmob != "" && txtwht != "") {
+                swal({
+                    title: "Thank you for connecting with us!",
+                    text: "We will connect with you soon.",
+                    type: "success"
+                }).then(function () {
+                    $("#contactfrm").submit();
+                });
+
+            } else {
+                swal("Error", "Please Enter Required Details.");
+            }
+
+
+        }
+
+    </script>
+
+
+
+
+</body>
+</html>

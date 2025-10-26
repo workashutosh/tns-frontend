@@ -1,0 +1,94 @@
+﻿
+@{
+    ViewBag.Title = "dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="main_content_iner ">
+    <div class="container-fluid p-0 ">
+        <div class="row ">
+            <div class="col-lg-12">
+                <div class="single_element">
+                    <div class="quick_activity">
+                        <div class="row">
+                            <div class="col-12 single_quick_activity;" style="text-align:center;background-color:white;padding:10px;margin-bottom:10px">
+                                <span style="width:100%; text-align: center; padding: 20px; text-align: center; font-weight: bold">Welcome <span id="usernamess"></span> </span>
+                            </div>
+                            <div class="col-12">
+                                <div class="quick_activity_wrap">
+                                    <!-- single_quick_activity  -->
+                                    <div class="single_quick_activity">
+                                        <div class="count_content">
+                                            <p>Ledger Balance</p>
+                                            <h3><span class="counter" id="ldgb">0</span> </h3>
+                                        </div>
+
+                                    </div>
+                                    <!-- single_quick_activity  -->
+                                    <div class="single_quick_activity">
+                                        <div class="count_content">
+                                            <p>Total Active Trade</p>
+                                            <h3><span class="counter" id="ta">0</span> </h3>
+                                        </div>
+
+                                    </div>
+                                    <!-- single_quick_activity  -->
+                                    <div class="single_quick_activity">
+                                        <div class="count_content">
+                                            <p>Total Pending Order</p>
+                                            <h3><span class="counter" id="tp">0</span> </h3>
+                                        </div>
+
+                                    </div>
+                                    <!-- single_quick_activity  -->
+                                    <div class="single_quick_activity">
+                                        <div class="count_content">
+                                            <p>Total Closed</p>
+                                            <h3><span class="counter" id="tc">0</span> </h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+
+                @*<iframe id="IframeAdm" name="IFrameAdm" width="100%" height="100%" border="none" src="/Home/Autosqarapartialview"></iframe>*@
+
+
+
+                <div class="white_card card_height_100 mb_30 QA_section">
+                    <script type="text/javascript">DukascopyApplet = { "type": "chart", "params": { "showUI": true, "showTabs": true, "showParameterToolbar": true, "showOfferSide": true, "allowInstrumentChange": true, "allowPeriodChange": true, "allowOfferSideChange": true, "showAdditionalToolbar": true, "showDetachButton": true, "presentationType": "candle", "axisX": true, "axisY": true, "legend": true, "timeline": true, "showDateSeparators": true, "showZoom": true, "showScrollButtons": true, "showAutoShiftButton": true, "crosshair": true, "borders": false, "theme": "Pastelle", "uiColor": "#000", "availableInstruments": "l:", "instrument": "EUR/USD", "period": "7", "offerSide": "BID", "timezone": 0, "live": true, "panLock": false, "width": "100%", "height": "600", "adv": "popup" } };</script>
+                    <script type="text/javascript" src="https://freeserv-static.dukascopy.com/2.0/core.js"></script>
+                </div>
+            </div>
+            <div  class="col-lg-12" style="">
+            @*@{
+                Html.RenderPartial("PartialViewPendingToActive");
+             }*@
+        </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="~/Content/js/jquery-3.4.1.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var LedgerBalance = localStorage.getItem("LedgerBalance");
+        var TotalActive = localStorage.getItem("TotalActive");
+        var TotalPending = localStorage.getItem("TotalPending");
+        var TotalClosed = localStorage.getItem("TotalClosed");
+        var username = localStorage.getItem("ClientName");
+        LedgerBalance = parseFloat(LedgerBalance).toFixed(2);
+        $("#ldgb").html(LedgerBalance);
+        $("#ta").html(TotalActive);
+        $("#tp").html(TotalPending);
+        $("#tc").html(TotalClosed);
+        $("#usernamess").html(username);
+    });
+
+</script>
+
