@@ -10,13 +10,13 @@ const Orders = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('active');
 
   const tabs = [
-    { id: 'all', label: 'All Orders' },
     { id: 'pending', label: 'Pending' },
     { id: 'active', label: 'Active' },
-    { id: 'closed', label: 'Closed' }
+    { id: 'closed', label: 'Closed' },
+    { id: 'sltp', label: 'SL/TP' }
   ];
 
   const bottomNavItems = [
@@ -33,17 +33,40 @@ const Orders = () => {
     }
   }, [user]);
 
-  const fetchOrders = async () => {
+  useEffect(() => {
+    if (user?.UserId && activeTab) {
+      fetchOrdersByStatus();
+    }
+  }, [activeTab, user?.UserId]);
+
+  const fetchOrdersByStatus = async () => {
     setLoading(true);
     try {
-      const response = await tradingAPI.getAllOrders(user.UserId);
-      setOrders(response);
+      let response;
+      
+      if (activeTab === 'sltp') {
+        // Get SL/TP orders
+        response = await tradingAPI.getSLTP(user.UserId);
+      } else {
+        // Get orders by status (Pending, Active, or Closed)
+        response = await tradingAPI.getOrders(activeTab.charAt(0).toUpperCase() + activeTab.slice(1), user.UserId);
+      }
+      
+      // Parse response if it's a string
+      const data = typeof response === 'string' ? JSON.parse(response) : response;
+      setOrders(data);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Failed to fetch orders');
+      setOrders([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchOrders = async () => {
+    // This is called on initial load - fetch active orders by default
+    setActiveTab('active');
   };
 
   const getStatusIcon = (status) => {
@@ -65,13 +88,12 @@ const Orders = () => {
       <TrendingDown className="w-4 h-4 text-red-500" />;
   };
 
-  const filteredOrders = orders.filter(order => {
-    if (activeTab === 'all') return true;
-    return order.OrderStatus?.toLowerCase() === activeTab;
-  });
-
   const handleTabClick = (tabId) => {
-    switch(tabId) {
+    setActiveTab(tabId);
+  };
+
+  const handleNavClick = (navId) => {
+    switch(navId) {
       case 'home':
         navigate('/dashboard');
         break;
@@ -124,59 +146,105 @@ const Orders = () => {
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
-        ) : filteredOrders.length > 0 ? (
+        ) : orders.length > 0 ? (
           <div className="space-y-4">
-            {filteredOrders.map((order, index) => (
-              <div key={index} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center space-x-2">
-                    {getActionIcon(order.OrderCategory)}
-                    <div>
-                      <h3 className="font-semibold text-white">{order.ScriptName}</h3>
-                      <p className="text-sm text-gray-400">{order.ActionType}</p>
+            {orders.map((order, index) => {
+              // Handle SL/TP orders differently
+              if (activeTab === 'sltp') {
+                const scriptParts = order.ScriptName?.split('_') || [order.ScriptName, ''];
+                return (
+                  <div key={index} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center space-x-2">
+                        <div>
+                          <h3 className="font-semibold text-white">{scriptParts[0]}</h3>
+                          <p className="text-sm text-gray-400">{scriptParts[1]}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium px-2 py-1 rounded-full bg-green-900 text-green-300">
+                          {order.OrderCategory}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-400">Stop Loss</p>
+                        <p className="font-medium text-red-400">₹{order.SL}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400">Take Profit</p>
+                        <p className="font-medium text-green-400">₹{order.TP}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-400">{order.DateTime}</span>
+                        <span className="text-green-400 px-2 py-1 rounded bg-green-900">
+                          {order.Status}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {getStatusIcon(order.OrderStatus)}
-                    <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-                      order.OrderStatus?.toLowerCase() === 'pending' ? 'bg-yellow-900 text-yellow-300' :
-                      order.OrderStatus?.toLowerCase() === 'active' ? 'bg-green-900 text-green-300' :
-                      'bg-gray-700 text-gray-300'
-                    }`}>
-                      {order.OrderStatus}
-                    </span>
+                );
+              }
+              
+              // Regular orders display
+              const scriptParts = order.ScriptName?.split('_') || [order.ScriptName, ''];
+              return (
+                <div key={index} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center space-x-2">
+                      {getActionIcon(order.OrderCategory)}
+                      <div>
+                        <h3 className="font-semibold text-white">{scriptParts[0]}</h3>
+                        <p className="text-sm text-gray-400">{scriptParts[1] || order.ActionType}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(order.OrderStatus)}
+                      <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                        order.OrderStatus?.toLowerCase() === 'pending' ? 'bg-yellow-900 text-yellow-300' :
+                        order.OrderStatus?.toLowerCase() === 'active' ? 'bg-green-900 text-green-300' :
+                        'bg-gray-700 text-gray-300'
+                      }`}>
+                        {order.OrderStatus}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-400">Order Type</p>
+                      <p className="font-medium text-white">{order.OrderType}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Lot Size</p>
+                      <p className="font-medium text-white">{order.Lot}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Price</p>
+                      <p className="font-medium text-white">₹{order.OrderPrice}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Margin Used</p>
+                      <p className="font-medium text-white">₹{order.MarginUsed}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-gray-700">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-400">
+                        {order.OrderDate} at {order.OrderTime}
+                      </span>
+                      <span className="text-gray-400">Order ID: {order.Id}</span>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-400">Order Type</p>
-                    <p className="font-medium text-white">{order.OrderType}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Lot Size</p>
-                    <p className="font-medium text-white">{order.Lot}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Price</p>
-                    <p className="font-medium text-white">₹{order.OrderPrice}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Margin Used</p>
-                    <p className="font-medium text-white">₹{order.MarginUsed}</p>
-                  </div>
-                </div>
-                
-                <div className="mt-3 pt-3 border-t border-gray-700">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400">
-                      {order.OrderDate} at {order.OrderTime}
-                    </span>
-                    <span className="text-gray-400">Order ID: {order.Id}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
@@ -192,7 +260,7 @@ const Orders = () => {
           {bottomNavItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => handleTabClick(item.id)}
+              onClick={() => handleNavClick(item.id)}
               className="flex flex-col items-center py-2"
             >
               <item.icon 

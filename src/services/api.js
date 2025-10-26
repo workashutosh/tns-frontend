@@ -102,6 +102,18 @@ export const authAPI = {
     } catch (error) {
       throw error;
     }
+  },
+
+  // Change active status
+  changeActiveStatus: async (userId) => {
+    try {
+      const response = await api.get('/changeactivestatus/', {
+        params: { userid: userId }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 
@@ -486,6 +498,175 @@ export const tradingAPI = {
   closeAllTradesByApp: async (orderData) => {
     try {
       const response = await api.post('/closealltradesbyapp/', orderData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // On select token load
+  onSelectForLoad: async (tokenId) => {
+    try {
+      const response = await api.get('/onselectforload/', {
+        params: { tokenid: tokenId }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get history data
+  getHistoryData: async (interval, instrumentToken, fromDateTime, toDateTime) => {
+    try {
+      const response = await api.get('/gethistorydata', {
+        params: {
+          interval,
+          instrumenttoken: instrumentToken,
+          fromdatetime: fromDateTime,
+          todatetime: toDateTime
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get script
+  getScript: async (exchangeName) => {
+    try {
+      const response = await api.get('/getscript', {
+        params: { exchangename: exchangeName }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Save transaction
+  saveTransaction: async (transactionData) => {
+    try {
+      const response = await api.post('/savetransaction/', transactionData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get payment image
+  getPaymentImage: async (refId) => {
+    try {
+      const response = await api.get('/getpaymentimage/', {
+        params: { refid: refId }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get user bill
+  getUserBill: async (userId) => {
+    try {
+      const response = await api.get('/getuserbill/', {
+        params: { UserId: userId }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get user balance ledger
+  getUserBalanceLedger: async (userId) => {
+    try {
+      const response = await api.get('/getuserbalanceledger/', {
+        params: { uid: userId }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get profile data
+  getProfileData: async (userId) => {
+    try {
+      const response = await api.get('/profiledata/', {
+        params: { userid: userId }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get notifications
+  getNotification: async (userId, refId) => {
+    try {
+      const response = await api.get('/getnotification/', {
+        params: { userid: userId, refid: refId }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get script token
+  getScriptToken: async (scriptName) => {
+    try {
+      const response = await api.get('/getscripttoken/', {
+        params: { scriptname: scriptName }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Contact us
+  contactUs: async (contactData) => {
+    try {
+      const response = await api.post('/contactus/', contactData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Update user bank details
+  updateUserBankDetails: async (bankDetails) => {
+    try {
+      const response = await api.get('/updateuserbankdetails/', {
+        params: bankDetails
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get payment form content
+  getFormContentAsync: async (paymentData) => {
+    try {
+      const response = await api.get('/getformconetntAsync/', {
+        params: paymentData
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get user URL
+  getUserUrl: async (url) => {
+    try {
+      const response = await api.get('/userurl', {
+        params: { url }
+      });
       return response.data;
     } catch (error) {
       throw error;
