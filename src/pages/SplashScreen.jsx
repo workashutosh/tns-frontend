@@ -33,7 +33,7 @@ const SplashScreen = ({ onFinish }) => {
 
       {/* Logo Container with animation */}
       <div className="relative z-10 mb-8">
-        <div className="w-24 h-24 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-6 shadow-2xl border border-white/20 animate-bounce">
+        <div className="w-24 h-24 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center mb-6 shadow-2xl border border-white/20">
           <img 
             src={logo} 
             alt="TradeStocko Logo" 
@@ -73,12 +73,7 @@ const SplashScreen = ({ onFinish }) => {
         {loadingProgress}%
       </div>
       
-      {/* Bottom decorative elements */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
-        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse delay-200"></div>
-        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-400"></div>
-      </div>
+
     </div>
   );
 };

@@ -73,10 +73,29 @@ const OrderModal = ({
 
   const loadActiveOrders = async () => {
     try {
-      const orders = await tradingAPI.getConsolidatedTrades(user.UserId);
-      setActiveOrders(orders);
+      const response = await tradingAPI.getConsolidatedTrades(user.UserId);
+      
+      // Parse the response if it's a string
+      let orders = response;
+      if (typeof response === 'string') {
+        try {
+          orders = JSON.parse(response);
+        } catch (parseError) {
+          console.error('Error parsing orders:', parseError);
+          orders = [];
+        }
+      }
+      
+      // Ensure orders is an array
+      if (!Array.isArray(orders)) {
+        console.warn('Orders is not an array:', orders);
+        orders = [];
+      }
+      
+      setActiveOrders(orders || []);
     } catch (error) {
       console.error('Error loading active orders:', error);
+      setActiveOrders([]);
     }
   };
 
@@ -294,67 +313,145 @@ const OrderModal = ({
         }
       }
       
-      // Prepare order payload exactly like the original
+      // Get current date and time exactly like the original
+      const now = new Date();
+      const orderDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+      const orderTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+      
+      // Determine if it's a stop loss order (for pending orders)
+      let isstoplossorder = "";
+      if (activeTab === 'order') {
+        const bid = symbol.sell || 0;
+        const ask = symbol.buy || 0;
+        if (orderData.orderType === "SELL") {
+          if (parseFloat(orderprice) > parseFloat(bid)) {
+            isstoplossorder = "false";
+          } else {
+            isstoplossorder = "true";
+          }
+        } else {
+          if (parseFloat(orderprice) > parseFloat(ask)) {
+            isstoplossorder = "true";
+          } else {
+            isstoplossorder = "false";
+          }
+        }
+      }
+      
+      // Get the symbol lot size from localStorage (exactly like original)
+      const actualLotSize = localStorage.getItem("SymbolLotSize") || symbol.Lotsize || 1;
+      
+      // Prepare order payload EXACTLY like the original
       const orderPayload = {
         Id: '',
         OrderDate: '',
         OrderTime: '',
-        actualLot: symbol.Lotsize || 1,
-        selectedlotsize: lotSize,
+        actualLot: actualLotSize.toString(),
+        selectedlotsize: lotSize.toString(),
         OrderNo: '',
         UserId: localStorage.getItem("userid") || user.UserId,
         UserName: localStorage.getItem("ClientName") || user.UserName || user.UserId,
         OrderCategory: orderData.orderType,
-        OrderType: activeTab === 'market' ? 'Market' : 'Limit',
+        OrderType: activeTab === 'market' ? 'Market' : (isstoplossorder === "true" ? 'S/L' : 'Limit'),
         ScriptName: symbol.SymbolName,
         TokenNo: symbol.SymbolToken,
         ActionType: activeTab === 'market' ? 
           (orderData.orderType === 'BUY' ? 'Bought By Trader' : 'Sold By Trader') : 
           'Order Placed @@',
-        OrderPrice: orderprice,
-        Lot: lotSize,
-        MarginUsed: Math.round(marginvalue),
-        HoldingMarginReq: Math.round(holdmarginvalue),
+        OrderPrice: orderprice.toString(),
+        Lot: lotSize.toString(),
+        MarginUsed: Math.round(marginvalue).toString(),
+        HoldingMarginReq: Math.round(holdmarginvalue).toString(),
         OrderStatus: activeTab === 'market' ? 'Active' : 'Pending',
-        SymbolType: exchtype === 'CDS' ? 'OPT' : exchtype
+        SymbolType: exchtype === 'CDS' ? 'OPT' : exchtype,
+        isstoplossorder: activeTab === 'order' ? isstoplossorder : "",
+        isedit: 'false'
       };
 
-      // Step 1: Check before trade (exactly like original)
-      console.log('Checking before trade with payload:', orderPayload);
-      const canTrade = await tradingAPI.checkBeforeTrade(orderPayload);
-      console.log('Check before trade response:', canTrade);
-      
-      if (canTrade !== 'true') {
-        setError(canTrade);
+      // CRITICAL CHECK 3: Check margin available (exactly like original)
+      const marginAvailable = parseFloat(userBalance.marginAvailable || 0);
+      if (parseInt(marginvalue) > parseInt(marginAvailable)) {
+        setError('Insufficient margin available. Please reduce lot size.');
+        setOrderLoading(false);
         return;
       }
 
-      // Step 2: Save the order (exactly like original)
-      console.log('Saving order with payload:', orderPayload);
-      const saveResponse = await tradingAPI.saveOrders(orderPayload);
-      console.log('Save order response:', saveResponse);
+      // Step 1: Check before trade (exactly like original)
+      console.log('Checking before trade with payload:', orderPayload);
+      let canTrade;
+      if (activeTab === 'order') {
+        canTrade = await tradingAPI.checkBeforeTradeForPending(orderPayload);
+      } else {
+        canTrade = await tradingAPI.checkBeforeTrade(orderPayload);
+      }
+      console.log('Check before trade response:', canTrade);
       
-      setSuccess(`Order placed successfully!`);
-
-      // Step 3: Create SL/TP if provided (exactly like original)
-      if (orderData.stopLoss || orderData.takeProfit) {
-        await createSLTPForNewOrder(
-          symbol.SymbolToken,
-          symbol.SymbolName,
-          orderData.orderType,
-          orderData.stopLoss,
-          orderData.takeProfit
-        );
+      if (canTrade !== 'true' && canTrade !== true) {
+        setError(canTrade || 'Order validation failed');
+        setOrderLoading(false);
+        return;
       }
 
+      // Step 2: Save the order using simplified payload
+      console.log('Saving order with payload:', orderPayload);
+      
+      // Prepare simplified payload for saveorderbyuser endpoint
+      const savePayload = {
+        UserId: orderPayload.UserId,
+        UserName: orderPayload.UserName,
+        OrderCategory: orderPayload.OrderCategory,
+        OrderType: orderPayload.OrderType,
+        ScriptName: orderPayload.ScriptName,
+        TokenNo: orderPayload.TokenNo,
+        OrderPrice: orderPayload.OrderPrice,
+        Lot: orderPayload.Lot,
+        selectedlotsize: orderPayload.selectedlotsize,
+        OrderStatus: orderPayload.OrderStatus,
+        SymbolType: orderPayload.SymbolType,
+        actualLot: orderPayload.actualLot
+      };
+      
+      console.log('Saving with simplified payload:', savePayload);
+      const saveResponse = await tradingAPI.saveOrderByUser(savePayload);
+      console.log('Save order response:', saveResponse);
+      
+      // Verify response
+      if (!saveResponse && saveResponse !== 'true') {
+        setError('Failed to save order. Please try again.');
+        setOrderLoading(false);
+        return;
+      }
+
+      // Step 3: Create SL/TP if provided (exactly like original)
+      if ((orderData.stopLoss || orderData.takeProfit) && activeTab === 'market') {
+        // For market orders, create SL/TP immediately
+        try {
+          await createSLTPForNewOrder(
+            symbol.SymbolToken,
+            symbol.SymbolName,
+            orderData.orderType,
+            orderData.stopLoss,
+            orderData.takeProfit
+          );
+        } catch (error) {
+          console.error('Error creating SL/TP:', error);
+          // Don't fail the order if SL/TP fails
+        }
+      }
+
+      // Show success message
+      setSuccess('Order placed successfully!');
+      setOrderLoading(false);
+      
       // Call callback to refresh data
       if (onOrderPlaced) {
         onOrderPlaced();
       }
 
-      // Close modal after 2 seconds
+      // Close modal and reload after showing success
       setTimeout(() => {
         onClose();
+        window.location.reload();
       }, 2000);
 
     } catch (error) {
@@ -374,7 +471,6 @@ const OrderModal = ({
       }
       
       setError(errorMessage);
-    } finally {
       setOrderLoading(false);
     }
   };
@@ -431,7 +527,7 @@ const OrderModal = ({
         </div>
 
         {/* Active Orders */}
-        {activeOrders.length > 0 && (
+        {Array.isArray(activeOrders) && activeOrders.length > 0 && (
           <div className="p-2 bg-gray-600">
             <div className="text-xs text-gray-300 mb-1">Active Orders:</div>
             <div className="text-xs text-white">

@@ -26,8 +26,11 @@ const MarketWatch = ({ user }) => {
   const fetchMarketData = async () => {
     setLoading(true);
     try {
+      // Get refId from localStorage
+      const refId = localStorage.getItem('Refid');
+      
       // Fetch symbols for the active exchange
-      const response = await tradingAPI.getSymbols(activeExchange, searchQuery || 'null');
+      const response = await tradingAPI.getSymbols(activeExchange, searchQuery || 'null', refId);
       setMarketData(response);
     } catch (error) {
       console.error('Error fetching market data:', error);

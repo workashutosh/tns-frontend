@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base API URL - always use production API
-const API_BASE_URL = 'https://www.tradenstocko.com/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -187,13 +187,38 @@ export const tradingAPI = {
   // Get MCX symbols
   getSymbols: async (exchangeType, searchKey, refId) => {
     try {
-      const response = await api.get('/getMCXsymbols/', {
-        params: {
-          extype: exchangeType,
-          searchkey: searchKey || 'null',
-          refid: refId
+      // Get refId from localStorage if not provided
+      let refIdToUse = refId;
+      if (!refIdToUse) {
+        refIdToUse = localStorage.getItem('Refid');
+      }
+      
+      // If still no refId, try to get from user object
+      if (!refIdToUse) {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          refIdToUse = user?.Refid;
         }
-      });
+      }
+      
+      // Fallback to fixed value '4355' for testing
+      if (!refIdToUse || refIdToUse === '' || refIdToUse === null) {
+        refIdToUse = '4355';
+      }
+      
+      console.log('getSymbols - refIdToUse:', refIdToUse);
+      
+      // Only include refid param if we have a valid value
+      const params = {
+        extype: exchangeType,
+        searchkey: searchKey || 'null',
+        refid: refIdToUse
+      };
+      
+      console.log('getSymbols - params:', params);
+      
+      const response = await api.get('/getMCXsymbols/', { params });
       return response.data;
     } catch (error) {
       throw error;
@@ -359,6 +384,18 @@ export const tradingAPI = {
   saveOrders: async (orderData) => {
     try {
       const response = await api.get('/saveorders/', {
+        params: orderData
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Save order by user (direct order placement)
+  saveOrderByUser: async (orderData) => {
+    try {
+      const response = await api.post('/saveorderbyuser/', null, {
         params: orderData
       });
       return response.data;

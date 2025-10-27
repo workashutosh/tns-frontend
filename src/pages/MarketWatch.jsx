@@ -327,7 +327,10 @@ const MarketWatch = () => {
       return;
     }
     
-    if (!user.Refid) {
+    // Get refId from user object or localStorage
+    const refId = user.Refid || localStorage.getItem('Refid');
+    
+    if (!refId) {
       console.error('No Refid found for user');
       setSearchResults([]);
       return;
@@ -335,7 +338,7 @@ const MarketWatch = () => {
     
     setSearchLoading(true);
     try {
-      const response = await tradingAPI.getSymbols(activeTab, query, user.Refid);
+      const response = await tradingAPI.getSymbols(activeTab, query, refId);
       const symbols = typeof response === 'string' ? JSON.parse(response) : response;
       
       console.log(`Found ${symbols.length} symbols for query "${query}":`, symbols);
@@ -403,9 +406,12 @@ const MarketWatch = () => {
     setSearchResults([]);
     setModalLoading(true);
     
+    // Get refId from user object or localStorage
+    const refId = user.Refid || localStorage.getItem('Refid');
+    
     // Load initial suggestions when modal opens
     try {
-      const response = await tradingAPI.getSymbols(activeTab, 'null', user.Refid);
+      const response = await tradingAPI.getSymbols(activeTab, 'null', refId);
       const symbols = typeof response === 'string' ? JSON.parse(response) : response;
       setSearchResults(symbols); // Show all symbols as suggestions
     } catch (error) {
@@ -455,8 +461,15 @@ const MarketWatch = () => {
     initializeWebSocket();
   };
 
-  // Handle order modal
+  // Handle order modal (exactly like original implementation)
   const handleOrderModalOpen = (symbol) => {
+    // Store symbol lot size in localStorage exactly like original
+    if (symbol && symbol.SymbolToken) {
+      localStorage.setItem("SymbolLotSize", symbol.Lotsize || 1);
+      localStorage.setItem("selected_token", symbol.SymbolToken);
+      localStorage.setItem("selected_script", symbol.SymbolName);
+      localStorage.setItem("selectedlotsize", symbol.Lotsize || 1);
+    }
     setSelectedSymbol(symbol);
     setShowOrderModal(true);
   };
@@ -535,7 +548,7 @@ const MarketWatch = () => {
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3 px-2 text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? 'text-white bg-gray-700 border-b-2 border-blue-500'
                 : 'text-gray-400 hover:text-gray-300 hover:bg-gray-750'

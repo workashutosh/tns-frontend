@@ -250,7 +250,7 @@ const Portfolio = () => {
     const tokenToFind = data.instrument_token.toString();
     
     setActiveOrders(prevOrders => {
-      return prevOrders.map(order => {
+      const updatedOrders = prevOrders.map(order => {
         if (order.TokenNo?.toString() === tokenToFind) {
           const bid = data.bid === "0" || data.bid === 0 ? data.last_price : data.bid;
           const ask = data.ask === "0" || data.ask === 0 ? data.last_price : data.ask;
@@ -274,25 +274,25 @@ const Portfolio = () => {
         }
         return order;
       });
-    });
-    
-    // Update balance data
-    setBalanceData(prev => {
-      const totalActivePL = prevOrders => {
-        return prevOrders.reduce((total, order) => total + (order.profitLoss || 0), 0);
-      };
       
-      const activePL = totalActivePL(prevOrders);
-      const creditLimit = parseFloat(localStorage.getItem('CreditLimit')) || 0;
-      const m2m = prev.ledgerBalance + activePL + creditLimit;
-      const marginAvailable = m2m - totalMarginUsedRef.current;
+      // Calculate total P/L from updated orders
+      const totalActivePL = updatedOrders.reduce((total, order) => total + (order.profitLoss || 0), 0);
       
-      return {
-        ...prev,
-        activePL,
-        m2m,
-        marginAvailable: Math.max(0, marginAvailable)
-      };
+      // Update balance data
+      setBalanceData(prev => {
+        const creditLimit = parseFloat(localStorage.getItem('CreditLimit')) || 0;
+        const m2m = prev.ledgerBalance + totalActivePL + creditLimit;
+        const marginAvailable = m2m - totalMarginUsedRef.current;
+        
+        return {
+          ...prev,
+          activePL: totalActivePL,
+          m2m,
+          marginAvailable: Math.max(0, marginAvailable)
+        };
+      });
+      
+      return updatedOrders;
     });
   }, []);
 
@@ -668,16 +668,16 @@ const Portfolio = () => {
             {/* Closed Orders Balance Summary */}
             {activeSubTab === 'Closed' && (
               <div className="bg-gray-800 rounded-lg p-2 mb-4 border border-gray-700">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <p className="text-gray-400 text-sm mb-1">Ledger Balance</p>
-                    <p className="text-white font-bold text-lg">{balanceData.ledgerBalance.toLocaleString()}</p>
+                <div className="flex justify-around items-center">
+                  <div className="flex items-center space-x-1">
+                    <span className="text-gray-400 text-sm">Balance:</span>
+                    <span className="text-white font-bold text-sm">{balanceData.ledgerBalance.toLocaleString()}</span>
                   </div>
-                  <div className="text-center">
-                    <p className="text-gray-400 text-sm mb-1">Net Profit/Loss</p>
-                    <p className={`font-bold text-lg ${balanceData.netPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-gray-400 text-sm">Net P/L:</span>
+                    <span className={`font-bold text-sm ${balanceData.netPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {balanceData.netPL >= 0 ? '+' : ''}{balanceData.netPL.toLocaleString()}
-                    </p>
+                    </span>
                   </div>
                 </div>
               </div>
