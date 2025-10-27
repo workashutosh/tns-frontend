@@ -106,8 +106,33 @@ const Profile = () => {
   const getTransactionHistory = async () => {
     try {
       if (!user?.UserId) return;
-      const transactions = await tradingAPI.getUserBalanceLedger(user.UserId);
-      setTransactionHistory(Array.isArray(transactions) ? transactions : []);
+      let transactions = await tradingAPI.getUserBalanceLedger(user.UserId);
+      
+      console.log('Raw transaction response:', transactions, 'Type:', typeof transactions);
+      
+      // Handle JSON-encoded response (backend returns JSON as string)
+      if (typeof transactions === 'string') {
+        try {
+          transactions = JSON.parse(transactions);
+          console.log('Parsed transactions:', transactions);
+        } catch (e) {
+          console.error('Error parsing transaction data:', e);
+          setTransactionHistory([]);
+          return;
+        }
+      }
+      
+      // Process transactions to map TransactionType
+      const processed = (Array.isArray(transactions) ? transactions : []).map(t => ({
+        ...t,
+        TransactionType: t.TransactionType === '1' ? 'Deposit' : 
+                        t.TransactionType === '2' ? 'Withdrawal' :
+                        t.TransactionType === '3' ? 'Profit' :
+                        t.TransactionType === '4' ? 'Loss' : t.TransactionType
+      }));
+      
+      setTransactionHistory(processed);
+      console.log('Transaction history loaded:', processed.length, 'transactions');
     } catch (error) {
       console.error('Error getting transactions:', error);
       setTransactionHistory([]);
@@ -401,28 +426,46 @@ const Profile = () => {
         </div>
       </Modal>
 
-      <Modal show={showFundDetailsModal} onClose={() => setShowFundDetailsModal(false)} title="Transaction History">
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          <div className="flex justify-between items-center p-2.5 bg-gray-900 rounded mb-2">
-            <span className="text-sm font-medium text-gray-300">Current Balance</span>
-            <span className="text-base font-semibold text-green-400">₹{(balanceData.ledgerBalance || 0).toFixed(0)}</span>
+      <Modal show={showFundDetailsModal} onClose={() => setShowFundDetailsModal(false)} title="Transaction History" size="lg">
+        <div className="max-h-[70vh] overflow-y-auto">
+          <div className="flex justify-between items-center p-3 bg-gray-900 rounded-lg mb-3 border border-gray-700">
+            <span className="text-sm font-medium text-gray-300">User Current Balance</span>
+            <span className="text-lg font-bold text-green-400">₹{(balanceData.ledgerBalance || 0).toFixed(0)}</span>
           </div>
           {transactionHistory && transactionHistory.length > 0 ? (
-            transactionHistory.map((t, idx) => (
-              <div key={idx} className="bg-gray-900 rounded p-2.5 border border-gray-700">
-                <div className="flex justify-between items-center">
-                  <div><div className="text-xs text-gray-400">{t.CreatedDate || '-'}</div></div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-400">{t.TransactionType || '-'}</div>
-                    <div className={`text-sm font-medium ${t.TransactionType === 'Withdrawal' || t.TransactionType === 'Loss' ? 'text-red-400' : 'text-green-400'}`}>
-                      {(t.TransactionType === 'Withdrawal' || t.TransactionType === 'Loss' ? '-' : '+')}₹{t.Amount || 0}
+            <div className="space-y-2">
+              {transactionHistory.map((t, idx) => {
+                const amount = parseFloat(t.Amount || 0);
+                const isNegative = amount < 0 || t.TransactionType === 'Withdrawal' || t.TransactionType === 'Loss';
+                const displayAmount = Math.abs(amount);
+                
+                return (
+                  <div key={idx} className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                      <div className="text-left">
+                        <div className="text-xs text-gray-400 mb-1">{t.CreatedDate || '-'}</div>
+                        {t.Notes && t.Notes !== 'None' && (
+                          <div className="text-xs text-gray-500">{t.Notes}</div>
+                        )}
+                      </div>
+                      <div className="text-center">
+                        <div className="text-sm font-medium text-gray-300">{t.TransactionType || '-'}</div>
+                        {t.ScriptName && (
+                          <div className="text-xs text-gray-500">{t.ScriptName}</div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-base font-bold ${isNegative ? 'text-red-400' : 'text-green-400'}`}>
+                          {isNegative ? '-' : '+'}₹{displayAmount.toFixed(2)}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))
+                );
+              })}
+            </div>
           ) : (
-            <div className="text-center text-gray-400 p-3 text-sm">No transactions found</div>
+            <div className="text-center text-gray-400 p-8 text-sm">No transactions found</div>
           )}
         </div>
       </Modal>

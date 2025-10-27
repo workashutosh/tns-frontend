@@ -499,16 +499,44 @@ const Portfolio = () => {
       const endSeconds = getTimeInSeconds(endTime);
       
       if (currentSeconds >= startSeconds && currentSeconds <= endSeconds) {
-        const result = await tradingAPI.closeTradeFromPortfolio(
-          user.UserId, 
-          order.OrderCategory, 
-          order.TokenNo, 
-          order.currentPrice
+        // Get order number - in the backend it's the Id field
+        const orderNo = order.Id || order.OrderNo || order.OrderId || order.orderNo || order.orderId;
+        
+        console.log('Closing order with OrderNo:', orderNo, 'Full order:', order);
+        
+        if (!orderNo) {
+          toast.error("Order number not found");
+          return;
+        }
+        
+        // Calculate P/L
+        const pl = order.profitLoss;
+        
+        // Calculate brokerage (you may need to adjust this based on your logic)
+        const brokerage = Math.abs(pl) * 0.01; // Example: 1% of absolute P/L
+        
+        // Get current date for ClosedAt
+        const datee = new Date();
+        const finaldate = datee.getFullYear() + "-" + (datee.getMonth() + 1) + "-" + datee.getDate();
+        
+        const result = await tradingAPI.updateOrder(
+          pl.toFixed(2),              // lp
+          brokerage.toFixed(2),       // brokerage
+          order.currentPrice,          // BroughtBy
+          finaldate,                   // ClosedAt
+          orderNo,                     // orderno
+          user.UserId,                 // uid
+          order.OrderCategory,         // ordertype
+          order.TokenNo                // tokenno
         );
         
-        toast.success("Trade Closed!");
-        // Refresh data
-        await initializePortfolioData();
+        if (result === 'true' || result === true) {
+          toast.success("Trade Closed!");
+          // Refresh data
+          await initializePortfolioData();
+        } else {
+          toast.error("Failed to close trade");
+        }
       } else {
         toast.error("Market not open.");
       }
