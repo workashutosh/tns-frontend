@@ -387,8 +387,6 @@
             <div class="modal-body" style="text-align:center">
 
                 <table class="table table-borderd" style="margin-top:10px;">
-
-
                     <tr>
                         <td style="text-align:left">
                             <span>Enter Amount</span>
@@ -433,7 +431,6 @@
         <div class="mob-head">
             <button type="button" class="close" data-dismiss="modal" onclick="closechangepass()">
                 <svg fill="#d6d6d6fff" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="27px" viewBox="0 0 32.75 32.75" xml:space="preserve" stroke="#d6d6d6fff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M32.75,16.377c0,2.209-1.791,4-4,4H12.646l3.754,4.42c1.431,1.684,1.224,4.207-0.46,5.638 c-0.752,0.64-1.672,0.95-2.587,0.95c-1.134,0-2.26-0.479-3.051-1.41l-9.351-11.01c-1.268-1.492-1.268-3.687,0-5.178l9.351-11.01 c1.431-1.684,3.954-1.89,5.638-0.459s1.891,3.954,0.46,5.638l-3.754,4.42H28.75C30.959,12.376,32.75,14.167,32.75,16.377z"></path> </g> </g></svg>
-
             </button>
             <h5 class="mb-0">Pay Online </h5>
             <span>&nbsp;&nbsp;&nbsp;</span>
@@ -520,6 +517,10 @@
                             <span>Transaction ID</span>
                             <input type="text" id="gatwaytxnid" readonly class="custom-input" autocomplete="off" />
                         </td>
+                        <td style="text-align:left"></td>
+                            <span>UPI ID</span>
+                            <span>fcbizsbr36255@freecharge</span>
+                        </td>
                     </tr>
                     <tr>
                         <td> </td>
@@ -535,17 +536,34 @@
                     </tr>
                     <tr>
                         <td>
-                            <button class="btn btn-primary form-control" href="upi://pay?pa=upiaddress@okhdfcbank&pn=JohnDoe&cu=INR" id="upiBtn"  style="margin-bottom:10px; background-color:#41aa21; border-color:#41aa21; display:flex; align-items:center; justify-content:center;">
+                            @* <button class="btn btn-primary form-control" href="upi://pay?pa=upiaddress@okhdfcbank&pn=JohnDoe&cu=INR" id="upiBtn"  style="margin-bottom:10px; background-color:#41aa21; border-color:#41aa21; display:flex; align-items:center; justify-content:center;">
                                 <img src="https://imgs.search.brave.com/iWA2XQeaamYNbvDIXrfqLT4Vu_qPY-uJeUjVH6glgHI/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzA4LzkzLzgyLzYz/LzM2MF9GXzg5Mzgy/NjMzMV85RzhweHdE/ZGtaUFYzd0t2TUZj/a3VuQ3hvRXN2UUdU/YS5qcGc" alt="UPI Logo" style="width:24px; height:24px; margin-right:8px; vertical-align:middle;" />
-                                        <a id="upiPayLink" href="#" class="upi-pay1">Pay through UPI</a>                            
-                            </button>
+                                        * <a id="upiPayLink" href="#" class="upi-pay1">Pay through UPI</a>                             
+                            </button> *@
+
+                        </td>
+                    </tr>
+                    <tr>
+                        <td> </td>
+                    </tr>
+                    <br />
+                    <tr>
+                        <td style="text-align:left">
+                            <span>Upload a transaction record / payment screenshot</span>
+                            <input type="file" id="txnUploadFile" accept="image/*,application/pdf" class="form-control" />
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input type="button" required class="btn btn-success form-control" value="Other Payment" id="payBtn" onclick="submitpaymentdetails1()" />
+                            <button type="button" id="uploadTxnBtn" class="btn btn-success form-control" onclick="uploadTransactionRecord()">Upload Transaction Record</button>
+                            <div id="uploadTxnMsg" style="margin-top:8px; font-size:13px;"></div>
                         </td>
                     </tr>
+                    @* <tr>
+                        <td>
+                            <input type="button" required class="btn btn-success form-control" value="Other Payment" id="payBtn" onclick="submitpaymentdetails1()" />
+                        </td>
+                    </tr> *@
                     <tr>
                         <td>
                             <div id="qrcode" style="margin-top:5px; display:flex; justify-content:center;"></div>
@@ -932,14 +950,14 @@
                                         </td>
                                     </tr>
                                     <tr>
-    <td>
-        <a href="#" id="kycRowLink" data-toggle='modal' data-target='#kycdetails' class="btn-default" style="color:#d6d6d6; font-weight:bold;">KYC</a>
-        <div id="kycRowStatus" style="margin-left:0;margin-top:2px;"></div>
-    </td>
-    <td align="right">
-        <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#d6d6d6"></path> <circle cx="6" cy="3.5" fill="#d6d6d6" r="3.5"></circle> </g> </g></svg>
-    </td>
-</tr>
+                                        <td>
+                                            <a href="#" id="kycRowLink" data-toggle='modal' data-target='#kycModal' class="btn-default" style="color:#d6d6d6; font-weight:bold;">KYC</a>
+                                            <div id="kycRowStatus" style="margin-left:0;margin-top:2px;"></div>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#d6d6d6"></path> <circle cx="6" cy="3.5" fill="#d6d6d6" r="3.5"></circle> </g> </g></svg>
+                                        </td>
+                                    </tr>
 
 
 
@@ -976,6 +994,15 @@
                                         </td>
                                         <td align="right">
                                             <svg width="30px" height="30px" viewBox="0 0 12 12" enable-background="new 0 0 12 12" id="Слой_1" version="1.1" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M9.3005371,6.5351563C8.4776001,7.4294434,7.3084106,8,6,8S3.5223999,7.4294434,2.6994629,6.5351563 C1.3145142,7.2350464,0.5,8.6131592,0.5,10.5V12h11v-1.5C11.5,8.6131592,10.6854858,7.2350464,9.3005371,6.5351563z" fill="#d6d6d6"></path> <circle cx="6" cy="3.5" fill="#d6d6d6" r="3.5"></circle> </g> </g></svg>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <a href="#" id="bankDetailsLink" data-toggle='modal' data-target='#bankDetailsModal' class="btn-default" style="color:#d6d6d6;font-weight:bold">Bank Details</a>
+                                        </td>
+                                        <td align="right">
+                                            <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke="#d6d6d6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
                                         </td>
                                     </tr>
 
@@ -1116,25 +1143,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to update UPI URL and QR code
     function updateUpiUrlAndQr(upiBaseUrl, amount) {
-        if (!upiBaseUrl) {
-            $('#upiPayLink').attr('href', '#').addClass('disabled').css('pointer-events', 'none');
-            $('#qrcode').empty(); // Clear QR code if no URL
-            return;
-        }
-        let upiUrl = upiBaseUrl;
-        if (amount && !isNaN(amount)) {
-            upiUrl += '&am=' + encodeURIComponent(amount);
-        }
-        $('#upiPayLink').attr('href', upiUrl).removeClass('disabled').css('pointer-events', 'auto');
-
-        // Update or create QR code
-        $('#qrcode').empty(); // Clear previous QR code
-        new QRCode(document.getElementById('qrcode'), {
-            text: upiUrl,
-            width: 128,
-            height: 128
-        });
+    if (!upiBaseUrl) {
+        $('#upiPayLink').attr('href', '#').addClass('disabled').css('pointer-events', 'none');
+        $('#qrcode').empty();
+        return;
     }
+    
+    let upiUrl = upiBaseUrl;
+    if (amount && !isNaN(amount)) {
+        // Check if &am= already exists (simple regex for query param)
+        if (!upiUrl.match(/&?am=/)) {
+            // If it starts with ?, use &; else, add ?
+            const separator = upiUrl.includes('?') ? '&' : '?';
+            upiUrl += separator + 'am=' + encodeURIComponent(amount);
+        } else {
+            // Optionally, replace the existing one: upiUrl = upiUrl.replace(/&?am=[^&]*/, '&am=' + encodeURIComponent(amount));
+            // But for now, just skip to avoid duplicates
+            console.warn('Amount parameter already present in base URL; skipping append.');
+        }
+    }
+    
+    $('#upiPayLink').attr('href', upiUrl).removeClass('disabled').css('pointer-events', 'auto');
+    
+    $('#qrcode').empty();
+    new QRCode(document.getElementById('qrcode'), {
+        text: upiUrl,
+        width: 128,
+        height: 128
+    });
+}
 
     // Fetch UPI URL once and store it
     fetchUpiDetails().then(upiBaseUrl => {
@@ -1153,6 +1190,73 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initial update with no amount
         updateUpiUrlAndQr(upiBaseUrl, '');
     });
+    
+    // Upload transaction record (image/pdf)
+    window.uploadTransactionRecord = function () {
+        var fileInput = document.getElementById('txnUploadFile');
+        var file = fileInput ? fileInput.files[0] : null;
+        var userId = localStorage.getItem('userid');
+        var txnId = document.getElementById('gatwaytxnid') ? document.getElementById('gatwaytxnid').value : '';
+        var status = 'SUCCESS';
+
+        var msgEl = document.getElementById('uploadTxnMsg');
+        if (msgEl) msgEl.innerHTML = '';
+
+        if (!userId) {
+            if (msgEl) msgEl.style.color = 'red', msgEl.innerText = 'User not identified.';
+            return;
+        }
+        if (!txnId) {
+            if (msgEl) msgEl.style.color = 'red', msgEl.innerText = 'Transaction ID is empty.';
+            return;
+        }
+        if (!file) {
+            if (msgEl) msgEl.style.color = 'red', msgEl.innerText = 'Please choose a file (JPG/PNG/PDF).';
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('userId', userId);
+        formData.append('txnId', txnId);
+        formData.append('status', status);
+        formData.append('image', file);
+
+        if (msgEl) {
+            msgEl.style.color = '#666';
+            msgEl.innerText = 'Uploading...';
+        }
+
+        fetch('https://tnsadmin.twmresearchalert.com/api/uploadTransaction.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(function (res) { return res.json().catch(function(){ return { status: 'error', message: 'Invalid JSON response' }; }); })
+            .then(function (data) {
+                if (data && data.status === 'success') {
+                    if (msgEl) {
+                        msgEl.style.color = 'green';
+                        msgEl.innerText = 'Uploaded successfully.';
+                    }
+                    // Close the Pay Online modal after successful upload
+                    try {
+                        $('#payonlinemodel').modal('hide');
+                    } catch (e) { }
+                    // Reset file input
+                    if (fileInput) fileInput.value = '';
+                } else {
+                    if (msgEl) {
+                        msgEl.style.color = 'red';
+                        msgEl.innerText = (data && data.message) ? data.message : 'Upload failed.';
+                    }
+                }
+            })
+            .catch(function (err) {
+                if (msgEl) {
+                    msgEl.style.color = 'red';
+                    msgEl.innerText = 'Network error while uploading.';
+                }
+            });
+    }
 });
 
 
@@ -2341,73 +2445,69 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    //
+    // Store KYC data globally for modal use
+    var lastKycData = null;
 
     function fetchKYCStatus() {
         var userid = localStorage.getItem("userid");
-        if (!userid) return;
+        if (!userid) return Promise.resolve();
 
-        $.ajax({
+        return $.ajax({
             url: "https://tnsadmin.twmresearchalert.com/api/get_kyc.php?user_id=" + userid,
-            type: "GET",
-            success: function (response) {
-                if (typeof response === "string") {
-                    response = JSON.parse(response);
-                }
-                if (response.status === "success") {
-                    if (response.data && response.data.length > 0) {
-                        var kyc = response.data[0];
-                        lastKycData = kyc;
-                        $("#kycStatus").html(
-                            "<b>KYC Status:</b> " + kyc.approval_status.charAt(0).toUpperCase() + kyc.approval_status.slice(1)
-                        );
-                        $("#kycPendingBar").remove();
-                        // If images are submitted and approval_status is pending, show orange text
-                        if (kyc.aadhaar_image && kyc.pan_image && kyc.approval_status === 'pending') {
-                            $('#kycRowStatus').html('<span style="color:orange;font-weight:bold;">Under Inspection</span>');
-                        } else {
-                            $('#kycRowStatus').html('');
-                        }
-                        // Always allow modal to open
-                        $('#kycRowLink').attr('data-toggle', 'modal').attr('data-target', '#kycModal');
-                        $('#kycRowLink').off('click');
+            type: "GET"
+        }).done(function (response) {
+            console.log('fetchKYCStatus response:', response);
+            if (typeof response === "string") {
+                response = JSON.parse(response);
+            }
+            if (response.status === "success") {
+                if (response.data && response.data.length > 0) {
+                    var kyc = response.data[0];
+                    lastKycData = kyc;
+                    console.log('KYC data found, setting lastKycData:', lastKycData);
+                    $("#kycStatus").html(
+                        "<b>KYC Status:</b> " + kyc.approval_status.charAt(0).toUpperCase() + kyc.approval_status.slice(1)
+                    );
+                    $("#kycPendingBar").remove();
+                    // If images are submitted and approval_status is pending, show orange text
+                    if (kyc.aadhaar_image && kyc.pan_image && kyc.approval_status === 'pending') {
+                        $('#kycRowStatus').html('<span style="color:orange;font-weight:bold;">Under Inspection</span>');
                     } else {
-                        lastKycData = null;
-                        $("#kycStatus").html(
-                            "<span style='color:red;'><b>You have not submitted your KYC. Please submit your KYC documents.</b></span>"
-                        );
-                        if (!$("#kycPendingBar").length) {
-                            var kycBar =
-                                '<div id="kycPendingBar" style="width:100%;background:#ff4d4d;color:white;text-align:center;padding:10px 0;z-index:9999;font-weight:bold;">' +
-                                '<span style="display:inline-block;width:12px;height:12px;background:#ff0000;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>' +
-                                'KYC Pending - Please submit your KYC documents to access all features.' +
-                                '<span id="closeKycBar" style="float:right;margin-right:20px;cursor:pointer;font-size:18px;font-weight:bold;">&times;</span>' +
-                                '</div>';
-                            $(".main_content_iner").before(kycBar);
-                            $(document).on('click', '#closeKycBar', function() {
-                                $('#kycPendingBar').remove();
-                            });
-                        }
-                        // Enable modal trigger for KYC row
                         $('#kycRowStatus').html('');
-                        $('#kycRowLink').attr('data-toggle', 'modal').attr('data-target', '#kycModal');
-                        $('#kycRowLink').off('click');
                     }
                 } else {
                     lastKycData = null;
+                    console.log('No KYC data found, setting lastKycData to null');
                     $("#kycStatus").html(
-                        "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
+                        "<span style='color:red;'><b>You have not submitted your KYC. Please submit your KYC documents.</b></span>"
                     );
-                    $("#kycPendingBar").remove();
+                    if (!$("#kycPendingBar").length) {
+                        var kycBar =
+                            '<div id="kycPendingBar" style="width:100%;background:#ff4d4d;color:white;text-align:center;padding:10px 0;z-index:9999;font-weight:bold;">' +
+                            '<span style="display:inline-block;width:12px;height:12px;background:#ff0000;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>' +
+                            'KYC Pending - Please submit your KYC documents to access all features.' +
+                            '<span id="closeKycBar" style="float:right;margin-right:20px;cursor:pointer;font-size:18px;font-weight:bold;">&times;</span>' +
+                            '</div>';
+                        $(".main_content_iner").before(kycBar);
+                        $(document).on('click', '#closeKycBar', function() {
+                            $('#kycPendingBar').remove();
+                        });
+                    }
+                    $('#kycRowStatus').html('');
                 }
-            },
-            error: function () {
+            } else {
                 lastKycData = null;
                 $("#kycStatus").html(
                     "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
                 );
                 $("#kycPendingBar").remove();
             }
+        }).fail(function () {
+            lastKycData = null;
+            $("#kycStatus").html(
+                "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
+            );
+            $("#kycPendingBar").remove();
         });
     }
 
@@ -2458,79 +2558,92 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
+<div class="modal fade" id="bankDetailsModal" tabindex="-1" role="dialog" aria-labelledby="bankDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bankDetailsModalLabel">Bank Details</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="bankDetailsModalBody">
+        <div style="text-align:center;">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-// Store KYC data globally for modal use
-var lastKycData = null;
+// Handler for KYC modal when it's shown
+$('#kycModal').on('show.bs.modal', function() {
+    console.log('KYC modal opened');
+    // Fetch fresh KYC status when modal opens
+    fetchKYCStatusFromAPI().then(function(kycData) {
+        console.log('fetchKYCStatusFromAPI completed, calling populateKycModal');
+        populateKycModal(kycData);
+    }).catch(function(error) {
+        console.error('Error in fetchKYCStatusFromAPI:', error);
+        // Fallback: show form even if fetch fails
+        populateKycModal(null);
+    });
+});
 
-function fetchKYCStatus() {
+// Direct click handler as backup
+$('#kycRowLink').on('click', function(e) {
+    console.log('KYC link clicked directly');
+    e.preventDefault();
+    $('#kycModal').modal('show');
+    // Force populate after a short delay
+    setTimeout(function() {
+        console.log('Force populating modal after delay');
+        fetchKYCStatusFromAPI().then(function(kycData) {
+            populateKycModal(kycData);
+        }).catch(function(error) {
+            console.error('Error in fetchKYCStatusFromAPI:', error);
+            populateKycModal(null);
+        });
+    }, 500);
+});
+
+// Function to fetch KYC status from the new API endpoint
+function fetchKYCStatusFromAPI() {
     var userid = localStorage.getItem("userid");
-    if (!userid) return;
-
-    $.ajax({
-        url: "https://tnsadmin.twmresearchalert.com/api/get_kyc.php?user_id=" + userid,
-        type: "GET",
-        success: function (response) {
-            if (typeof response === "string") {
-                response = JSON.parse(response);
-            }
-            if (response.status === "success") {
-                if (response.data && response.data.length > 0) {
-                    var kyc = response.data[0];
-                    lastKycData = kyc;
-                    $("#kycStatus").html(
-                        "<b>KYC Status:</b> " + kyc.approval_status.charAt(0).toUpperCase() + kyc.approval_status.slice(1)
-                    );
-                    $("#kycPendingBar").remove();
-                } else {
-                    lastKycData = null;
-                    $("#kycStatus").html(
-                        "<span style='color:red;'><b>You have not submitted your KYC. Please submit your KYC documents.</b></span>"
-                    );
-                    if (!$("#kycPendingBar").length) {
-                        var kycBar =
-                            '<div id="kycPendingBar" style="width:100%;background:#ff4d4d;color:white;text-align:center;padding:10px 0;z-index:9999;font-weight:bold;">' +
-                            '<span style="display:inline-block;width:12px;height:12px;background:#ff0000;border-radius:50%;margin-right:8px;vertical-align:middle;"></span>' +
-                            'KYC Pending - Please submit your KYC documents to access all features.' +
-                            '<span id="closeKycBar" style="float:right;margin-right:20px;cursor:pointer;font-size:18px;font-weight:bold;">&times;</span>' +
-                            '</div>';
-                        $(".main_content_iner").before(kycBar);
-                        $(document).on('click', '#closeKycBar', function() {
-                            $('#kycPendingBar').remove();
-                        });
-                    }
-                }
-            } else {
-                lastKycData = null;
-                $("#kycStatus").html(
-                    "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
-                );
-                $("#kycPendingBar").remove();
-            }
-        },
-        error: function () {
-            lastKycData = null;
-            $("#kycStatus").html(
-                "<span style='color:red;'><b>Unable to fetch KYC status. Please try again later.</b></span>"
-            );
-            $("#kycPendingBar").remove();
+    if (!userid) return Promise.resolve(null);
+    
+    return $.ajax({
+        url: 'https://tnsadmin.twmresearchalert.com/api/get_kyc_status.php?user_id=' + userid,
+        type: 'GET'
+    }).then(function(response) {
+        console.log('KYC Status API Response:', response);
+        if (response && response.status === 'success' && response.data) {
+            return response.data;
         }
+        return null;
+    }).catch(function(error) {
+        console.error('Error fetching KYC status:', error);
+        return null;
     });
 }
 
-// Handler for KYC row click
-$(document).on('click', '[data-toggle="modal"][data-target="#kycdetails"], #kycdetails', function(e) {
-    e.preventDefault();
-    // Open our custom modal instead
-    $('#kycModal').modal('show');
-    populateKycModal();
-});
-
-function populateKycModal() {
+function populateKycModal(kycStatusData) {
     var $body = $('#kycModalBody');
+    console.log('populateKycModal called, modal body element:', $body.length);
+    
+    if ($body.length === 0) {
+        console.error('Modal body element not found!');
+        return;
+    }
+    
     $body.html('<div style="text-align:center;">Loading...</div>');
-    // Defensive: ensure lastKycData is set only if KYC is submitted
-    var kyc = (lastKycData && lastKycData.aadhaar_image && lastKycData.pan_image) ? lastKycData : null;
-    if (!kyc) {
+    
+    console.log('populateKycModal called, kycStatusData:', kycStatusData);
+    
+    // Use the KYC status data from the API
+    var kyc = kycStatusData;
+    console.log('kyc data for modal:', kyc);
+    
+    if (!kyc || !kyc.approval_status) {
         // Not submitted: show file inputs
         $body.html(`
             <form id="kycUploadForm" enctype="multipart/form-data">
@@ -2546,6 +2659,9 @@ function populateKycModal() {
                 <div id="kycUploadMsg" style="margin-top:10px;"></div>
             </form>
         `);
+        
+        console.log('KYC upload form displayed');
+        
         // Attach submit handler
         $('#kycUploadForm').off('submit').on('submit', function(ev) {
             ev.preventDefault();
@@ -2576,36 +2692,371 @@ function populateKycModal() {
                 processData: false,
                 contentType: false,
                 success: function(response) {
+                    console.log('KYC Submit Response:', response);
                     if (typeof response === 'string') {
-                        try { response = JSON.parse(response); } catch(e) {}
+                        try { response = JSON.parse(response); } catch(e) {
+                            console.error('Failed to parse response:', e);
+                        }
                     }
-                    if (response.status === 'success') {
+                    if (response && response.status === 'success') {
                         $('#kycUploadMsg').html('<span style="color:green;">KYC images submitted successfully!</span>');
                         setTimeout(function() {
                             $('#kycModal').modal('hide');
                             fetchKYCStatus();
                         }, 1200);
                     } else {
-                        $('#kycUploadMsg').html('<span style="color:red;">' + (response.message || 'Submission failed. Please try again.') + '</span>');
+                        // Debug: Log the exact response
+                        console.log('Error response received:', response);
+                        console.log('Response message:', response && response.message);
+                        
+                        // Check if KYC already exists - check multiple possible error messages
+                        var errorMessage = response && response.message ? response.message.toLowerCase() : '';
+                        console.log('Error message (lowercase):', errorMessage);
+                        
+                        if (errorMessage.includes('kyc already submitted') || 
+                            errorMessage.includes('already submitted') ||
+                            errorMessage.includes('kyc already exists') ||
+                            (response && response.status === 'error' && errorMessage.includes('already'))) {
+                            console.log('KYC already exists detected');
+                            $('#kycUploadMsg').html('<span style="color:orange;">Your KYC is already submitted and under verification</span>');
+                        } else {
+                            console.log('Showing generic error message');
+                            $('#kycUploadMsg').html('<span style="color:red;">' + (response.message || 'Submission failed. Please try again.') + '</span>');
+                        }
                     }
                 },
-                error: function(xhr) {
-                    $('#kycUploadMsg').html('<span style="color:red;">Submission failed. Please try again.</span>');
+                error: function(xhr, status, error) {
+                    console.error('KYC Submit Error:', xhr.responseText);
+                    $('#kycUploadMsg').html('<span style="color:red;">Submission failed. Please try again. Error: ' + error + '</span>');
                 }
             });
         });
     } else {
-        // Submitted: show images and status only
-        var aadhaarImg = kyc.aadhaar_image ? `<img src="data:image/png;base64,${kyc.aadhaar_image}" alt="Aadhaar" style="max-width:100%;max-height:200px;display:block;margin:10px auto;" />` : '<span>No Aadhaar image</span>';
-        var panImg = kyc.pan_image ? `<img src="data:image/png;base64,${kyc.pan_image}" alt="PAN" style="max-width:100%;max-height:200px;display:block;margin:10px auto;" />` : '<span>No PAN image</span>';
+        // Submitted: show status and information
+        var statusColor = kyc.approval_status === 'approved' ? 'green' : 'orange';
+        var statusText = kyc.approval_status === 'approved' ? 'Approved' : 
+                        kyc.approval_status === 'pending' ? 'Under Verification' : 
+                        kyc.approval_status;
+        
         $body.html(`
             <div style="text-align:center;">
-                <div><b>Aadhaar Image:</b><br>${aadhaarImg}</div>
-                <div style="margin-top:15px;"><b>PAN Image:</b><br>${panImg}</div>
-                <div style="margin-top:20px;"><b>Approval Status:</b> <span style="color:${kyc.approval_status==='approved'?'green':'orange'};text-transform:capitalize;">${kyc.approval_status}</span></div>
+                <div style="margin-bottom:20px;">
+                    <h4>KYC Status</h4>
+                </div>
+                <div style="margin-top:15px;">
+                    <b>Approval Status:</b> <span style="color:${statusColor};text-transform:capitalize;font-weight:bold;">${statusText}</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <b>Submitted Date:</b> ${kyc.submit_datetime || 'N/A'}
+                </div>
+                <div style="margin-top:15px;">
+                    <b>User ID:</b> ${kyc.user_id || 'N/A'}
+                </div>
+                ${kyc.approval_status === 'pending' ? 
+                    '<div style="margin-top:20px;padding:10px;background-color:#fff3cd;border:1px solid #ffeaa7;border-radius:5px;"><small>Your KYC documents are under review. Please wait for approval.</small></div>' : 
+                    kyc.approval_status === 'approved' ? 
+                    '<div style="margin-top:20px;padding:10px;background-color:#d4edda;border:1px solid #c3e6cb;border-radius:5px;"><small>Your KYC has been approved successfully!</small></div>' : 
+                    ''
+                }
             </div>
         `);
     }
+}
+
+// Bank Details Modal Functions
+$(document).ready(function() {
+    console.log('Setting up Bank Details modal handlers');
+    
+    $('#bankDetailsModal').on('show.bs.modal', function() {
+        console.log('Bank Details modal opened - triggering fetchBankDetails');
+        fetchBankDetails();
+    });
+
+    $('#bankDetailsLink').on('click', function(e) {
+        console.log('Bank Details link clicked');
+        e.preventDefault();
+        $('#bankDetailsModal').modal('show');
+    });
+    
+    // Also add a direct click handler as backup
+    $(document).on('click', '#bankDetailsLink', function(e) {
+        console.log('Bank Details link clicked via document handler');
+        e.preventDefault();
+        $('#bankDetailsModal').modal('show');
+    });
+});
+
+// Function to fetch bank details from API
+function fetchBankDetails() {
+    console.log('fetchBankDetails function called');
+    var userid = localStorage.getItem("userid");
+    console.log('User ID from localStorage:', userid);
+    
+    if (!userid) {
+        console.error('User ID not found');
+        $('#bankDetailsModalBody').html('<div style="text-align:center;color:red;">User ID not found. Please login again.</div>');
+        return;
+    }
+    
+    var $body = $('#bankDetailsModalBody');
+    $body.html('<div style="text-align:center;">Loading bank details...</div>');
+    
+    var apiUrl = 'https://tnsadmin.twmresearchalert.com/api/client_bank_detail.php?user_id=' + userid;
+    console.log('Making API call to:', apiUrl);
+    
+    $.ajax({
+        url: apiUrl,
+        type: 'GET',
+        success: function(response) {
+            console.log('Bank Details API Response:', response);
+            if (response && response.status === 'success' && response.data) {
+                var bankData = response.data;
+                // Check if the data contains placeholder values that indicate no real data
+                if (bankData.BankName === "NA" || 
+                    bankData.AccountNo === "undefined" || 
+                    bankData.IFSCCode === "undefined" || 
+                    bankData.AccountHolderName === "undefined" ||
+                    !bankData.BankName || 
+                    !bankData.AccountNo || 
+                    !bankData.IFSCCode || 
+                    !bankData.AccountHolderName) {
+                    // Show form to add new details
+                    showBankDetailsForm();
+                } else {
+                    // Show existing data
+                    populateBankDetailsModal(response.data);
+                }
+            } else {
+                // No bank details found - show form to add new details
+                showBankDetailsForm();
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching bank details:', error);
+            console.error('XHR status:', xhr.status);
+            console.error('XHR response:', xhr.responseText);
+            $body.html('<div style="text-align:center;color:red;">Error loading bank details. Please try again.</div>');
+        }
+    });
+}
+
+// Debug function - can be called from browser console
+function testBankDetailsAPI() {
+    console.log('Testing Bank Details API manually');
+    var userid = localStorage.getItem("userid");
+    console.log('User ID:', userid);
+    
+    if (!userid) {
+        console.error('No user ID found in localStorage');
+        return;
+    }
+    
+    var apiUrl = 'https://tnsadmin.twmresearchalert.com/api/client_bank_detail.php?user_id=' + userid;
+    console.log('Testing API URL:', apiUrl);
+    
+    $.ajax({
+        url: apiUrl,
+        type: 'GET',
+        success: function(response) {
+            console.log('Manual API test successful:', response);
+        },
+        error: function(xhr, status, error) {
+            console.error('Manual API test failed:', error, xhr);
+        }
+    });
+}
+
+// Function to populate bank details modal with existing data
+function populateBankDetailsModal(bankData) {
+    var $body = $('#bankDetailsModalBody');
+    
+    $body.html(`
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="bankName"><strong>Bank Name:</strong></label>
+                    <input type="text" class="form-control" id="bankName" value="${bankData.BankName || ''}" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="accountNo"><strong>Account Number:</strong></label>
+                    <input type="text" class="form-control" id="accountNo" value="${bankData.AccountNo || ''}" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="ifscCode"><strong>IFSC Code:</strong></label>
+                    <input type="text" class="form-control" id="ifscCode" value="${bankData.IFSCCode || ''}" readonly>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="accountHolderName"><strong>Account Holder Name:</strong></label>
+                    <input type="text" class="form-control" id="accountHolderName" value="${bankData.AccountHolderName || ''}" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label for="upiId"><strong>UPI ID:</strong></label>
+                    <input type="text" class="form-control" id="upiId" value="${bankData.client_upi_id || ''}" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <button type="button" class="btn btn-primary" id="editBankDetailsBtn" onclick="enableBankDetailsEdit()">Edit Details</button>
+                <button type="button" class="btn btn-success" id="saveBankDetailsBtn" onclick="saveBankDetails()" style="display:none;">Save Changes</button>
+                <button type="button" class="btn btn-secondary" id="cancelEditBtn" onclick="cancelBankDetailsEdit()" style="display:none;">Cancel</button>
+            </div>
+        </div>
+        <div id="bankDetailsMsg" style="margin-top:15px;text-align:center;"></div>
+    `);
+}
+
+// Function to show bank details form for new entries
+function showBankDetailsForm() {
+    var $body = $('#bankDetailsModalBody');
+    
+    $body.html(`
+        <div class="alert alert-info">
+            <strong>Bank Details Required</strong><br>
+            Please complete your bank details below to enable transactions.
+        </div>
+        <form id="bankDetailsForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="bankName"><strong>Bank Name:</strong></label>
+                        <input type="text" class="form-control" id="bankName" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="accountNo"><strong>Account Number:</strong></label>
+                        <input type="text" class="form-control" id="accountNo" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="ifscCode"><strong>IFSC Code:</strong></label>
+                        <input type="text" class="form-control" id="ifscCode" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="accountHolderName"><strong>Account Holder Name:</strong></label>
+                        <input type="text" class="form-control" id="accountHolderName" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="upiId"><strong>UPI ID:</strong></label>
+                        <input type="text" class="form-control" id="upiId">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <button type="submit" class="btn btn-success">Save Bank Details</button>
+                </div>
+            </div>
+            <div id="bankDetailsMsg" style="margin-top:15px;text-align:center;"></div>
+        </form>
+    `);
+    
+    // Attach form submit handler
+    $('#bankDetailsForm').on('submit', function(e) {
+        e.preventDefault();
+        saveBankDetails();
+    });
+}
+
+// Function to enable editing of bank details
+function enableBankDetailsEdit() {
+    $('#bankName, #accountNo, #ifscCode, #accountHolderName, #upiId').prop('readonly', false);
+    $('#editBankDetailsBtn').hide();
+    $('#saveBankDetailsBtn, #cancelEditBtn').show();
+}
+
+// Function to cancel editing
+function cancelBankDetailsEdit() {
+    $('#bankName, #accountNo, #ifscCode, #accountHolderName, #upiId').prop('readonly', true);
+    $('#editBankDetailsBtn').show();
+    $('#saveBankDetailsBtn, #cancelEditBtn').hide();
+    $('#bankDetailsMsg').html('');
+    // Reload the data to reset any changes
+    fetchBankDetails();
+}
+
+// Function to save bank details
+function saveBankDetails() {
+    var userid = localStorage.getItem("userid");
+    if (!userid) {
+        console.error('User ID not found');
+        return;
+    }
+    
+    var bankData = {
+        user_id: parseInt(userid),
+        BankName: $('#bankName').val().trim(),
+        AccountNo: $('#accountNo').val().trim(),
+        IFSCCode: $('#ifscCode').val().trim(),
+        AccountHolderName: $('#accountHolderName').val().trim(),
+        client_upi_id: $('#upiId').val().trim()
+    };
+    
+    // Basic validation
+    if (!bankData.BankName || !bankData.AccountNo || !bankData.IFSCCode || !bankData.AccountHolderName) {
+        $('#bankDetailsMsg').html('<div style="color:red;">Please fill in all required fields.</div>');
+        return;
+    }
+    
+    // IFSC validation
+    if (!validateIFSC(bankData.IFSCCode)) {
+        $('#bankDetailsMsg').html('<div style="color:red;">Invalid IFSC Code format.</div>');
+        return;
+    }
+    
+    // Account number validation
+    if (!validateIndianBankAccount(bankData.AccountNo)) {
+        $('#bankDetailsMsg').html('<div style="color:red;">Invalid Account Number format.</div>');
+        return;
+    }
+    
+    $('#bankDetailsMsg').html('<div style="color:blue;">Saving bank details...</div>');
+    
+    $.ajax({
+        url: 'https://tnsadmin.twmresearchalert.com/api/client_bank_detail.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(bankData),
+        success: function(response) {
+            console.log('Bank Details Save Response:', response);
+            if (response && response.status === 'success') {
+                $('#bankDetailsMsg').html('<div style="color:green;">Bank details saved successfully!</div>');
+                // Disable editing mode
+                setTimeout(function() {
+                    cancelBankDetailsEdit();
+                    $('#bankDetailsMsg').html('');
+                }, 1500);
+            } else {
+                $('#bankDetailsMsg').html('<div style="color:red;">Failed to save bank details. Please try again.</div>');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error saving bank details:', error);
+            $('#bankDetailsMsg').html('<div style="color:red;">Error saving bank details. Please try again.</div>');
+        }
+    });
 }
 </script>
 <source> 

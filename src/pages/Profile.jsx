@@ -47,7 +47,28 @@ const Profile = () => {
   const [kycImages, setKycImages] = useState({ aadhaar: null, pan: null });
   const [uploadMessage, setUploadMessage] = useState('');
   const [kycLoading, setKycLoading] = useState(false);
-  
+  const [bankDetails, setBankDetails] = useState({
+    accountHolderName: '',
+    bankName: '',
+    accountNo: '',
+    ifscCode: ''
+  });
+  const [isEditingBank, setIsEditingBank] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [depositData, setDepositData] = useState({
+    upiId: '',
+    qrCodeUrl: '',
+    accountName: '',
+    accountNo: '',
+    ifscCode: ''
+  });
+  const [paymentData, setPaymentData] = useState({
+    transactionId: '',
+    amount: '',
+    remark: ''
+  });
+  const [useGateway, setUseGateway] = useState(false);
+
   const bottomNavItems = [
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'orders', icon: FileText, label: 'Orders' },
@@ -75,7 +96,6 @@ const Profile = () => {
         getPersonalDetails()
       ]);
     } catch (error) {
-      console.error('Error loading profile data:', error);
       // Don't show error toast - let individual functions handle their own errors
     }
   };
@@ -86,8 +106,6 @@ const Profile = () => {
       const balance = await tradingAPI.getLedgerBalance(user.UserId);
       setBalanceData(prev => ({ ...prev, ledgerBalance: parseFloat(balance || 0) }));
     } catch (error) {
-      console.error('Error getting balance:', error);
-      // Set default value on error
       setBalanceData(prev => ({ ...prev, ledgerBalance: 0 }));
     }
   };
@@ -98,7 +116,6 @@ const Profile = () => {
       const orders = await tradingAPI.getConsolidatedTrades(user.UserId);
       setActiveOrders(Array.isArray(orders) ? orders : []);
     } catch (error) {
-      console.error('Error getting active orders:', error);
       setActiveOrders([]);
     }
   };
@@ -108,15 +125,11 @@ const Profile = () => {
       if (!user?.UserId) return;
       let transactions = await tradingAPI.getUserBalanceLedger(user.UserId);
       
-      console.log('Raw transaction response:', transactions, 'Type:', typeof transactions);
-      
       // Handle JSON-encoded response (backend returns JSON as string)
       if (typeof transactions === 'string') {
         try {
           transactions = JSON.parse(transactions);
-          console.log('Parsed transactions:', transactions);
         } catch (e) {
-          console.error('Error parsing transaction data:', e);
           setTransactionHistory([]);
           return;
         }
@@ -132,9 +145,7 @@ const Profile = () => {
       }));
       
       setTransactionHistory(processed);
-      console.log('Transaction history loaded:', processed.length, 'transactions');
     } catch (error) {
-      console.error('Error getting transactions:', error);
       setTransactionHistory([]);
     }
   };
@@ -145,7 +156,6 @@ const Profile = () => {
       const bills = await tradingAPI.getUserBill(user.UserId);
       setBillInfo(Array.isArray(bills) ? bills : []);
     } catch (error) {
-      console.error('Error getting bill info:', error);
       setBillInfo([]);
     }
   };
@@ -156,7 +166,6 @@ const Profile = () => {
       const notifs = await tradingAPI.getNotification(user.UserId, user.Refid);
       setNotifications(Array.isArray(notifs) ? notifs : []);
     } catch (error) {
-      console.error('Error getting notifications:', error);
       setNotifications([]);
     }
   };
@@ -167,7 +176,6 @@ const Profile = () => {
       const profile = await tradingAPI.getProfileData(user.UserId);
       setProfileData(profile);
     } catch (error) {
-      console.error('Error getting profile data:', error);
       setProfileData(null);
     }
   };
@@ -178,9 +186,15 @@ const Profile = () => {
       const details = await authAPI.getUserProfile(user.UserId);
       if (Array.isArray(details) && details.length > 0) {
         setPersonalDetails(details[0]);
+        // Set bank details
+        setBankDetails({
+          accountHolderName: details[0].AccountHolderName || '',
+          bankName: details[0].BankName || '',
+          accountNo: details[0].AccountNo || '',
+          ifscCode: details[0].IFSCCode || ''
+        });
       }
     } catch (error) {
-      console.error('Error getting personal details:', error);
       setPersonalDetails(null);
     }
   };
@@ -261,7 +275,6 @@ const Profile = () => {
         setKycData(null);
       }
     } catch (error) {
-      console.error('Error fetching KYC status:', error);
       setKycData(null);
     } finally {
       setKycLoading(false);
@@ -310,8 +323,93 @@ const Profile = () => {
         setUploadMessage(result.message || 'Submission failed. Please try again.');
       }
     } catch (error) {
-      console.error('Error uploading KYC:', error);
       setUploadMessage('Submission failed. Please try again.');
+    }
+  };
+
+  const validateIFSC = (ifsc) => {
+    const ifscRegex = /^[A-Za-z]{4}[0][\d]{6}$/;
+    return ifscRegex.test(ifsc);
+  };
+
+  const validateAccountNo = (accountNo) => {
+    const accountRegex = /^\d{9,18}$/;
+    return accountRegex.test(accountNo);
+  };
+
+  const handleSaveBankDetails = async () => {
+    if (!validateIFSC(bankDetails.ifscCode)) {
+      toast.error('Invalid IFSC Code');
+      return;
+    }
+    
+    if (!validateAccountNo(bankDetails.accountNo)) {
+      toast.error('Invalid Account Number');
+      return;
+    }
+    
+    try {
+      await tradingAPI.updateUserBankDetails({
+        userid: user.UserId,
+        bankname: bankDetails.bankName,
+        accno: bankDetails.accountNo,
+        ifsccode: bankDetails.ifscCode,
+        accountholder: bankDetails.accountHolderName,
+        mob: personalDetails?.MobileNo || '',
+        email: personalDetails?.EmailId || '',
+        address: personalDetails?.Address || ''
+      });
+      
+      toast.success('Bank details updated successfully');
+      setIsEditingBank(false);
+    } catch (error) {
+      toast.error('Failed to update bank details');
+    }
+  };
+
+  const fetchDepositDetails = async () => {
+    try {
+      // Fetch UPI details from gateway
+      const upiResponse = await fetch('https://tnsadmin.twmresearchalert.com/api/upigateway.php/upi_details/1');
+      const upiData = await upiResponse.json();
+      
+      setDepositData({
+        upiId: upiData.vpa || '',
+        qrCodeUrl: upiData.upi_url || ''
+      });
+    } catch (error) {
+      // Error handling
+    }
+  };
+
+  const handleOpenDepositModal = () => {
+    setShowDepositModal(true);
+    fetchDepositDetails();
+    // Generate transaction ID
+    setPaymentData(prev => ({ ...prev, transactionId: `txn_${Date.now()}_${Math.floor(Math.random() * 1000000)}` }));
+  };
+
+  const handleSubmitPayment = async () => {
+    if (!paymentData.transactionId || !paymentData.amount || !paymentData.remark) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    
+    try {
+      await tradingAPI.saveTransaction({
+        userid: user.UserId,
+        txttransid: paymentData.transactionId,
+        txttransamount: paymentData.amount,
+        txttransremark: paymentData.remark,
+        refid: user.Refid
+      });
+      
+      toast.success('Transaction details saved successfully');
+      setShowDepositModal(false);
+      setPaymentData({ transactionId: '', amount: '', remark: '' });
+      getUserBalance();
+    } catch (error) {
+      toast.error('Failed to submit payment');
     }
   };
 
@@ -379,10 +477,10 @@ const Profile = () => {
             <MenuItem icon={<DollarSign className="w-5 h-5" />} label="Funds" onClick={() => setShowFundDetailsModal(true)} />
             <MenuItem icon={<FileText className="w-5 h-5" />} label="Bill & Invoice" onClick={() => setShowInvoiceBillModal(true)} />
             <MenuItem icon={<User className="w-5 h-5" />} label="User Trade Profile" onClick={() => setShowUserProfileModal(true)} />
-            <MenuItem icon={<User className="w-5 h-5" />} label="User Details" onClick={() => setShowPersonalDetailsModal(true)} />
+            <MenuItem icon={<CreditCard className="w-5 h-5" />} label="Bank Details" onClick={() => setShowPersonalDetailsModal(true)} />
             <MenuItem icon={<Bell className="w-5 h-5" />} label="Notifications" onClick={() => setShowNotificationModal(true)} />
             <MenuItem icon={<Settings className="w-5 h-5" />} label="Change Password" onClick={() => setShowChangePasswordModal(true)} />
-            <MenuItem icon={<CreditCard className="w-5 h-5" />} label="Deposit Online" onClick={() => toast.info('Coming soon')} />
+            <MenuItem icon={<CreditCard className="w-5 h-5" />} label="Deposit Online" onClick={handleOpenDepositModal} />
             <MenuItem icon={<CreditCard className="w-5 h-5" />} label="Withdraw Online" onClick={() => setShowWithdrawModal(true)} />
             <MenuItem icon={<Settings className="w-5 h-5" />} label="Logout" onClick={handleLogout} />
           </div>
@@ -416,7 +514,7 @@ const Profile = () => {
       </Modal>
 
       <Modal show={showWithdrawModal} onClose={() => setShowWithdrawModal(false)} title="Withdraw Online">
-        <div className="space-y-4">
+          <div className="space-y-4">
           <Input label="Enter Amount" type="number" value={withdrawData.amount} onChange={(v) => setWithdrawData({...withdrawData, amount: v})} />
           <Textarea label="Enter Remarks" value={withdrawData.remark} onChange={(v) => setWithdrawData({...withdrawData, remark: v})} />
           <div className="flex gap-2 mt-4">
@@ -485,41 +583,183 @@ const Profile = () => {
         </div>
       </Modal>
 
-      <Modal show={showPersonalDetailsModal} onClose={() => setShowPersonalDetailsModal(false)} title="User Details">
-        {personalDetails && (
-          <div className="space-y-3">
-            <DetailRow label="User Name" value={personalDetails.UserName} />
-            <DetailRow label="Name" value={`${personalDetails.FirstName} ${personalDetails.LastName}`} />
-            <DetailRow label="Mobile No." value={personalDetails.MobileNo} />
-            <DetailRow label="Email Id" value={personalDetails.EmailId} />
-            <DetailRow label="Aadhar No" value={personalDetails.AadharNo === '0' || !personalDetails.AadharNo ? 'xxxx-xxxx-xxxx' : personalDetails.AadharNo} />
-            <DetailRow label="PAN No" value={personalDetails.PanNo} />
-            <DetailRow label="City" value={personalDetails.City} />
-            <DetailRow label="Address" value={personalDetails.Address} />
+      <Modal show={showPersonalDetailsModal} onClose={() => setShowPersonalDetailsModal(false)} title="Bank Details" size="md">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="text-sm font-semibold text-gray-300">Bank Information</h4>
+            {!isEditingBank && (
+              <button 
+                onClick={() => setIsEditingBank(true)}
+                className="text-xs text-blue-400 hover:text-blue-300"
+              >
+                Edit
+              </button>
+            )}
           </div>
-        )}
+          
+          <div className="space-y-2">
+            <div className="flex justify-between items-center py-2 border-b border-gray-700">
+              <span className="text-xs text-gray-400">Account Holder:</span>
+              {isEditingBank ? (
+                <input 
+                  type="text"
+                  value={bankDetails.accountHolderName}
+                  onChange={(e) => setBankDetails({...bankDetails, accountHolderName: e.target.value})}
+                  className="flex-1 ml-4 px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                />
+              ) : (
+                <span className="text-xs text-white">{bankDetails.accountHolderName || '-'}</span>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center py-2 border-b border-gray-700">
+              <span className="text-xs text-gray-400">Bank Name:</span>
+              {isEditingBank ? (
+                <input 
+                  type="text"
+                  value={bankDetails.bankName}
+                  onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})}
+                  className="flex-1 ml-4 px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                />
+              ) : (
+                <span className="text-xs text-white">{bankDetails.bankName || '-'}</span>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center py-2 border-b border-gray-700">
+              <span className="text-xs text-gray-400">Account No:</span>
+              {isEditingBank ? (
+                <input 
+                  type="text"
+                  value={bankDetails.accountNo}
+                  onChange={(e) => setBankDetails({...bankDetails, accountNo: e.target.value})}
+                  className="flex-1 ml-4 px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                />
+              ) : (
+                <span className="text-xs text-white">{bankDetails.accountNo || '-'}</span>
+              )}
+            </div>
+            
+            <div className="flex justify-between items-center py-2">
+              <span className="text-xs text-gray-400">IFSC:</span>
+              {isEditingBank ? (
+                <input 
+                  type="text"
+                  value={bankDetails.ifscCode}
+                  onChange={(e) => setBankDetails({...bankDetails, ifscCode: e.target.value.toUpperCase()})}
+                  className="flex-1 ml-4 px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                  maxLength={11}
+                />
+              ) : (
+                <span className="text-xs text-white">{bankDetails.ifscCode || '-'}</span>
+              )}
+            </div>
+          </div>
+
+          {isEditingBank && (
+            <div className="flex gap-2 mt-4">
+              <button 
+                onClick={handleSaveBankDetails}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-sm font-medium"
+              >
+                Save
+              </button>
+              <button 
+                onClick={() => {
+                  setIsEditingBank(false);
+                  // Revert bank details
+                  if (personalDetails) {
+                    setBankDetails({
+                      accountHolderName: personalDetails.AccountHolderName || '',
+                      bankName: personalDetails.BankName || '',
+                      accountNo: personalDetails.AccountNo || '',
+                      ifscCode: personalDetails.IFSCCode || ''
+                    });
+                  }
+                }}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
       </Modal>
 
       <Modal show={showInvoiceBillModal} onClose={() => setShowInvoiceBillModal(false)} title="Bill & Invoice" size="lg">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[70vh]">
           <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-gray-700"><th className="text-left py-1.5 px-2 text-gray-300">S.No</th><th className="text-left py-1.5 px-2 text-gray-300">Script</th><th className="text-center py-1.5 px-2 text-gray-300">Order Price</th><th className="text-center py-1.5 px-2 text-gray-300">Close Price</th><th className="text-right py-1.5 px-2 text-gray-300">P/L</th><th className="text-right py-1.5 px-2 text-gray-300">Brokerage</th></tr>
+            <thead className="sticky top-0 bg-gray-900">
+              <tr className="border-b border-gray-700">
+                <th className="text-left py-2 px-2 text-gray-300">S.No</th>
+                <th className="text-left py-2 px-2 text-gray-300">Script Name<br /><span className="text-[10px] text-gray-400">Category, Lot</span></th>
+                <th className="text-center py-2 px-2 text-gray-300">Order Price<br /><span className="text-[10px] text-gray-400">Date & Time</span></th>
+                <th className="text-center py-2 px-2 text-gray-300">Close Price<br /><span className="text-[10px] text-gray-400">Date & Time</span></th>
+                <th className="text-right py-2 px-2 text-gray-300">Profit/Loss</th>
+                <th className="text-right py-2 px-2 text-gray-300">Brokerage</th>
+              </tr>
             </thead>
             <tbody className="text-gray-300">
               {billInfo && billInfo.length > 0 ? (
-                billInfo.map((b, idx) => (
-                  <tr key={idx} className="border-b border-gray-700">
-                    <td className="py-1.5 px-2">{idx + 1}</td>
-                    <td className="py-1.5 px-2"><div className="font-medium">{b.ScriptName || '-'}</div><div className="text-[10px] text-gray-400">{b.OrderCategory || '-'} ({b.Lot || 0})</div></td>
-                    <td className="py-1.5 px-2 text-center"><div>{b.OrderPrice || '-'}</div><div className="text-[10px] text-gray-400">{b.OrderDate || ''} {b.OrderTime || ''}</div></td>
-                    <td className="py-1.5 px-2 text-center"><div>{b.BroughtBy || '-'}</div><div className="text-[10px] text-gray-400">{b.ClosedAt || ''} {b.ClosedTime || ''}</div></td>
-                    <td className="py-1.5 px-2 text-right">{b.P_L || 0}</td>
-                    <td className="py-1.5 px-2 text-right">{b.Brokerage || 0}</td>
-                  </tr>
-                ))
+                <>
+                  {billInfo.map((b, idx) => {
+                    const pl = parseInt(b.P_L || 0);
+                    const brokerage = parseInt(b.Brokerage || 0);
+                    return (
+                      <tr key={idx} className="border-b border-gray-700 hover:bg-gray-700/30">
+                        <td className="py-2 px-2">{idx + 1}</td>
+                        <td className="py-2 px-2">
+                          <div className="font-medium text-white">{b.ScriptName || '-'}</div>
+                          <div className="text-[10px] text-gray-400">{b.OrderCategory || '-'} ({b.Lot || 0})</div>
+                        </td>
+                        <td className="py-2 px-2 text-center">
+                          <div className="font-medium">{b.OrderPrice || '-'}</div>
+                          <div className="text-[10px] text-gray-400">{b.OrderDate || ''}<br />{b.OrderTime || ''}</div>
+                        </td>
+                        <td className="py-2 px-2 text-center">
+                          <div className="font-medium">{b.BroughtBy || '-'}</div>
+                          <div className="text-[10px] text-gray-400">{b.ClosedAt || ''}<br />{b.ClosedTime || ''}</div>
+                        </td>
+                        <td className={`py-2 px-2 text-right font-medium ${pl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {pl}
+                        </td>
+                        <td className="py-2 px-2 text-right text-gray-300">{brokerage}</td>
+                      </tr>
+                    );
+                  })}
+                  {/* Total Row */}
+                  {(() => {
+                    const totalPL = billInfo.reduce((sum, b) => sum + parseInt(b.P_L || 0), 0);
+                    const totalBrokerage = billInfo.reduce((sum, b) => sum + parseInt(b.Brokerage || 0), 0);
+                    const netPL = totalPL - totalBrokerage;
+                    
+                    return (
+                      <>
+                        <tr className="border-t-2 border-gray-600 bg-gray-800">
+                          <td colSpan="4" className="py-2 px-2 text-center font-semibold text-gray-200">
+                            Total of Profit & Loss and Brokerage
+                          </td>
+                          <td className="py-2 px-2 text-right font-bold text-gray-200">{totalPL}</td>
+                          <td className="py-2 px-2 text-right font-bold text-gray-200">{totalBrokerage}</td>
+                        </tr>
+                        <tr className="bg-gray-900">
+                          <td colSpan="4" className="py-2 px-2 text-center font-semibold text-gray-200">
+                            Net Profit & Loss
+                          </td>
+                          <td colSpan="2" className={`py-2 px-2 text-right font-bold text-lg ${netPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {netPL}
+                          </td>
+                        </tr>
+                      </>
+                    );
+                  })()}
+                </>
               ) : (
-                <tr><td colSpan="6" className="text-center py-3 text-gray-400 text-sm">No bill information found</td></tr>
+                <tr>
+                  <td colSpan="6" className="text-center py-8 text-gray-400 text-sm">
+                    No bill information found
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -527,16 +767,75 @@ const Profile = () => {
       </Modal>
 
       <Modal show={showUserProfileModal} onClose={() => setShowUserProfileModal(false)} title="User Trade Profile" size="lg">
-        {profileData && (
-          <div className="space-y-4">
-            {profileData.MCX?.IsMCXTrade === 'true' && (
-              <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-                <h4 className="font-semibold mb-3">MCX</h4>
-                <div className="grid grid-cols-2 gap-3 text-sm"><DetailRow label="Brokerage Type" value={profileData.MCX?.Mcx_Brokerage_Type} /></div>
-              </div>
-            )}
+        <UserTradeProfileContent profileData={profileData} />
+      </Modal>
+
+            <Modal show={showDepositModal} onClose={() => setShowDepositModal(false)} title="Deposit Online" size="lg">
+        <div className="flex">
+          {/* Left Side - QR Code (col-lg-7) */}
+          <div className="w-[58%] pr-4 border-r border-gray-700">
+            <div className="text-center">
+              {depositData.qrCodeUrl ? (
+                <>
+                  <a href={depositData.qrCodeUrl}>
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=270x270&data=${encodeURIComponent(depositData.qrCodeUrl)}`} alt="QR Code" width="270" className="mx-auto border border-gray-600 rounded" />
+                  </a>
+                  <div className="text-white mt-5 text-lg font-semibold">
+                    UPI ID : <span className="text-blue-400">{depositData.upiId || '-'}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-gray-400 py-20">Loading QR Code...</div>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* Right Side - Form (col-lg-5) */}
+          <div className="w-[42%] pl-4">
+            <p className="text-gray-400 text-sm mb-3">
+              <b>Please fill the details after payment for payment approval.</b>
+            </p>
+            
+            <div className="mb-3">
+                <label className="block text-gray-400 text-xs mb-1">Transaction ID</label>
+                <input 
+                  type="text" 
+                  value={paymentData.transactionId}
+                  readOnly
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white"
+                />
+              </div>
+              
+              <div className="mb-3">
+                <label className="block text-gray-400 text-xs mb-1">Enter Amount</label>
+                <input 
+                  type="number" 
+                  value={paymentData.amount}
+                  onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
+                  required
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              
+              <div className="mb-3">
+                <label className="block text-gray-400 text-xs mb-1">Enter Remarks</label>
+                <textarea 
+                  rows={5}
+                  value={paymentData.remark}
+                  onChange={(e) => setPaymentData({...paymentData, remark: e.target.value})}
+                  required
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500 resize-none"
+                />
+              </div>
+              
+              <button 
+                onClick={handleSubmitPayment}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded text-sm font-medium"
+              >
+                Submit
+              </button>
+          </div>
+        </div>
       </Modal>
 
       <Modal show={showKYCModal} onClose={() => setShowKYCModal(false)} title="KYC Details" size="lg">
@@ -570,7 +869,7 @@ const Modal = ({ show, onClose, title, children, size = 'md' }) => {
 
 const MenuItem = ({ icon, label, badge, onClick }) => (
   <button onClick={onClick} className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-750 transition-colors">
-    <div className="flex items-center">
+            <div className="flex items-center">
       <div className="text-gray-400 mr-3">{icon}</div>
       <span className="text-white text-sm">{label}</span>
     </div>
@@ -578,8 +877,8 @@ const MenuItem = ({ icon, label, badge, onClick }) => (
   </button>
 );
 
-const Input = ({ label, type = 'text', value, onChange }) => (
-  <div className="mb-3"><label className="block text-xs text-gray-400 mb-1">{label}</label><input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500" /></div>
+const Input = ({ label, type = 'text', value, onChange, readOnly = false }) => (
+  <div className="mb-3"><label className="block text-xs text-gray-400 mb-1">{label}</label><input type={type} value={value} onChange={(e) => onChange(e.target.value)} readOnly={readOnly} className={`w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500 ${readOnly ? 'cursor-not-allowed opacity-70' : ''}`} /></div>
 );
 
 const Textarea = ({ label, value, onChange }) => (
@@ -593,6 +892,144 @@ const PasswordInput = ({ label, value, onChange, show, toggleShow }) => (
 const DetailRow = ({ label, value }) => (
   <div className="mb-2"><div className="text-gray-400 text-xs mb-0.5">{label}</div><div className="text-gray-100 text-sm">{value || '-'}</div></div>
 );
+
+const UserTradeProfileContent = ({ profileData }) => {
+  if (!profileData) {
+    return <div className="text-center text-gray-400 p-8 text-sm">Loading profile data...</div>;
+  }
+
+  const formatBrokerageValue = (profileData) => {
+    const commodities = [
+      'GOLD', 'BULLDEX', 'SILVER', 'CRUDEOIL', 'COPPER', 'NICKEL', 'ZINC', 'LEAD', 
+      'NATURALGAS', 'ALUMINIUM', 'MENTHAOIL', 'COTTON', 'CPO', 'GOLDMINI', 'SILVERMINI', 
+      'SILVERMIC', 'ALUMINI', 'CRUDEOILM', 'LEADMINI', 'NATGASMINI', 'ZINCMINI'
+    ];
+    
+    let result = '{';
+    commodities.forEach((commodity, index) => {
+      const brokerage = profileData[`${commodity}_brokerage`] || '0';
+      result += `"${commodity}": "${brokerage}"`;
+      if (index < commodities.length - 1) {
+        result += ', ';
+      }
+    });
+    result += '}';
+    return result;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* MCX Section */}
+      {profileData.IsMCXTrade === 'true' && (
+        <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
+          <h4 className="text-base font-bold text-white mb-3">MCX</h4>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between border-b border-gray-700 py-2">
+              <span className="text-gray-400">Brokerage Type :</span>
+              <span className="text-white font-medium">{profileData.Mcx_Brokerage_Type || '-'}</span>
+            </div>
+            {profileData.Mcx_Brokerage_Type === 'per_lot' && (
+              <div className="flex flex-col border-b border-gray-700 py-2">
+                <span className="text-gray-400 mb-1">Brokerage Value :</span>
+                <span className="text-white font-mono text-[10px] break-all">{formatBrokerageValue(profileData)}</span>
+              </div>
+            )}
+            {profileData.Mcx_Brokerage_Type === 'per_crore' && (
+              <div className="flex justify-between border-b border-gray-700 py-2">
+                <span className="text-gray-400">Brokerage Value :</span>
+                <span className="text-white font-medium">{profileData.MCX_brokerage_per_crore || '-'}</span>
+              </div>
+            )}
+            <div className="flex justify-between border-b border-gray-700 py-2">
+              <span className="text-gray-400">Exposure Type :</span>
+              <span className="text-white font-medium">{profileData.Mcx_Exposure_Type || '-'}</span>
+            </div>
+            <div className="flex justify-between border-b border-gray-700 py-2">
+              <span className="text-gray-400">Margin Intraday :</span>
+              <span className="text-white font-medium">{profileData.Intraday_Exposure_Margin_MCX || '-'}</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-gray-400">Margin Holding :</span>
+              <span className="text-white font-medium">{profileData.Holding_Exposure_Margin_MCX || '-'}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NSE Section */}
+      {profileData.IsNSETrade === 'true' && (
+        <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
+          <h4 className="text-base font-bold text-white mb-3">NSE</h4>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between border-b border-gray-700 py-2">
+              <span className="text-gray-400">Brokerage</span>
+              <span className="text-white font-medium">
+                {profileData.NSE_Brokerage_Type === 'per_lot' 
+                  ? `${profileData.Equity_brokerage_per_crore || '0'}/ per_lot`
+                  : `${profileData.Equity_brokerage_per_crore || '0'}`
+                }
+              </span>
+            </div>
+            <div className="flex justify-between border-b border-gray-700 py-2">
+              <span className="text-gray-400">Margin Intraday</span>
+              <span className="text-white font-medium">
+                {profileData.NSE_Exposure_Type === 'per_turnover'
+                  ? `${profileData.Intraday_Exposure_Margin_Equity || '0'}/ per_turnover`
+                  : profileData.Intraday_Exposure_Margin_Equity || '-'
+                }
+              </span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-gray-400">Margin Holding</span>
+              <span className="text-white font-medium">
+                {profileData.NSE_Exposure_Type === 'per_turnover'
+                  ? `${profileData.Holding_Exposure_Margin_Equity || '0'}/ per_turnover`
+                  : profileData.Holding_Exposure_Margin_Equity || '-'
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NFO-OPT Section */}
+      {profileData.IsCDSTrade === 'true' && (
+        <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
+          <h4 className="text-base font-bold text-white mb-3">NFO-OPT</h4>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between border-b border-gray-700 py-2">
+              <span className="text-gray-400">Brokerage</span>
+              <span className="text-white font-medium">
+                {profileData.CDS_Brokerage_Type === 'per_lot'
+                  ? `${profileData.CDS_brokerage_per_crore || '0'}/ per_lot`
+                  : `${profileData.CDS_brokerage_per_crore || '0'}`
+                }
+              </span>
+            </div>
+            <div className="flex justify-between border-b border-gray-700 py-2">
+              <span className="text-gray-400">Margin Intraday</span>
+              <span className="text-white font-medium">
+                {profileData.CDS_Exposure_Type === 'per_turnover'
+                  ? `${profileData.Intraday_Exposure_Margin_CDS || '0'}/ per_turnover`
+                  : profileData.Intraday_Exposure_Margin_CDS || '-'
+                }
+              </span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-gray-400">Margin Holding</span>
+              <span className="text-white font-medium">
+                {profileData.CDS_Exposure_Type === 'per_turnover'
+                  ? `${profileData.Holding_Exposure_Margin_CDS || '0'}/ per_turnover`
+                  : profileData.Holding_Exposure_Margin_CDS || '-'
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const KYCContent = ({ user, kycData, onUpload, uploadMessage, loading }) => {
   const [aadhaarFile, setAadhaarFile] = useState(null);
@@ -639,7 +1076,7 @@ const KYCContent = ({ user, kycData, onUpload, uploadMessage, loading }) => {
   // If KYC is already submitted, show the images and status
   if (kycData && kycData.aadhaar_image && kycData.pan_image) {
     return (
-      <div className="space-y-4">
+        <div className="space-y-4">
         <div className="text-center">
           <div className="mb-4">
             <div className="text-xs text-gray-400 mb-2">Aadhaar Image</div>
@@ -682,7 +1119,7 @@ const KYCContent = ({ user, kycData, onUpload, uploadMessage, loading }) => {
           onChange={(e) => handleFileChange('aadhaar', e.target.files[0])}
           className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-gray-300 focus:outline-none focus:border-blue-500"
         />
-      </div>
+        </div>
       <div>
         <label className="block text-xs text-gray-400 mb-2">PAN Image (max 2MB, images only)</label>
         <input 
@@ -697,7 +1134,7 @@ const KYCContent = ({ user, kycData, onUpload, uploadMessage, loading }) => {
           uploadMessage.includes('success') ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'
         }`}>
           {uploadMessage}
-        </div>
+    </div>
       )}
       <button 
         type="submit" 
