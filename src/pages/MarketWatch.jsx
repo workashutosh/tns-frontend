@@ -120,6 +120,15 @@ const MarketWatch = () => {
     });
   }, []);
 
+  // Use a ref to store the latest tokens for WebSocket subscription
+  const latestTokensRef = useRef('');
+  
+  // Update tokens ref when selected tokens change (Set, so no frequent updates)
+  useEffect(() => {
+    const allTokens = Array.from(selectedTokens);
+    latestTokensRef.current = allTokens.join(',');
+  }, [selectedTokens]);
+
   // Initialize WebSocket
   const initializeWebSocket = useCallback(() => {
     if (isInitializingRef.current) {
@@ -160,21 +169,8 @@ const MarketWatch = () => {
         setConnectionAttempts(0);
         isInitializingRef.current = false;
         
-        // Collect all tokens from market data
-        const allTokens = [];
-        Object.values(marketData).forEach(tokens => {
-          if (Array.isArray(tokens)) {
-            tokens.forEach(token => {
-              if (token.SymbolToken) {
-                allTokens.push(token.SymbolToken.toString());
-              }
-            });
-          }
-        });
-        
-        // Send tokens or empty string
-        const tokenString = allTokens.length > 0 ? allTokens.join(',') : "";
-       // console.log(`→ Subscribing to ${allTokens.length} tokens:`, tokenString || '(empty)');
+        // Use the latest tokens from ref (updated separately without causing reconnection)
+        const tokenString = latestTokensRef.current || "";
         
         try {
           ws.send(tokenString);
@@ -246,7 +242,35 @@ const MarketWatch = () => {
         }, 3000);
       }
     }
-  }, [marketData, connectionAttempts, updateMarketData]);
+  }, [connectionAttempts, updateMarketData]);
+
+  // Re-subscribe WebSocket when tokens change or tab changes
+  const tokensStringRef = useRef('');
+  useEffect(() => {
+    // Get current tab's tokens from selectedTokens (Set of token IDs only)
+    const allTokens = Array.from(selectedTokens);
+    const tokenString = allTokens.join(',');
+    
+    // Only re-subscribe if tokens actually changed AND WebSocket is connected
+    if (tokenString !== tokensStringRef.current && websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+      console.log('Tokens/tab changed, re-subscribing WebSocket...', { tab: activeTab, tokenCount: allTokens.length });
+      tokensStringRef.current = tokenString;
+      latestTokensRef.current = tokenString;
+      
+      try {
+        if (tokenString) {
+          websocketRef.current.send(tokenString);
+        } else {
+          websocketRef.current.send("");
+        }
+      } catch (error) {
+        console.error('Error re-subscribing WebSocket:', error);
+      }
+    } else if (tokenString !== tokensStringRef.current) {
+      tokensStringRef.current = tokenString;
+      latestTokensRef.current = tokenString;
+    }
+  }, [activeTab, selectedTokens]);
 
   // Initial load
   useEffect(() => {

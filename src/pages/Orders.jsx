@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Clock, CheckCircle, XCircle, TrendingUp, TrendingDown, Home, Briefcase, Settings, User } from 'lucide-react';
@@ -11,6 +11,12 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active');
+  
+  // WebSocket references
+  const websocketRef = useRef(null);
+  const tokensRef = useRef(null);
+  const mountedRef = useRef(true);
+  const reconnectTimeoutRef = useRef(null);
 
   const tabs = [
     { id: 'pending', label: 'Pending' },
@@ -26,6 +32,168 @@ const Orders = () => {
     { id: 'tools', icon: Settings, label: 'Tools' },
     { id: 'profile', icon: User, label: 'Profile' }
   ];
+
+  // Update market data from WebSocket
+  const updateMarketData = useCallback((data) => {
+    if (!data || !data.instrument_token) return;
+    
+    const tokenToFind = data.instrument_token.toString();
+    
+    setOrders(prevOrders => {
+      return prevOrders.map(order => {
+        if (order.TokenNo?.toString() === tokenToFind && activeTab === 'active') {
+          const bid = data.bid === "0" || data.bid === 0 ? data.last_price : data.bid;
+          const ask = data.ask === "0" || data.ask === 0 ? data.last_price : data.ask;
+          
+          let currentPrice = 0;
+          let profitLoss = 0;
+          
+          if (order.OrderCategory === "SELL") {
+            currentPrice = ask;
+            profitLoss = (parseFloat(order.OrderPrice) - parseFloat(currentPrice)) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+          } else {
+            currentPrice = bid;
+            profitLoss = (parseFloat(currentPrice) - parseFloat(order.OrderPrice)) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+          }
+          
+          return {
+            ...order,
+            currentPrice: parseFloat(currentPrice),
+            profitLoss: parseFloat(profitLoss.toFixed(2))
+          };
+        }
+        return order;
+      });
+    });
+  }, [activeTab]);
+
+  // Initialize WebSocket with robust reconnection
+  const initializeWebSocket = useCallback((tokens) => {
+    const uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    
+    // Close existing connection gracefully if any
+    if (websocketRef.current) {
+      try {
+        websocketRef.current.close(1000, 'Reconnecting');
+      } catch (error) {
+        console.log('Error closing existing WebSocket:', error);
+      }
+      websocketRef.current = null;
+    }
+    
+    // Clear any existing reconnection timeout
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    const maxReconnectAttempts = 10;
+    const reconnectAttemptRef = { current: 0 };
+    
+    const connectWebSocket = () => {
+      try {
+        const ws = new WebSocket(uri);
+        websocketRef.current = ws;
+        
+        const connectTimeout = setTimeout(() => {
+          if (ws.readyState === WebSocket.CONNECTING) {
+            ws.close();
+          }
+        }, 10000);
+        
+        ws.onopen = () => {
+          clearTimeout(connectTimeout);
+          
+          if (!mountedRef.current) {
+            ws.close();
+            return;
+          }
+          
+          reconnectAttemptRef.current = 0;
+          
+          if (tokens && tokens.trim().length > 0) {
+            try {
+              ws.send(tokens);
+            } catch (error) {
+              setTimeout(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                  try {
+                    ws.send(tokens);
+                  } catch (err) {}
+                }
+              }, 1000);
+            }
+          } else {
+            ws.send("");
+          }
+        };
+        
+        ws.onerror = () => {
+          clearTimeout(connectTimeout);
+        };
+        
+        ws.onclose = () => {
+          clearTimeout(connectTimeout);
+          if (!mountedRef.current) return;
+          
+          websocketRef.current = null;
+          
+          if (mountedRef.current && tokensRef.current && reconnectAttemptRef.current < maxReconnectAttempts) {
+            reconnectAttemptRef.current++;
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttemptRef.current - 1), 30000);
+            
+            reconnectTimeoutRef.current = setTimeout(() => {
+              if (mountedRef.current && tokensRef.current) {
+                connectWebSocket();
+              }
+            }, delay);
+          }
+        };
+        
+        ws.onmessage = (event) => {
+          if (!mountedRef.current) return;
+          
+          if (!event.data || event.data === "" || event.data === "true") {
+            return;
+          }
+          
+          try {
+            const data = JSON.parse(event.data);
+            updateMarketData(data);
+          } catch (error) {
+            console.error('Error parsing WebSocket data:', error);
+          }
+        };
+        
+      } catch (error) {
+        if (mountedRef.current && tokensRef.current && reconnectAttemptRef.current < maxReconnectAttempts) {
+          reconnectAttemptRef.current++;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptRef.current - 1), 30000);
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            if (mountedRef.current && tokensRef.current) {
+              connectWebSocket();
+            }
+          }, delay);
+        }
+      }
+    };
+    
+    connectWebSocket();
+  }, [updateMarketData]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      if (websocketRef.current) {
+        websocketRef.current.close();
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (user?.UserId) {
@@ -53,8 +221,45 @@ const Orders = () => {
       }
       
       // Parse response if it's a string
-      const data = typeof response === 'string' ? JSON.parse(response) : response;
-      setOrders(data);
+      let data = typeof response === 'string' ? JSON.parse(response) : response;
+      
+      // For active orders, initialize WebSocket for live updates
+      if (activeTab === 'active' && data.length > 0) {
+        let tokens = '';
+        data = data.map(item => {
+          if (item.TokenNo) {
+            tokens += item.TokenNo + ',';
+          }
+          
+          // Calculate initial P/L
+          let profitLoss = 0;
+          const cmp = parseFloat(item.cmp || 0);
+          const orderPrice = parseFloat(item.OrderPrice || 0);
+          const lotSize = (parseFloat(item.selectedlotsize || 1) * parseFloat(item.Lot || 1));
+          
+          if (item.OrderCategory === "SELL") {
+            profitLoss = (orderPrice - cmp) * lotSize;
+          } else {
+            profitLoss = (cmp - orderPrice) * lotSize;
+          }
+          
+          return {
+            ...item,
+            currentPrice: cmp,
+            profitLoss: parseFloat(profitLoss.toFixed(2))
+          };
+        });
+        
+        tokensRef.current = tokens.slice(0, -1);
+        setOrders(data);
+        
+        // Initialize WebSocket for live updates
+        if (tokensRef.current) {
+          initializeWebSocket(tokensRef.current);
+        }
+      } else {
+        setOrders(data);
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Failed to fetch orders');
@@ -225,13 +430,27 @@ const Orders = () => {
                       <p className="font-medium text-white">{order.Lot}</p>
                     </div>
                     <div>
-                      <p className="text-gray-400">Price</p>
+                      <p className="text-gray-400">Order Price</p>
                       <p className="font-medium text-white">₹{order.OrderPrice}</p>
                     </div>
+                    {activeTab === 'active' && order.currentPrice !== undefined && (
+                      <div>
+                        <p className="text-gray-400">Current Price</p>
+                        <p className="font-medium text-white">₹{order.currentPrice?.toFixed(2) || '0.00'}</p>
+                      </div>
+                    )}
                     <div>
                       <p className="text-gray-400">Margin Used</p>
                       <p className="font-medium text-white">₹{order.MarginUsed}</p>
                     </div>
+                    {activeTab === 'active' && order.profitLoss !== undefined && (
+                      <div>
+                        <p className="text-gray-400">Profit/Loss</p>
+                        <p className={`font-medium ${order.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {order.profitLoss >= 0 ? '+' : ''}₹{order.profitLoss?.toFixed(2) || '0.00'}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="mt-3 pt-3 border-t border-gray-700">

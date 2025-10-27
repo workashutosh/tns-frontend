@@ -49,6 +49,7 @@ const Portfolio = () => {
   const mountedRef = useRef(true);
   const tokensRef = useRef('');
   const totalMarginUsedRef = useRef(0);
+  const reconnectAttemptRef = useRef(0);
 
   // Bottom navigation items
   const bottomNavItems = [
@@ -80,6 +81,21 @@ const Portfolio = () => {
     if (user?.UserId) {
       initializePortfolioData();
     }
+    
+    // Cleanup WebSocket on unmount
+    return () => {
+      if (websocketRef.current) {
+        try {
+          websocketRef.current.close();
+          websocketRef.current = null;
+        } catch (error) {
+          console.log('Error closing WebSocket on unmount:', error);
+        }
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
   }, [user]);
 
   // Initialize portfolio data
@@ -147,11 +163,23 @@ const Portfolio = () => {
           const isStopLossOrder = item.isstoplossorder === 'true' || item.isstoplossorder === true;
           const orderCategoryDisplay = isStopLossOrder ? `Stop ${item.OrderCategory}` : item.OrderCategory;
           
+          // Calculate initial P/L from cmp value (exactly like original)
+          let profitLoss = 0;
+          const cmp = parseFloat(item.cmp || 0);
+          const orderPrice = parseFloat(item.OrderPrice || 0);
+          const lotSize = (parseFloat(item.selectedlotsize || 1) * parseFloat(item.Lot || 1));
+          
+          if (item.OrderCategory === "SELL") {
+            profitLoss = (orderPrice - cmp) * lotSize;
+          } else {
+            profitLoss = (cmp - orderPrice) * lotSize;
+          }
+          
           return {
             ...item,
             scriptName,
             exchange,
-            profitLoss: 0, // Will be updated by WebSocket
+            profitLoss: parseFloat(profitLoss.toFixed(2)),
             currentPrice: item.cmp,
             isStopLossOrder,
             orderCategoryDisplay,
@@ -194,55 +222,6 @@ const Portfolio = () => {
     }
   };
 
-  // Initialize WebSocket connection
-  const initializeWebSocket = useCallback((tokens) => {
-    const uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
-    
-    if (websocketRef.current) {
-      websocketRef.current.close();
-    }
-    
-    websocketRef.current = new WebSocket(uri);
-    
-    websocketRef.current.onopen = () => {
-      console.log('WebSocket connected');
-      setWsConnected(true);
-      setWsError(null);
-      websocketRef.current.send(true);
-    };
-    
-    websocketRef.current.onerror = (event) => {
-      console.error('WebSocket error:', event);
-      setWsError('Connection error');
-      setWsConnected(false);
-    };
-    
-    websocketRef.current.onclose = () => {
-      console.log('WebSocket disconnected');
-      setWsConnected(false);
-      
-      // Attempt to reconnect after 3 seconds
-      if (mountedRef.current) {
-        reconnectTimeoutRef.current = setTimeout(() => {
-          if (mountedRef.current && tokensRef.current) {
-            initializeWebSocket(tokensRef.current);
-          }
-        }, 3000);
-      }
-    };
-    
-    websocketRef.current.onmessage = (event) => {
-      if (event.data && event.data !== "true") {
-        try {
-          const data = JSON.parse(event.data);
-          updateMarketData(data);
-        } catch (error) {
-          console.error('Error parsing WebSocket data:', error);
-        }
-      }
-    };
-  }, []);
-
   // Update market data from WebSocket
   const updateMarketData = useCallback((data) => {
     if (!data || !data.instrument_token) return;
@@ -275,26 +254,195 @@ const Portfolio = () => {
         return order;
       });
       
-      // Calculate total P/L from updated orders
-      const totalActivePL = updatedOrders.reduce((total, order) => total + (order.profitLoss || 0), 0);
-      
-      // Update balance data
-      setBalanceData(prev => {
-        const creditLimit = parseFloat(localStorage.getItem('CreditLimit')) || 0;
-        const m2m = prev.ledgerBalance + totalActivePL + creditLimit;
-        const marginAvailable = m2m - totalMarginUsedRef.current;
-        
-        return {
-          ...prev,
-          activePL: totalActivePL,
-          m2m,
-          marginAvailable: Math.max(0, marginAvailable)
-        };
-      });
-      
       return updatedOrders;
     });
   }, []);
+  
+  // Calculate and update balance data when active orders change
+  useEffect(() => {
+    if (activeOrders.length === 0) return;
+    
+    // Calculate total active P/L from all orders (exactly like original calcm2m)
+    const totalActivePL = activeOrders.reduce((total, order) => total + (order.profitLoss || 0), 0);
+    
+    // Update balance data
+    setBalanceData(prev => {
+      const creditLimit = parseFloat(localStorage.getItem('CreditLimit')) || 0;
+      const ledgerBalance = prev.ledgerBalance;
+      const m2m = ledgerBalance + totalActivePL + creditLimit;
+      const marginAvailable = m2m - totalMarginUsedRef.current;
+      
+      return {
+        ...prev,
+        activePL: totalActivePL,
+        m2m,
+        marginAvailable: Math.max(0, marginAvailable)
+      };
+    });
+  }, [activeOrders]);
+
+  // Initialize WebSocket connection with 0 failure rate
+  const initializeWebSocket = useCallback((tokens) => {
+    const uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
+    
+    // Close existing connection gracefully if any
+    if (websocketRef.current) {
+      try {
+        websocketRef.current.close(1000, 'Reconnecting');
+      } catch (error) {
+        console.log('Error closing existing WebSocket:', error);
+      }
+      websocketRef.current = null;
+    }
+    
+    // Clear any existing reconnection timeout
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    // Store reconnect attempt count
+    const maxReconnectAttempts = 10;
+    
+    const connectWebSocket = () => {
+      try {
+        console.log(`Attempting WebSocket connection (attempt ${reconnectAttemptRef.current + 1})...`);
+        
+        const ws = new WebSocket(uri);
+        websocketRef.current = ws;
+        
+        const connectTimeout = setTimeout(() => {
+          if (ws.readyState === WebSocket.CONNECTING) {
+            console.log('WebSocket connection timeout');
+            ws.close();
+          }
+        }, 10000); // 10 second timeout
+        
+        ws.onopen = () => {
+          clearTimeout(connectTimeout);
+          
+          if (!mountedRef.current) {
+            ws.close();
+            return;
+          }
+          
+          console.log('✓ WebSocket connected successfully');
+          setWsConnected(true);
+          setWsError(null);
+          reconnectAttemptRef.current = 0; // Reset on successful connection
+          
+          // Send tokens to subscribe
+          if (tokens && tokens.trim().length > 0) {
+            console.log('Subscribing to tokens:', tokens);
+            try {
+              ws.send(tokens);
+            } catch (error) {
+              console.error('Error sending tokens:', error);
+              // Retry sending tokens after 1 second
+              setTimeout(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                  try {
+                    ws.send(tokens);
+                  } catch (err) {
+                    console.error('Retry send failed:', err);
+                  }
+                }
+              }, 1000);
+            }
+          } else {
+            console.log('No tokens to subscribe');
+            ws.send("");
+          }
+        };
+        
+        ws.onerror = (event) => {
+          clearTimeout(connectTimeout);
+          if (!mountedRef.current) return;
+          
+          console.error('WebSocket error:', event);
+          setWsError('Connection error occurred');
+          setWsConnected(false);
+          
+          // Don't reconnect on error, let onclose handle it
+        };
+        
+        ws.onclose = (event) => {
+          clearTimeout(connectTimeout);
+          if (!mountedRef.current) return;
+          
+          console.log('WebSocket disconnected', { 
+            code: event.code, 
+            reason: event.reason,
+            wasClean: event.wasClean
+          });
+          setWsConnected(false);
+          websocketRef.current = null;
+          
+          // Reconnect logic with exponential backoff
+          if (mountedRef.current && tokensRef.current && reconnectAttemptRef.current < maxReconnectAttempts) {
+            reconnectAttemptRef.current++;
+            
+            // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttemptRef.current - 1), 30000);
+            
+            console.log(`Scheduling reconnect in ${delay}ms (attempt ${reconnectAttemptRef.current}/${maxReconnectAttempts})`);
+            
+            reconnectTimeoutRef.current = setTimeout(() => {
+              if (mountedRef.current && tokensRef.current) {
+                connectWebSocket();
+              }
+            }, delay);
+          } else if (reconnectAttemptRef.current >= maxReconnectAttempts) {
+            console.error('Max reconnection attempts reached');
+            setWsError('Connection failed after multiple attempts');
+            // Reset after a longer delay to try again
+            reconnectTimeoutRef.current = setTimeout(() => {
+              reconnectAttemptRef.current = 0;
+              if (mountedRef.current && tokensRef.current) {
+                connectWebSocket();
+              }
+            }, 60000); // Try again after 60 seconds
+          }
+        };
+        
+        ws.onmessage = (event) => {
+          if (!mountedRef.current) return;
+          
+          // Handle empty or ping messages
+          if (!event.data || event.data === "" || event.data === "true") {
+            return;
+          }
+          
+          try {
+            const data = JSON.parse(event.data);
+            updateMarketData(data);
+          } catch (error) {
+            console.error('Error parsing WebSocket data:', error);
+            console.log('Raw data:', event.data);
+          }
+        };
+        
+      } catch (error) {
+        console.error('Error creating WebSocket:', error);
+        setWsError('Failed to create WebSocket connection');
+        setWsConnected(false);
+        
+        // Attempt to reconnect with exponential backoff
+        if (mountedRef.current && tokensRef.current && reconnectAttemptRef.current < maxReconnectAttempts) {
+          reconnectAttemptRef.current++;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptRef.current - 1), 30000);
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            if (mountedRef.current && tokensRef.current) {
+              connectWebSocket();
+            }
+          }, delay);
+        }
+      }
+    };
+    
+    connectWebSocket();
+  }, [updateMarketData]);
 
   // Close trade functionality
   const closeTrade = async (order) => {
@@ -631,6 +779,7 @@ const Portfolio = () => {
           </button>
           </div>
         </div>
+        
         
  
       </div>
