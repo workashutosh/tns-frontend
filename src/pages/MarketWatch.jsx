@@ -25,6 +25,7 @@ const MarketWatch = () => {
   const [selectedTokens, setSelectedTokens] = useState(new Set());
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState(null);
+  const [usdToInrRate, setUsdToInrRate] = useState(88.65); // Default fallback rate
   
   const websocketRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
@@ -32,6 +33,7 @@ const MarketWatch = () => {
   const mountedRef = useRef(true);
   const updateCountRef = useRef(0);
   const searchTimeoutRef = useRef(null);
+  const exchangeRateIntervalRef = useRef(null);
 
   // Build tabs dynamically based on localStorage values
   const buildTabs = () => {
@@ -66,9 +68,32 @@ const MarketWatch = () => {
   
   const [tabs] = useState(() => buildTabs());
 
+  // Fetch USD to INR exchange rate
+  const fetchExchangeRate = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const data = await response.json();
+      if (data.rates && data.rates.INR) {
+        setUsdToInrRate(data.rates.INR);
+        console.log('USD to INR rate updated:', data.rates.INR);
+      }
+    } catch (error) {
+      console.error('Error fetching exchange rate:', error);
+      // Keep using the previous rate or default
+    }
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     mountedRef.current = true;
+    
+    // Fetch exchange rate on mount and set up periodic updates (every 5 minutes)
+    fetchExchangeRate();
+    exchangeRateIntervalRef.current = setInterval(() => {
+      if (mountedRef.current) {
+        fetchExchangeRate();
+      }
+    }, 5 * 60 * 1000); // Update every 5 minutes
     
     return () => {
       mountedRef.current = false;
@@ -78,17 +103,24 @@ const MarketWatch = () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
+      if (exchangeRateIntervalRef.current) {
+        clearInterval(exchangeRateIntervalRef.current);
+      }
       if (websocketRef.current) {
         websocketRef.current.close();
         websocketRef.current = null;
       }
     };
-  }, []);
+  }, [fetchExchangeRate]);
   
-  // Update market data with live prices
+  // Check if current tab uses FX WebSocket (Crypto, Forex, Commodity)
+  const isFXWebSocketTab = useCallback(() => {
+    return ['CRYPTO', 'FOREX', 'COMMODITY'].includes(activeTab);
+  }, [activeTab]);
+
+  // Update market data with live prices for MCX/NSE (original format)
   const updateMarketData = useCallback((result) => {
     if (!result || !result.instrument_token) {
-      //console.warn('Invalid market data received:', result);
       return;
     }
 
@@ -130,8 +162,6 @@ const MarketWatch = () => {
                 lastUpdate: Date.now()
               };
               
-              //console.log(`✓ Updated ${token.SymbolName}: LTP=${updatedToken.ltp}, Bid=${updatedToken.sell}, Ask=${updatedToken.buy}`);
-              
               return updatedToken;
             }
             return token;
@@ -146,6 +176,91 @@ const MarketWatch = () => {
       return updated ? newData : prev;
     });
   }, []);
+
+  // Update market data for FX WebSocket (Crypto/Forex/Commodity tick format)
+  const updateFXMarketData = useCallback((tickData) => {
+    if (!tickData || !tickData.type || tickData.type !== 'tick' || !tickData.data) {
+      return;
+    }
+
+    const { Symbol, BestBid, BestAsk, Bids, Asks } = tickData.data;
+    
+    if (!Symbol) return;
+
+    // Get USD prices from tick data
+    const bestBidPriceUSD = BestBid?.Price || 0;
+    const bestAskPriceUSD = BestAsk?.Price || 0;
+    
+    // Convert USD prices to INR using real-time exchange rate
+    const bestBidPrice = bestBidPriceUSD * usdToInrRate;
+    const bestAskPrice = bestAskPriceUSD * usdToInrRate;
+    
+    // Calculate High (max ask price) and Low (min bid price) in USD, then convert to INR
+    const highUSD = Asks && Asks.length > 0 
+      ? Math.max(...Asks.map(ask => ask.Price || 0))
+      : bestAskPriceUSD;
+    
+    const lowUSD = Bids && Bids.length > 0
+      ? Math.min(...Bids.map(bid => bid.Price || 0))
+      : bestBidPriceUSD;
+
+    // Convert High and Low to INR
+    const high = highUSD * usdToInrRate;
+    const low = lowUSD * usdToInrRate;
+
+    // Calculate total volumes (volumes don't need conversion)
+    const totalBidVolume = Bids ? Bids.reduce((sum, bid) => sum + (bid.Volume || 0), 0) : 0;
+    const totalAskVolume = Asks ? Asks.reduce((sum, ask) => sum + (ask.Volume || 0), 0) : 0;
+
+    // Calculate LTP (Last Traded Price) in INR - midpoint of best bid/ask
+    const ltp = bestBidPrice && bestAskPrice ? (bestBidPrice + bestAskPrice) / 2 : (bestBidPrice || bestAskPrice || 0);
+    
+    setMarketData(prev => {
+      const newData = { ...prev };
+      let updated = false;
+      
+      // Search through current tab's tokens to find matching symbol
+      if (newData[activeTab] && Array.isArray(newData[activeTab])) {
+        newData[activeTab] = newData[activeTab].map(token => {
+          // Match by SymbolName (the Symbol from tick data should match SymbolName)
+          const symbolName = token.SymbolName?.split('_')[0] || token.SymbolName;
+          if (symbolName === Symbol || token.SymbolName === Symbol) {
+            updated = true;
+            updateCountRef.current++;
+            
+            // Calculate change (difference from previous LTP in INR)
+            const prevLtp = token.ltp || ltp;
+            const change = ltp - prevLtp;
+            
+            const updatedToken = {
+              ...token,
+              buy: bestAskPrice, // Already converted to INR
+              sell: bestBidPrice, // Already converted to INR
+              ltp: ltp, // Already converted to INR
+              chg: change, // Change in INR
+              high: high, // Already converted to INR
+              low: low, // Already converted to INR
+              volume: totalBidVolume + totalAskVolume,
+              // Store previous values for color changes
+              prevBuy: token.buy || bestAskPrice,
+              prevSell: token.sell || bestBidPrice,
+              prevLtp: prevLtp,
+              lastUpdate: Date.now()
+            };
+            
+            return updatedToken;
+          }
+          return token;
+        });
+      }
+      
+      if (updated) {
+        setLastUpdate(Date.now());
+      }
+      
+      return updated ? newData : prev;
+    });
+  }, [activeTab, usdToInrRate]);
 
   // Use a ref to store the latest tokens for WebSocket subscription
   const latestTokensRef = useRef('');
@@ -170,9 +285,18 @@ const MarketWatch = () => {
     }
    
     isInitializingRef.current = true;
-    const uri = "wss://ws.tradewingss.com/api/webapiwebsoc";
     
-    console.log('Attempting WebSocket connection...', { attempt: connectionAttempts + 1 });
+    // Use different WebSocket URL for Crypto/Forex/Commodity
+    const useFXWebSocket = isFXWebSocketTab();
+    const uri = useFXWebSocket 
+      ? "wss://www.fxsoc.tradenstocko.com:8001/ws"
+      : "wss://ws.tradewingss.com/api/webapiwebsoc";
+    
+    console.log('Attempting WebSocket connection...', { 
+      attempt: connectionAttempts + 1,
+      type: useFXWebSocket ? 'FX' : 'MCX/NSE',
+      uri 
+    });
     
     if (websocketRef.current) {
       try {
@@ -190,19 +314,21 @@ const MarketWatch = () => {
       ws.onopen = (event) => {
         if (!mountedRef.current) return;
         
-        console.log("✓ WebSocket connected successfully");
+        console.log("✓ WebSocket connected successfully", { type: useFXWebSocket ? 'FX' : 'MCX/NSE' });
         setWsConnected(true);
         setWsError(null);
         setConnectionAttempts(0);
         isInitializingRef.current = false;
         
-        // Use the latest tokens from ref (updated separately without causing reconnection)
-        const tokenString = latestTokensRef.current || "";
-        
-        try {
-          ws.send(tokenString);
-        } catch (error) {
-          console.error('Error sending tokens:', error);
+        // For FX WebSocket, no need to send tokens - it automatically sends all data
+        // For MCX/NSE, send token string to subscribe
+        if (!useFXWebSocket) {
+          const tokenString = latestTokensRef.current || "";
+          try {
+            ws.send(tokenString);
+          } catch (error) {
+            console.error('Error sending tokens:', error);
+          }
         }
       };
 
@@ -212,7 +338,15 @@ const MarketWatch = () => {
         if (event.data && event.data !== "true" && event.data !== "") {
           try {
             const result = JSON.parse(event.data);
-            updateMarketData(result);
+            
+            // Handle different message formats based on WebSocket type
+            if (useFXWebSocket) {
+              // FX WebSocket sends tick data
+              updateFXMarketData(result);
+            } else {
+              // MCX/NSE WebSocket sends market data
+              updateMarketData(result);
+            }
           } catch (error) {
             console.error('Error parsing WebSocket data:', error);
           }
@@ -269,18 +403,55 @@ const MarketWatch = () => {
         }, 3000);
       }
     }
-  }, [connectionAttempts, updateMarketData]);
+  }, [connectionAttempts, updateMarketData, updateFXMarketData, isFXWebSocketTab]);
 
   // Re-subscribe WebSocket when tokens change or tab changes
   const tokensStringRef = useRef('');
+  const previousTabRef = useRef(activeTab);
+  
   useEffect(() => {
     // Get current tab's tokens from selectedTokens (Set of token IDs only)
     const allTokens = Array.from(selectedTokens);
     const tokenString = allTokens.join(',');
     
-    // Only re-subscribe if tokens actually changed AND WebSocket is connected
-    if (tokenString !== tokensStringRef.current && websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
-      console.log('Tokens/tab changed, re-subscribing WebSocket...', { tab: activeTab, tokenCount: allTokens.length });
+    // Check if tab type changed (FX vs non-FX) - need to reconnect with different WebSocket
+    const previousTab = previousTabRef.current;
+    const previousIsFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(previousTab);
+    const currentIsFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(activeTab);
+    
+    // If switching between FX and non-FX tabs, reconnect WebSocket
+    if (previousTab !== activeTab && previousIsFX !== currentIsFX) {
+      console.log('Tab type changed, reconnecting WebSocket...', { 
+        from: previousTab, 
+        to: activeTab,
+        fromType: previousIsFX ? 'FX' : 'MCX/NSE',
+        toType: currentIsFX ? 'FX' : 'MCX/NSE'
+      });
+      previousTabRef.current = activeTab;
+      
+      // Close existing connection and reconnect
+      if (websocketRef.current) {
+        try {
+          websocketRef.current.close();
+        } catch (e) {
+          console.log('Error closing WebSocket:', e);
+        }
+        websocketRef.current = null;
+      }
+      
+      // Reinitialize WebSocket with correct URL
+      setTimeout(() => {
+        if (mountedRef.current) {
+          setConnectionAttempts(0);
+          initializeWebSocket();
+        }
+      }, 500);
+      return;
+    }
+    
+    // Only re-subscribe if tokens actually changed AND WebSocket is connected (for MCX/NSE only)
+    if (tokenString !== tokensStringRef.current && websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN && !currentIsFX) {
+      console.log('Tokens changed, re-subscribing WebSocket...', { tab: activeTab, tokenCount: allTokens.length });
       tokensStringRef.current = tokenString;
       latestTokensRef.current = tokenString;
       
@@ -297,7 +468,9 @@ const MarketWatch = () => {
       tokensStringRef.current = tokenString;
       latestTokensRef.current = tokenString;
     }
-  }, [activeTab, selectedTokens]);
+    
+    previousTabRef.current = activeTab;
+  }, [activeTab, selectedTokens, initializeWebSocket]);
 
   // Initial load
   useEffect(() => {
