@@ -10,11 +10,38 @@ const MarketWatch = ({ user }) => {
   const [selectedSymbols, setSelectedSymbols] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const exchanges = [
-    { id: 'MCX', name: 'MCX Futures' },
-    { id: 'NSE', name: 'NSE Futures' },
-    { id: 'CDS', name: 'OPTION' }
-  ];
+  // Build exchanges dynamically based on localStorage values
+  const buildExchanges = () => {
+    const exchanges = [
+      { id: 'MCX', name: 'MCX Futures' },
+      { id: 'NSE', name: 'NSE Futures' },
+      { id: 'CDS', name: 'OPTION' }
+    ];
+    
+    // Check localStorage for trading permissions
+    const tradeInCrypto = localStorage.getItem('Trade_in_crypto') === 'true';
+    const tradeInForex = localStorage.getItem('Trade_in_forex') === 'true';
+    const tradeInCommodity = localStorage.getItem('Trade_in_commodity') === 'true';
+    
+    // Add Crypto exchange if enabled
+    if (tradeInCrypto) {
+      exchanges.push({ id: 'CRYPTO', name: 'Crypto' });
+    }
+    
+    // Add Forex exchange if enabled
+    if (tradeInForex) {
+      exchanges.push({ id: 'FOREX', name: 'Forex' });
+    }
+    
+    // Add Commodity exchange if enabled
+    if (tradeInCommodity) {
+      exchanges.push({ id: 'COMMODITY', name: 'Commodity' });
+    }
+    
+    return exchanges;
+  };
+  
+  const [exchanges] = useState(() => buildExchanges());
 
   useEffect(() => {
     if (user?.UserId) {
@@ -29,8 +56,20 @@ const MarketWatch = ({ user }) => {
       // Get refId from localStorage
       const refId = localStorage.getItem('Refid');
       
+      // Map exchange IDs to API extype values
+      const extypeMap = {
+        'MCX': 'MCX',
+        'NSE': 'NSE',
+        'CDS': 'OPT',
+        'CRYPTO': 'CRYPTO',
+        'FOREX': 'FOREX',
+        'COMMODITY': 'COMMODITY'
+      };
+      
+      const extype = extypeMap[activeExchange] || activeExchange;
+      
       // Fetch symbols for the active exchange
-      const response = await tradingAPI.getSymbols(activeExchange, searchQuery || 'null', refId);
+      const response = await tradingAPI.getSymbols(extype, searchQuery || 'null', refId);
       setMarketData(response);
     } catch (error) {
       console.error('Error fetching market data:', error);
@@ -42,7 +81,17 @@ const MarketWatch = ({ user }) => {
 
   const fetchSelectedTokens = async () => {
     try {
-      const response = await tradingAPI.getSelectedTokens(user.UserId, activeExchange.toLowerCase());
+      const exchangeMap = {
+        'MCX': 'mcx',
+        'NSE': 'nse',
+        'CDS': 'cds',
+        'CRYPTO': 'crypto',
+        'FOREX': 'forex',
+        'COMMODITY': 'commodity'
+      };
+      
+      const exchangeKey = exchangeMap[activeExchange] || activeExchange.toLowerCase();
+      const response = await tradingAPI.getSelectedTokens(user.UserId, exchangeKey);
       setSelectedSymbols(response);
     } catch (error) {
       console.error('Error fetching selected tokens:', error);
@@ -57,8 +106,18 @@ const MarketWatch = ({ user }) => {
         setSelectedSymbols(prev => prev.filter(s => s.SymbolToken !== token));
         toast.success('Symbol removed from watchlist');
       } else {
-        // Add symbol
-        await tradingAPI.saveToken(symbolName, token, user.UserId, activeExchange, lotSize);
+        // Map exchange IDs to exchange types for saveToken API
+        const exchangeTypeMap = {
+          'MCX': 'MCX',
+          'NSE': 'NSE',
+          'CDS': 'OPT',
+          'CRYPTO': 'CRYPTO',
+          'FOREX': 'FOREX',
+          'COMMODITY': 'COMMODITY'
+        };
+        
+        const exchangeType = exchangeTypeMap[activeExchange] || activeExchange;
+        await tradingAPI.saveToken(symbolName, token, user.UserId, exchangeType, lotSize);
         await fetchSelectedTokens();
         toast.success('Symbol added to watchlist');
       }

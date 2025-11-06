@@ -213,9 +213,12 @@ export const tradingAPI = {
       
       console.log('getSymbols - refIdToUse:', refIdToUse);
       
+      // Map CRYPTO to CRYPTOCURRENCIES for database compatibility
+      const mappedExchangeType = exchangeType === 'CRYPTO' ? 'CRYPTOCURRENCIES' : exchangeType;
+      
       // Only include refid param if we have a valid value
       const params = {
-        extype: exchangeType,
+        extype: mappedExchangeType,
         searchkey: searchKey || 'null',
         refid: refIdToUse
       };

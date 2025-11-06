@@ -33,11 +33,38 @@ const MarketWatch = () => {
   const updateCountRef = useRef(0);
   const searchTimeoutRef = useRef(null);
 
-  const tabs = [
-    { id: 'MCX', label: 'MCX Futures' },
-    { id: 'NSE', label: 'NSE Futures' },
-    { id: 'OPT', label: 'OPTION' }
-  ];
+  // Build tabs dynamically based on localStorage values
+  const buildTabs = () => {
+    const tabs = [
+      { id: 'MCX', label: 'MCX Futures' },
+      { id: 'NSE', label: 'NSE Futures' },
+      { id: 'OPT', label: 'OPTION' }
+    ];
+    
+    // Check localStorage for trading permissions
+    const tradeInCrypto = localStorage.getItem('Trade_in_crypto') === 'true';
+    const tradeInForex = localStorage.getItem('Trade_in_forex') === 'true';
+    const tradeInCommodity = localStorage.getItem('Trade_in_commodity') === 'true';
+    
+    // Add Crypto tab if enabled
+    if (tradeInCrypto) {
+      tabs.push({ id: 'CRYPTO', label: 'Crypto' });
+    }
+    
+    // Add Forex tab if enabled
+    if (tradeInForex) {
+      tabs.push({ id: 'FOREX', label: 'Forex' });
+    }
+    
+    // Add Commodity tab if enabled
+    if (tradeInCommodity) {
+      tabs.push({ id: 'COMMODITY', label: 'Commodity' });
+    }
+    
+    return tabs;
+  };
+  
+  const [tabs] = useState(() => buildTabs());
 
   // Cleanup on unmount
   useEffect(() => {
@@ -286,7 +313,10 @@ const MarketWatch = () => {
       const exchangeMap = {
         'MCX': 'mcx',
         'NSE': 'nse', 
-        'OPT': 'cds'
+        'OPT': 'cds',
+        'CRYPTO': 'crypto',
+        'FOREX': 'forex',
+        'COMMODITY': 'commodity'
       };
       
       const exchangeKey = exchangeMap[activeTab];
@@ -362,7 +392,18 @@ const MarketWatch = () => {
     
     setSearchLoading(true);
     try {
-      const response = await tradingAPI.getSymbols(activeTab, query, refId);
+      // Map tab IDs to API extype values
+      const extypeMap = {
+        'MCX': 'MCX',
+        'NSE': 'NSE',
+        'OPT': 'OPT',
+        'CRYPTO': 'CRYPTO',
+        'FOREX': 'FOREX',
+        'COMMODITY': 'COMMODITY'
+      };
+      
+      const extype = extypeMap[activeTab] || activeTab;
+      const response = await tradingAPI.getSymbols(extype, query, refId);
       const symbols = typeof response === 'string' ? JSON.parse(response) : response;
       
       console.log(`Found ${symbols.length} symbols for query "${query}":`, symbols);
@@ -379,7 +420,17 @@ const MarketWatch = () => {
   // Add token to watchlist
   const addTokenToWatchlist = async (token, symbolName, lotSize) => {
     try {
-      const exchangeType = activeTab === 'OPT' ? 'OPT' : activeTab;
+      // Map tab IDs to exchange types for saveToken API
+      const exchangeTypeMap = {
+        'MCX': 'MCX',
+        'NSE': 'NSE',
+        'OPT': 'OPT',
+        'CRYPTO': 'CRYPTO',
+        'FOREX': 'FOREX',
+        'COMMODITY': 'COMMODITY'
+      };
+      
+      const exchangeType = exchangeTypeMap[activeTab] || activeTab;
       await tradingAPI.saveToken(symbolName, token, user.UserId, exchangeType, lotSize);
       
       console.log(`Added token ${token} (${symbolName}) to watchlist`);
@@ -435,7 +486,18 @@ const MarketWatch = () => {
     
     // Load initial suggestions when modal opens
     try {
-      const response = await tradingAPI.getSymbols(activeTab, 'null', refId);
+      // Map tab IDs to API extype values
+      const extypeMap = {
+        'MCX': 'MCX',
+        'NSE': 'NSE',
+        'OPT': 'OPT',
+        'CRYPTO': 'CRYPTO',
+        'FOREX': 'FOREX',
+        'COMMODITY': 'COMMODITY'
+      };
+      
+      const extype = extypeMap[activeTab] || activeTab;
+      const response = await tradingAPI.getSymbols(extype, 'null', refId);
       const symbols = typeof response === 'string' ? JSON.parse(response) : response;
       setSearchResults(symbols); // Show all symbols as suggestions
     } catch (error) {
@@ -516,6 +578,9 @@ const MarketWatch = () => {
     if (activeTab === 'MCX') return 'MCX';
     if (activeTab === 'NSE') return 'NSE';
     if (activeTab === 'OPT') return 'NSE';
+    if (activeTab === 'CRYPTO') return 'CRYPTO';
+    if (activeTab === 'FOREX') return 'FOREX';
+    if (activeTab === 'COMMODITY') return 'COMMODITY';
     return activeTab;
   };
 
@@ -543,65 +608,42 @@ const MarketWatch = () => {
   const currentSymbols = marketData[activeTab] || [];
 
   return (
-    <div className="h-screen bg-gray-900 flex flex-col">
-      {/* Fixed Header with Connection Status */}
-      <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700">
-        <div className="px-6 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-white">MarketWatch</h1>
-          <div className="flex items-center space-x-3">
-            <div className={`w-3 h-3 rounded-full ${wsConnected ? 'bg-green-500' : 'bg-red-500'} ${wsConnected ? 'animate-pulse' : ''}`}></div>
-            {/* <span className="text-sm text-gray-300">
-              {wsConnected ? `Live (${updateCountRef.current} updates)` : wsError ? wsError : 'Connecting...'}
-            </span>
-            {!wsConnected && (
-              <button
-                onClick={handleManualReconnect}
-                disabled={isInitializingRef.current}
-                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded disabled:opacity-50"
-              >
-                {isInitializingRef.current ? 'Connecting...' : 'Reconnect'}
-              </button>
-            )} */}
+    <div className="h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-950 flex flex-col">
+      {/* Fixed Header with Search Icon */}
+      <div className="flex-shrink-0 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800/50 shadow-sm">
+        <div className="px-5 py-3 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">MarketWatch</h1>
+            <p className="text-xs text-gray-500 mt-0.5">Real-time market data</p>
           </div>
+          <button
+            onClick={handleSearchModalOpen}
+            className="bg-gray-800/50 hover:bg-gray-800 p-2.5 rounded-full transition-all duration-200 hover:scale-110"
+          >
+            <Search className="w-5 h-5 text-gray-300" />
+          </button>
         </div>
       </div>
 
       {/* Fixed Tabs */}
-      <div className="flex-shrink-0 flex bg-gray-800 border-b border-gray-700">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            className={`flex-1 py-3 px-2 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'text-white bg-gray-700 border-b-2 border-blue-500'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-750'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Fixed Search Bar */}
-      <div className="flex-shrink-0 px-2 py-2 bg-gray-800">
-        <div className="flex items-center space-x-3">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              placeholder="Search Symbol"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full px-2 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <Search className="absolute right-3 top-2.5 w-5 h-5 text-gray-400" />
-          </div>
-          <button
-            onClick={handleSearchModalOpen}
-            className="bg-blue-600 text-white p-1 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
+      <div className="flex-shrink-0 bg-gray-900/50 border-b border-gray-800/50 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`relative flex-1 min-w-[110px] py-3 px-4 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'text-white'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -620,10 +662,8 @@ const MarketWatch = () => {
                 '0.00';
               
               const isPositive = changeValue >= 0;
-              const changeColor = isPositive ? 'text-green-400' : 'text-red-400';
+              const changeColor = isPositive ? 'text-emerald-400' : 'text-red-400';
               const ltpColor = getPriceColor(ltpValue, prevLtpValue);
-              const buyColor = getPriceColor(symbol.buy, symbol.prevBuy);
-              const sellColor = getPriceColor(symbol.sell, symbol.prevSell);
               
               // Time since last update
               const timeSinceUpdate = symbol.lastUpdate ? 
@@ -633,17 +673,17 @@ const MarketWatch = () => {
               return (
                 <div
                   key={symbol.SymbolToken}
-                  className="py-2 px-3 border-b border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer"
+                  className="py-2.5 px-4 border-b border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer group"
                   onClick={() => handleOrderModalOpen(symbol)}
                 >
                   <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="text-white text-sm font-medium">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <div className="text-white text-sm font-medium truncate">
                           {symbol.SymbolName?.split('_')[0] || 'N/A'}
                         </div>
                         {timeSinceUpdate !== null && timeSinceUpdate < 5 && (
-                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse flex-shrink-0"></div>
                         )}
                       </div>
                       <div className="text-gray-400 text-xs">
@@ -651,40 +691,34 @@ const MarketWatch = () => {
                       </div>
                     </div>
                     
-                    <div className="text-right mr-3">
-                      <div className={`text-sm font-semibold ${ltpColor} transition-colors duration-300`}>
+                    <div className="text-right flex-shrink-0">
+                      <div className={`text-sm font-semibold ${ltpColor} transition-colors`}>
                         ₹{formatPrice(ltpValue)}
                       </div>
-                      <div className={`text-xs ${changeColor}`}>
+                      <div className={`text-xs font-medium ${changeColor}`}>
                         {isPositive ? '+' : ''}{formatPrice(changeValue)} ({isPositive ? '+' : ''}{changePercent}%)
                       </div>
                     </div>
-
-                    {/* Remove Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTokenFromWatchlist(symbol.SymbolToken);
-                      }}
-                      className="bg-red-600 hover:bg-red-700 text-white px-1.5 py-1 rounded text-xs transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <TrendingUp className="w-16 h-16 text-gray-600 mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No symbols in watchlist</h3>
-            <p className="text-gray-400 mb-4">
-              Add symbols to your {activeTab} watchlist to start tracking
+          <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-2xl"></div>
+              <div className="relative bg-gray-800/60 backdrop-blur-sm rounded-full p-6 border border-gray-700/50">
+                <TrendingUp className="w-16 h-16 text-gray-400" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">No symbols in watchlist</h3>
+            <p className="text-gray-400 text-sm mb-8 max-w-sm leading-relaxed">
+              Add symbols to your <span className="font-semibold text-white">{activeTab}</span> watchlist to start tracking live market data and prices
             </p>
             <button
               onClick={handleSearchModalOpen}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-semibold text-sm shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40"
             >
               Add Symbols
             </button>
@@ -694,45 +728,51 @@ const MarketWatch = () => {
 
       {/* Search Modal */}
       {showSearchModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-white">Search & Add Symbol</h3>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700/50 rounded-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h3 className="text-xl font-bold text-white">Search & Add Symbol</h3>
+                <p className="text-xs text-gray-500 mt-1">Find and add symbols to your watchlist</p>
+              </div>
               <button
                 onClick={() => {
                   setShowSearchModal(false);
                   setSearchQuery('');
                   setSearchResults([]);
                 }}
-                className="text-gray-400 hover:text-gray-300"
+                className="text-gray-400 hover:text-white hover:bg-gray-800 transition-all p-2 rounded-lg"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search symbol..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="mb-5">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search symbol..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="w-full pl-11 pr-4 py-3 bg-gray-800/60 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all backdrop-blur-sm"
+                />
+              </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto -mx-2 px-2">
               {modalLoading ? (
-                <div className="text-center py-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                  <p className="text-gray-400">Loading suggestions...</p>
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-gray-400 text-sm font-medium">Loading suggestions...</p>
                 </div>
               ) : searchLoading ? (
-                <div className="text-center py-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                  <p className="text-gray-400">Searching...</p>
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-gray-400 text-sm font-medium">Searching...</p>
                 </div>
               ) : searchResults.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {searchResults.map((symbol) => {
                     const isSelected = selectedTokens.has(symbol.instrument_token.toString());
                     const symbolParts = symbol.tradingsymbol?.split('_') || [symbol.name];
@@ -740,33 +780,38 @@ const MarketWatch = () => {
                     return (
                       <div
                         key={symbol.instrument_token}
-                        className={`flex items-center justify-between p-1 rounded-md border cursor-pointer transition-colors ${
+                        className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
                           isSelected 
-                            ? 'bg-green-900 border-green-600' 
-                            : 'bg-gray-700 border-gray-600 hover:bg-gray-600'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/15' 
+                            : 'bg-gray-800/40 border-gray-700/50 hover:bg-gray-800/60 hover:border-gray-700'
                         }`}
                         onClick={() => handleSymbolSelect(symbol)}
                       >
-                        <div className="flex-1">
-                          <div className="text-white font-medium">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white font-semibold text-sm mb-1">
                             {symbolParts[0] || symbol.name}
                           </div>
-                          <div className="text-gray-400 text-xs">
-                            {symbolParts[1] && `${symbolParts[1]} • `}
-                            Lot: {symbol.lot_size}
+                          <div className="flex items-center gap-2">
+                            {symbolParts[1] && (
+                              <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-0.5 rounded">
+                                {symbolParts[1]}
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-400">
+                              Lot: <span className="font-semibold text-gray-300">{symbol.lot_size}</span>
+                            </span>
                           </div>
-                          {/* <div className="text-gray-500 text-xs">
-                            Token: {symbol.instrument_token}
-                          </div> */}
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center ml-4 flex-shrink-0">
                           {isSelected ? (
-                            <div className="flex items-center text-green-400">
-                              <Check className="w-5 h-5 mr-1" />
-                              <span className="text-sm">Added</span>
+                            <div className="flex items-center text-emerald-400 space-x-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg">
+                              <Check className="w-4 h-4" />
+                              <span className="text-xs font-semibold">Added</span>
                             </div>
                           ) : (
-                            <Plus className="w-5 h-5 text-gray-400" />
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg shadow-lg shadow-blue-500/30">
+                              <Plus className="w-4 h-4 text-white" />
+                            </div>
                           )}
                         </div>
                       </div>
@@ -774,12 +819,16 @@ const MarketWatch = () => {
                   })}
                 </div>
               ) : searchQuery.length >= 2 ? (
-                <div className="text-gray-400 text-center py-8">
-                  No symbols found for "{searchQuery}"
+                <div className="text-center py-16">
+                  <div className="text-gray-500 text-sm mb-2">No symbols found for</div>
+                  <div className="text-white font-semibold text-base">"{searchQuery}"</div>
+                  <div className="text-gray-500 text-xs mt-3">Try a different search term</div>
                 </div>
               ) : (
-                <div className="text-gray-400 text-center py-8">
-                  Popular symbols for {activeTab}
+                <div className="text-center py-16">
+                  <div className="text-gray-500 text-sm mb-2">Popular symbols for</div>
+                  <div className="text-white font-semibold text-base">{activeTab}</div>
+                  <div className="text-gray-500 text-xs mt-3">Start typing to search</div>
                 </div>
               )}
             </div>
