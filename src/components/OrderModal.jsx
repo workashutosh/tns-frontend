@@ -552,12 +552,35 @@ const OrderModal = ({
             Lot Size: {symbol?.Lotsize || 1} • Exchange: {symbol?.ExchangeType || 'MCX'}
           </p>
           <div className="mt-1">
-            <button
-              onClick={() => window.open(`#chart-${symbol?.SymbolToken}`, '_blank')}
-              className="text-blue-400 hover:text-blue-300 text-xs"
-            >
-              📈 Open Chart
-            </button>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => window.open(`#chart-${symbol?.SymbolToken}`, '_blank')}
+                className="text-blue-400 hover:text-blue-300 text-xs"
+              >
+                📈 Open Chart
+              </button>
+              <span className="text-gray-600">|</span>
+              <button
+                onClick={() => {
+                  try {
+                    // Persist context like MarketWatch does
+                    if (symbol && symbol.SymbolToken) {
+                      localStorage.setItem("SymbolLotSize", symbol.Lotsize || 1);
+                      localStorage.setItem("selected_token", symbol.SymbolToken);
+                      localStorage.setItem("selected_script", symbol.SymbolName);
+                      localStorage.setItem("selectedlotsize", symbol.Lotsize || 1);
+                      localStorage.setItem("selected_exchange", symbol.ExchangeType || 'MCX');
+                    }
+                    window.location.assign(`/order/${symbol?.SymbolToken}`);
+                  } catch (e) {
+                    console.error('Failed to open order page with chart', e);
+                  }
+                }}
+                className="text-blue-400 hover:text-blue-300 text-xs"
+              >
+                Go to Order Page + Chart
+              </button>
+            </div>
           </div>
         </div>
 

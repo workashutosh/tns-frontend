@@ -40,6 +40,7 @@ const Profile = () => {
   const [activeOrders, setActiveOrders] = useState([]);
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [billInfo, setBillInfo] = useState([]);
+  const [billSummary, setBillSummary] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [profileData, setProfileData] = useState(null);
   const [personalDetails, setPersonalDetails] = useState(null);
@@ -154,10 +155,72 @@ const Profile = () => {
     try {
       if (!user?.UserId) return;
       const bills = await tradingAPI.getUserBill(user.UserId);
-      setBillInfo(Array.isArray(bills) ? bills : []);
+      
+      // Handle different response structures
+      let trades = [];
+      if (bills && typeof bills === 'object') {
+        // If response has trades property (structured response)
+        if (Array.isArray(bills.trades)) {
+          trades = bills.trades;
+          // Store summary if available
+          if (bills.summary) {
+            setBillSummary(bills.summary);
+          } else {
+            // Calculate summary from trades if not provided
+            const summary = calculateBillSummary(trades);
+            setBillSummary(summary);
+          }
+        } 
+        // If response is directly an array of trades
+        else if (Array.isArray(bills)) {
+          trades = bills;
+          // Calculate summary from trades
+          const summary = calculateBillSummary(trades);
+          setBillSummary(summary);
+        }
+      } 
+      // Handle plain array response
+      else if (Array.isArray(bills)) {
+        trades = bills;
+        const summary = calculateBillSummary(trades);
+        setBillSummary(summary);
+      }
+      
+      setBillInfo(trades);
     } catch (error) {
       setBillInfo([]);
+      setBillSummary(null);
     }
+  };
+
+  const calculateBillSummary = (trades) => {
+    if (!Array.isArray(trades) || trades.length === 0) {
+      return null;
+    }
+    
+    // Sort by date to get period range
+    const sortedTrades = [...trades].sort((a, b) => {
+      const dateA = new Date(a.OrderDate || a.ClosedAt || '');
+      const dateB = new Date(b.OrderDate || b.ClosedAt || '');
+      return dateA - dateB;
+    });
+    
+    const firstTrade = sortedTrades[0];
+    const lastTrade = sortedTrades[sortedTrades.length - 1];
+    
+    const totalTrades = trades.length;
+    const totalBrokerage = trades.reduce((sum, t) => sum + parseFloat(t.Brokerage || 0), 0);
+    const grossPL = trades.reduce((sum, t) => sum + parseFloat(t.P_L || 0), 0);
+    const netPL = grossPL - totalBrokerage;
+    
+    return {
+      TotalTrades: totalTrades,
+      TotalBrokerage: totalBrokerage.toFixed(2),
+      GrossPL: grossPL.toFixed(2),
+      NetPL: netPL.toFixed(2),
+      PeriodStart: firstTrade?.OrderDate || firstTrade?.ClosedAt || '',
+      PeriodEnd: lastTrade?.OrderDate || lastTrade?.ClosedAt || ''
+    };
   };
 
   const getNotifications = async () => {
@@ -687,83 +750,115 @@ const Profile = () => {
       </Modal>
 
       <Modal show={showInvoiceBillModal} onClose={() => setShowInvoiceBillModal(false)} title="Bill & Invoice" size="lg">
-        <div className="overflow-x-auto max-h-[70vh]">
-          <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-gray-900">
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-2 px-2 text-gray-300">S.No</th>
-                <th className="text-left py-2 px-2 text-gray-300">Script Name<br /><span className="text-[10px] text-gray-400">Category, Lot</span></th>
-                <th className="text-center py-2 px-2 text-gray-300">Order Price<br /><span className="text-[10px] text-gray-400">Date & Time</span></th>
-                <th className="text-center py-2 px-2 text-gray-300">Close Price<br /><span className="text-[10px] text-gray-400">Date & Time</span></th>
-                <th className="text-right py-2 px-2 text-gray-300">Profit/Loss</th>
-                <th className="text-right py-2 px-2 text-gray-300">Brokerage</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-300">
-              {billInfo && billInfo.length > 0 ? (
-                <>
-                  {billInfo.map((b, idx) => {
-                    const pl = parseInt(b.P_L || 0);
-                    const brokerage = parseInt(b.Brokerage || 0);
-                    return (
-                      <tr key={idx} className="border-b border-gray-700 hover:bg-gray-700/30">
-                        <td className="py-2 px-2">{idx + 1}</td>
-                        <td className="py-2 px-2">
-                          <div className="font-medium text-white">{b.ScriptName || '-'}</div>
-                          <div className="text-[10px] text-gray-400">{b.OrderCategory || '-'} ({b.Lot || 0})</div>
-                        </td>
-                        <td className="py-2 px-2 text-center">
-                          <div className="font-medium">{b.OrderPrice || '-'}</div>
-                          <div className="text-[10px] text-gray-400">{b.OrderDate || ''}<br />{b.OrderTime || ''}</div>
-                        </td>
-                        <td className="py-2 px-2 text-center">
-                          <div className="font-medium">{b.BroughtBy || '-'}</div>
-                          <div className="text-[10px] text-gray-400">{b.ClosedAt || ''}<br />{b.ClosedTime || ''}</div>
-                        </td>
-                        <td className={`py-2 px-2 text-right font-medium ${pl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {pl}
-                        </td>
-                        <td className="py-2 px-2 text-right text-gray-300">{brokerage}</td>
-                      </tr>
-                    );
-                  })}
-                  {/* Total Row */}
-                  {(() => {
-                    const totalPL = billInfo.reduce((sum, b) => sum + parseInt(b.P_L || 0), 0);
-                    const totalBrokerage = billInfo.reduce((sum, b) => sum + parseInt(b.Brokerage || 0), 0);
-                    const netPL = totalPL - totalBrokerage;
-                    
-                    return (
-                      <>
-                        <tr className="border-t-2 border-gray-600 bg-gray-800">
-                          <td colSpan="4" className="py-2 px-2 text-center font-semibold text-gray-200">
-                            Total of Profit & Loss and Brokerage
-                          </td>
-                          <td className="py-2 px-2 text-right font-bold text-gray-200">{totalPL}</td>
-                          <td className="py-2 px-2 text-right font-bold text-gray-200">{totalBrokerage}</td>
-                        </tr>
-                        <tr className="bg-gray-900">
-                          <td colSpan="4" className="py-2 px-2 text-center font-semibold text-gray-200">
-                            Net Profit & Loss
-                          </td>
-                          <td colSpan="2" className={`py-2 px-2 text-right font-bold text-lg ${netPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {netPL}
-                          </td>
-                        </tr>
-                      </>
-                    );
-                  })()}
-                </>
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center py-8 text-gray-400 text-sm">
-                    No bill information found
-                  </td>
+        {/* Summary Section */}
+        {billSummary && (
+          <div className="mb-4 p-4 bg-gray-900 rounded-lg border border-gray-700">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-semibold text-gray-200">Period Summary</h3>
+              <span className="text-xs text-gray-400">
+                {billSummary.PeriodStart || '-'} to {billSummary.PeriodEnd || '-'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="flex justify-between border-b border-gray-700 pb-2">
+                <span className="text-gray-400">Total Trades:</span>
+                <span className="text-white font-medium">{billSummary.TotalTrades || 0}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-700 pb-2">
+                <span className="text-gray-400">Total Brokerage:</span>
+                <span className="text-white font-medium">₹{parseFloat(billSummary.TotalBrokerage || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-700 pb-2">
+                <span className="text-gray-400">Gross P/L:</span>
+                <span className={`font-medium ${parseFloat(billSummary.GrossPL || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  ₹{parseFloat(billSummary.GrossPL || 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-gray-700 pb-2">
+                <span className="text-gray-400">Net P/L:</span>
+                <span className={`font-bold text-base ${parseFloat(billSummary.NetPL || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  ₹{parseFloat(billSummary.NetPL || 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Trades Table */}
+        {billInfo && billInfo.length > 0 ? (
+          <div className="overflow-x-auto max-h-[70vh]">
+            <table className="w-full text-xs">
+              <thead className="sticky top-0 bg-gray-900">
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-2 px-2 text-gray-300">S.No</th>
+                  <th className="text-left py-2 px-2 text-gray-300">Script Name<br /><span className="text-[10px] text-gray-400">Category, Lot</span></th>
+                  <th className="text-center py-2 px-2 text-gray-300">Order Price<br /><span className="text-[10px] text-gray-400">Date & Time</span></th>
+                  <th className="text-center py-2 px-2 text-gray-300">Close Price<br /><span className="text-[10px] text-gray-400">Date & Time</span></th>
+                  <th className="text-right py-2 px-2 text-gray-300">Profit/Loss</th>
+                  <th className="text-right py-2 px-2 text-gray-300">Brokerage</th>
                 </tr>
-              )}
+              </thead>
+              <tbody className="text-gray-300">
+              {billInfo.map((b, idx) => {
+                const pl = parseFloat(b.P_L || 0);
+                const brokerage = parseFloat(b.Brokerage || 0);
+                
+                return (
+                  <tr key={idx} className="border-b border-gray-700 hover:bg-gray-700/30">
+                    <td className="py-2 px-2">{idx + 1}</td>
+                    <td className="py-2 px-2">
+                      <div className="font-medium text-white">{b.ScriptName || '-'}</div>
+                      <div className="text-[10px] text-gray-400">{b.OrderCategory || '-'} ({b.Lot || 0})</div>
+                    </td>
+                    <td className="py-2 px-2 text-center">
+                      <div className="font-medium">{b.OrderPrice || '-'}</div>
+                      <div className="text-[10px] text-gray-400">{b.OrderDate || ''}<br />{b.OrderTime || ''}</div>
+                    </td>
+                    <td className="py-2 px-2 text-center">
+                      <div className="font-medium">{b.BroughtBy || '-'}</div>
+                      <div className="text-[10px] text-gray-400">{b.ClosedAt || ''}<br />{b.ClosedTime || ''}</div>
+                    </td>
+                    <td className={`py-2 px-2 text-right font-medium ${pl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      ₹{pl.toFixed(2)}
+                    </td>
+                    <td className="py-2 px-2 text-right text-gray-300">₹{brokerage.toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+              {/* Total Row */}
+              {(() => {
+                const totalPL = billInfo.reduce((sum, b) => sum + parseFloat(b.P_L || 0), 0);
+                const totalBrokerage = billInfo.reduce((sum, b) => sum + parseFloat(b.Brokerage || 0), 0);
+                const netPL = totalPL - totalBrokerage;
+                
+                return (
+                  <>
+                    <tr className="border-t-2 border-gray-600 bg-gray-800">
+                      <td colSpan="4" className="py-2 px-2 text-center font-semibold text-gray-200">
+                        Total of Profit & Loss and Brokerage
+                      </td>
+                      <td className="py-2 px-2 text-right font-bold text-gray-200">₹{totalPL.toFixed(2)}</td>
+                      <td className="py-2 px-2 text-right font-bold text-gray-200">₹{totalBrokerage.toFixed(2)}</td>
+                    </tr>
+                    <tr className="bg-gray-900">
+                      <td colSpan="4" className="py-2 px-2 text-center font-semibold text-gray-200">
+                        Net Profit & Loss
+                      </td>
+                      <td colSpan="2" className={`py-2 px-2 text-right font-bold text-lg ${netPL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        ₹{netPL.toFixed(2)}
+                      </td>
+                    </tr>
+                  </>
+                );
+              })()}
             </tbody>
           </table>
-        </div>
+          </div>
+        ) : (
+          <div className="text-center text-gray-400 py-8 text-sm">
+            No trades found for the selected period.
+          </div>
+        )}
       </Modal>
 
       <Modal show={showUserProfileModal} onClose={() => setShowUserProfileModal(false)} title="User Trade Profile" size="lg">
@@ -771,9 +866,9 @@ const Profile = () => {
       </Modal>
 
             <Modal show={showDepositModal} onClose={() => setShowDepositModal(false)} title="Deposit Online" size="lg">
-        <div className="flex">
+        <div className="">
           {/* Left Side - QR Code (col-lg-7) */}
-          <div className="w-[58%] pr-4 border-r border-gray-700">
+          <div className=" ">
             <div className="text-center">
               {depositData.qrCodeUrl ? (
                 <>
@@ -791,7 +886,7 @@ const Profile = () => {
           </div>
 
           {/* Right Side - Form (col-lg-5) */}
-          <div className="w-[42%] pl-4">
+          <div className="">
             <p className="text-gray-400 text-sm mb-3">
               <b>Please fill the details after payment for payment approval.</b>
             </p>

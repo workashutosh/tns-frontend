@@ -20,7 +20,7 @@ const Welcome = () => {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="p-6">
-        <img src={logo} alt="TradeNstocko Logo" className="w-10 h-10 rounded-lg object-contain" />
+        <img src={logo} alt="TradeNstocko Logo" className="w-20 h-20 rounded-lg object-contain" />
       </div>
 
       {/* Main Content */}

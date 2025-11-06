@@ -14,6 +14,7 @@ import OnboardingStep2 from './pages/OnboardingStep2';
 import Welcome from './pages/Welcome';
 import Registration from './pages/Registration';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
+import OrderTrade from './pages/OrderTrade';
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -47,6 +48,10 @@ function AppRoutes() {
       <Route 
         path="/marketwatch" 
         element={isAuthenticated ? <MarketWatch /> : <Navigate to="/login" />} 
+      />
+      <Route 
+        path="/order/:token" 
+        element={isAuthenticated ? <OrderTrade /> : <Navigate to="/login" />} 
       />
       <Route 
         path="/orders" 

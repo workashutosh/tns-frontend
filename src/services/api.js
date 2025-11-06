@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-// Base API URL - always use production API
-const API_BASE_URL = 'http://localhost:5000/api';
+// Base API URL
+// - In production (https), default to same-origin proxy "/api" to avoid mixed-content
+// - Allow override via Vite env: VITE_API_BASE_URL
+// - In dev (http), fall back to the direct IP endpoint
+//const API_BASE_URL = 'https://www.api.tradenstocko.com/api/';
+const API_BASE_URL = 'http://localhost:5000/api/';
 
 // Create axios instance
 const api = axios.create({
@@ -91,7 +95,7 @@ export const authAPI = {
       return response.data;
     } catch (error) {
       throw error;
-    }
+    } 
   },
 
   // Register user

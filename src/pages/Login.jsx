@@ -63,7 +63,7 @@ const Login = () => {
         localStorage.setItem("userid", response.UserId || '');
         localStorage.setItem("ClientName", response.ClientName || '');
         localStorage.setItem("oldpassword", formData.password);
-        localStorage.setItem("Refid", '4355');
+        localStorage.setItem("Refid", response.Refid || '');
         localStorage.setItem("isonlinepayment", response.isonlinepayment || '');
         localStorage.setItem("MobileNo", response.MobileNo || '');
         localStorage.setItem("EmailId", response.EmailId || '');
@@ -168,6 +168,39 @@ const Login = () => {
         localStorage.setItem("TotalActive", response.TotalActive || '');
         localStorage.setItem("TotalPending", response.TotalPending || '');
         localStorage.setItem("TotalClosed", response.TotalClosed || '');
+        
+        // Crypto trading fields
+        localStorage.setItem("Trade_in_crypto", response.Trade_in_crypto || '');
+        localStorage.setItem("CryptoBrokerageType", response.CryptoBrokerageType || '');
+        localStorage.setItem("CryptoBrokerage", response.CryptoBrokerage || '');
+        localStorage.setItem("CryptoIntradayMargin", response.CryptoIntradayMargin || '');
+        localStorage.setItem("MinLotSingleTradeCrypto", response.MinLotSingleTradeCrypto || '');
+        localStorage.setItem("MaxLotSingleTradeCrypto", response.MaxLotSingleTradeCrypto || '');
+        localStorage.setItem("MaxLotOverAllTradeCrypto", response.MaxLotOverAllTradeCrypto || '');
+        localStorage.setItem("TradeCryptoIntradayClosing", response.TradeCryptoIntradayClosing || '');
+        
+        // Forex trading fields
+        localStorage.setItem("Trade_in_forex", response.Trade_in_forex || '');
+        localStorage.setItem("ForexBrokerageType", response.ForexBrokerageType || '');
+        localStorage.setItem("ForexBrokerage", response.ForexBrokerage || '');
+        localStorage.setItem("ForexIntradayMargin", response.ForexIntradayMargin || '');
+        localStorage.setItem("MinLotSingleTradeForex", response.MinLotSingleTradeForex || '');
+        localStorage.setItem("MaxLotSingleTradeForex", response.MaxLotSingleTradeForex || '');
+        localStorage.setItem("MaxLotOverAllTradeForex", response.MaxLotOverAllTradeForex || '');
+        localStorage.setItem("TradeForexIntradayClosing", response.TradeForexIntradayClosing || '');
+        
+        // Commodity trading fields
+        localStorage.setItem("Trade_in_commodity", response.Trade_in_commodity || '');
+        localStorage.setItem("CommodityBrokerageType", response.CommodityBrokerageType || '');
+        localStorage.setItem("CommodityBrokerage", response.CommodityBrokerage || '');
+        localStorage.setItem("CommodityIntradayMargin", response.CommodityIntradayMargin || '');
+        localStorage.setItem("MinLotSingleTradeCommodity", response.MinLotSingleTradeCommodity || '');
+        localStorage.setItem("MaxLotSingleTradeCommodity", response.MaxLotSingleTradeCommodity || '');
+        localStorage.setItem("MaxLotOverAllTradeCommodity", response.MaxLotOverAllTradeCommodity || '');
+        localStorage.setItem("TradeCommodityIntradayClosing", response.TradeCommodityIntradayClosing || '');
+        
+        // Save the complete response object as JSON for easy access
+        localStorage.setItem("loginResponse", JSON.stringify(response));
         
         login(userData);
         toast.success(`Welcome back, ${response.ClientName}!`);
