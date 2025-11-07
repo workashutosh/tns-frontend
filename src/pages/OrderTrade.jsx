@@ -52,6 +52,7 @@ export default function OrderTrade() {
   });
   const [loading, setLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
+  const [placingOrderType, setPlacingOrderType] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -62,9 +63,13 @@ export default function OrderTrade() {
   const wsRef = useRef(null);
   const lastBarRef = useRef(null);
 
-  // Initialize symbol if not provided via state
+  // Initialize symbol from location.state or localStorage
   useEffect(() => {
-    if (!symbol && token) {
+    // If symbol is provided via location.state, use it
+    if (initialSymbol && initialSymbol.SymbolToken) {
+      setSymbol(initialSymbol);
+    } else if (token && (!symbol || symbol.SymbolToken !== token)) {
+      // Fallback to localStorage if no symbol in state
       const storedScript = localStorage.getItem('selected_script');
       const storedLot = localStorage.getItem('selectedlotsize');
       const exchange = localStorage.getItem('selected_exchange') || 'MCX';
@@ -74,10 +79,11 @@ export default function OrderTrade() {
         Lotsize: storedLot || 1,
         ExchangeType: exchange,
         buy: 0,
-        sell: 0
+        sell: 0,
+        ltp: 0
       });
     }
-  }, [symbol, token]);
+  }, [initialSymbol, token]);
 
   // Load user balance on mount
   useEffect(() => {
@@ -185,18 +191,59 @@ export default function OrderTrade() {
   };
 
   const formatPrice = (p) => parseFloat(p || 0).toFixed(2);
-  const getCurrentPrice = () => {
+  
+  // Check if symbol is from FX tabs (Crypto/Forex/Commodity)
+  const isFXSymbol = () => {
+    if (!symbol) return false;
+    const exchtype = symbol.ExchangeType || '';
+    return ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
+  };
+
+  // Get USD price for display (for FX symbols)
+  const getBuyPriceUSD = () => {
     if (!symbol) return 0;
-    return orderData.orderType === 'BUY' ? symbol.buy : symbol.sell;
+    if (activeTab === 'market') {
+      return parseFloat(symbol.buyUSD || 0);
+    }
+    // For limit orders, show the USD price user entered
+    return parseFloat(orderData.price || 0);
+  };
+
+  const getSellPriceUSD = () => {
+    if (!symbol) return 0;
+    if (activeTab === 'market') {
+      return parseFloat(symbol.sellUSD || 0);
+    }
+    // For limit orders, show the USD price user entered
+    return parseFloat(orderData.price || 0);
   };
 
   const calculateMargin = () => {
     if (!symbol || !orderData.lotSize) return 0;
-    const lotSize = parseInt(orderData.lotSize) || 0;
-    if (lotSize < 1) return 0;
-    const price = activeTab === 'market' ? (orderData.orderType === 'BUY' ? symbol?.buy : symbol?.sell) : parseFloat(orderData.price) || 0;
-    let marginvalue = 0;
+    const lotSize = parseFloat(orderData.lotSize) || 0;
+    if (lotSize <= 0) return 0;
+    // Use current orderType for margin calculation
+    const currentOrderType = orderData.orderType;
     const exchtype = symbol?.ExchangeType || 'MCX';
+    const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
+    
+    // Get price in INR for margin calculation
+    let price;
+    if (activeTab === 'market') {
+      price = currentOrderType === 'BUY' ? symbol?.buy : symbol?.sell;
+    } else {
+      // Limit order
+      if (isFX && orderData.price && symbol?.buy && symbol?.buyUSD) {
+        // Convert USD price to INR using the exchange rate
+        const usdToInrRate = symbol.buy / symbol.buyUSD;
+        price = parseFloat(orderData.price) * usdToInrRate;
+      } else {
+        // For non-FX or if conversion data not available, use price as-is (INR)
+        price = parseFloat(orderData.price) || 0;
+      }
+    }
+    
+    let marginvalue = 0;
     const Intraday_Exposure_Margin_MCX = localStorage.getItem('Intraday_Exposure_Margin_MCX');
     const Intraday_Exposure_Margin_Equity = localStorage.getItem('Intraday_Exposure_Margin_Equity');
     const Intraday_Exposure_Margin_CDS = localStorage.getItem('Intraday_Exposure_Margin_CDS');
@@ -208,42 +255,68 @@ export default function OrderTrade() {
         const symarr = (symbol.SymbolName || '').split('_');
         const similersym = symarr[0]?.toString().trim();
         const Intraday_Exposure = localStorage.getItem('MCX_Exposure_Lot_wise_' + similersym + '_Intraday');
-        marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure || 0);
+        marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure || 0);
       } else {
-        const finallotsize = (parseInt(lotSize) * parseInt(symbol?.Lotsize || 1));
-        marginvalue = (parseInt(price) * finallotsize) / parseInt(Intraday_Exposure_Margin_MCX || 10);
+        const finallotsize = (parseFloat(lotSize) * parseFloat(symbol?.Lotsize || 1));
+        marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_MCX || 10);
       }
     } else if (exchtype === 'NSE') {
       if (NSE_Exposure_Type === 'per_lot') {
-        marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure_Margin_Equity || 0);
+        marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_Equity || 0);
       } else {
-        const finallotsize = (parseInt(lotSize) * parseInt(symbol?.Lotsize || 1));
-        marginvalue = (parseInt(price) * finallotsize) / parseInt(Intraday_Exposure_Margin_Equity || 10);
+        const finallotsize = (parseFloat(lotSize) * parseFloat(symbol?.Lotsize || 1));
+        marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_Equity || 10);
       }
     } else {
       if (CDS_Exposure_Type === 'per_lot') {
-        marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure_Margin_CDS || 0);
+        marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_CDS || 0);
       } else {
-        const finallotsize = (parseInt(lotSize) * parseInt(symbol?.Lotsize || 1));
-        marginvalue = (parseInt(price) * finallotsize) / parseInt(Intraday_Exposure_Margin_CDS || 10);
+        const finallotsize = (parseFloat(lotSize) * parseFloat(symbol?.Lotsize || 1));
+        marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_CDS || 10);
       }
     }
     return marginvalue;
   };
 
-  const placeOrder = async () => {
+  const placeOrder = async (orderTypeOverride = null) => {
+    // Use override if provided, otherwise use current orderData.orderType
+    const orderType = orderTypeOverride || orderData.orderType;
+    
+    // Temporarily set orderType if override is provided
+    if (orderTypeOverride) {
+      setOrderData(prev => ({ ...prev, orderType: orderTypeOverride }));
+    }
+    
     if (!symbol) { setError('No symbol selected'); return; }
-    const lotSize = parseInt(orderData.lotSize) || 0;
-    if (lotSize < 1) { setError('Lot size must be at least 1'); return; }
+    const lotSize = parseFloat(orderData.lotSize) || 0;
+    if (lotSize <= 0) { setError('Lot size must be greater than 0'); return; }
     if (activeTab === 'limit' && !orderData.price) { setError('Price is required for limit orders'); return; }
 
     setOrderLoading(true);
+    setPlacingOrderType(orderType);
     setError('');
     setSuccess('');
     try {
       let marginvalue = 0; let holdmarginvalue = 0; let finallotsize = 0;
       const exchtype = symbol.ExchangeType || 'MCX';
-      const orderprice = activeTab === 'market' ? (orderData.orderType === 'BUY' ? symbol.buy : symbol.sell) : parseFloat(orderData.price);
+      const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
+      
+      // Get price in INR for margin calculation and order placement
+      let orderprice;
+      if (activeTab === 'market') {
+        orderprice = orderType === 'BUY' ? symbol.buy : symbol.sell;
+      } else {
+        // Limit order
+        if (isFX && orderData.price && symbol.buy && symbol.buyUSD) {
+          // Convert USD price to INR using the exchange rate
+          const usdToInrRate = symbol.buy / symbol.buyUSD;
+          orderprice = parseFloat(orderData.price) * usdToInrRate;
+        } else {
+          // For non-FX or if conversion data not available, use price as-is (INR)
+          orderprice = parseFloat(orderData.price);
+        }
+      }
+      
       const Intraday_Exposure_Margin_MCX = localStorage.getItem('Intraday_Exposure_Margin_MCX');
       const Holding_Exposure_Margin_MCX = localStorage.getItem('Holding_Exposure_Margin_MCX');
       const Intraday_Exposure_Margin_Equity = localStorage.getItem('Intraday_Exposure_Margin_Equity');
@@ -260,35 +333,35 @@ export default function OrderTrade() {
           const similersym = symarr[0]?.toString().trim();
           const Intraday_Exposure = localStorage.getItem('MCX_Exposure_Lot_wise_' + similersym + '_Intraday');
           const Intraday_hold_Exposure = localStorage.getItem('MCX_Exposure_Lot_wise_' + similersym + '_Holding');
-          marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure || 0);
-          holdmarginvalue = parseInt(lotSize) * parseInt(Intraday_hold_Exposure || 0);
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure || 0);
+          holdmarginvalue = parseFloat(lotSize) * parseFloat(Intraday_hold_Exposure || 0);
         } else {
-          finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-          marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_MCX || 10);
-          holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_MCX || 10);
+          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_MCX || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_MCX || 10);
         }
       } else if (exchtype === 'NSE') {
         if (NSE_Exposure_Type === 'per_lot') {
-          marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure_Margin_Equity || 0);
-          holdmarginvalue = parseInt(lotSize) * parseInt(Holding_Exposure_Margin_Equity || 0);
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_Equity || 0);
+          holdmarginvalue = parseFloat(lotSize) * parseFloat(Holding_Exposure_Margin_Equity || 0);
         } else {
-          finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-          marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_Equity || 10);
-          holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_Equity || 10);
+          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_Equity || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_Equity || 10);
         }
       } else {
         if (CDS_Exposure_Type === 'per_lot') {
-          marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure_Margin_CDS || 0);
-          holdmarginvalue = parseInt(lotSize) * parseInt(Holding_Exposure_Margin_CDS || 0);
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_CDS || 0);
+          holdmarginvalue = parseFloat(lotSize) * parseFloat(Holding_Exposure_Margin_CDS || 0);
         } else {
-          finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-          marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_CDS || 10);
-          holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_CDS || 10);
+          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_CDS || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_CDS || 10);
         }
       }
 
       const marginAvailable = parseFloat(userBalance.marginAvailable || 0);
-      if (parseInt(marginvalue) > parseInt(marginAvailable)) {
+      if (parseFloat(marginvalue) > parseFloat(marginAvailable)) {
         setError('Insufficient margin available. Please reduce lot size.');
         setOrderLoading(false);
         return;
@@ -297,7 +370,7 @@ export default function OrderTrade() {
       let isstoplossorder = '';
       if (activeTab === 'order') {
         const bid = symbol.sell || 0; const ask = symbol.buy || 0;
-        if (orderData.orderType === 'SELL') {
+        if (orderType === 'SELL') {
           isstoplossorder = parseFloat(orderprice) > parseFloat(bid) ? 'false' : 'true';
         } else {
           isstoplossorder = parseFloat(orderprice) > parseFloat(ask) ? 'true' : 'false';
@@ -306,18 +379,18 @@ export default function OrderTrade() {
 
       const actualLotSize = localStorage.getItem('SymbolLotSize') || symbol.Lotsize || 1;
       const orderPayload = {
-        Id: '', OrderDate: '', OrderTime: '', actualLot: actualLotSize.toString(), selectedlotsize: (parseInt(orderData.lotSize)||1).toString(), OrderNo: '',
+        Id: '', OrderDate: '', OrderTime: '', actualLot: actualLotSize.toString(), selectedlotsize: (parseFloat(orderData.lotSize)||1).toString(), OrderNo: '',
         UserId: localStorage.getItem('userid') || user.UserId,
         UserName: localStorage.getItem('ClientName') || user.UserName || user.UserId,
-        OrderCategory: orderData.orderType,
+        OrderCategory: orderType,
         OrderType: activeTab === 'market' ? 'Market' : (isstoplossorder === 'true' ? 'S/L' : 'Limit'),
         ScriptName: symbol.SymbolName,
         TokenNo: symbol.SymbolToken,
-        ActionType: activeTab === 'market' ? (orderData.orderType === 'BUY' ? 'Bought By Trader' : 'Sold By Trader') : 'Order Placed @@',
+        ActionType: activeTab === 'market' ? (orderType === 'BUY' ? 'Bought By Trader' : 'Sold By Trader') : 'Order Placed @@',
         OrderPrice: orderprice.toString(),
-        Lot: (parseInt(orderData.lotSize)||1).toString(),
-        MarginUsed: Math.round(marginvalue).toString(),
-        HoldingMarginReq: Math.round(holdmarginvalue).toString(),
+        Lot: (parseFloat(orderData.lotSize)||1).toString(),
+        MarginUsed: Math.round(parseFloat(marginvalue)).toString(),
+        HoldingMarginReq: Math.round(parseFloat(holdmarginvalue)).toString(),
         OrderStatus: activeTab === 'market' ? 'Active' : 'Pending',
         SymbolType: symbol.ExchangeType === 'CDS' ? 'OPT' : (symbol.ExchangeType || 'MCX'),
         isstoplossorder: activeTab === 'order' ? isstoplossorder : '',
@@ -333,6 +406,7 @@ export default function OrderTrade() {
       if (canTrade !== 'true' && canTrade !== true) {
         setError(canTrade || 'Order validation failed');
         setOrderLoading(false);
+        setPlacingOrderType(null);
         return;
       }
 
@@ -360,9 +434,16 @@ export default function OrderTrade() {
 
       setSuccess('Order placed successfully!');
       setOrderLoading(false);
+      setPlacingOrderType(null);
+      
+      // Navigate back after showing success
+      setTimeout(() => {
+        navigate(-1);
+      }, 2000);
     } catch (e) {
       setError(e?.response?.data || e?.message || 'Failed to place order');
       setOrderLoading(false);
+      setPlacingOrderType(null);
     }
   };
 
@@ -375,7 +456,6 @@ export default function OrderTrade() {
         <div className="font-semibold">
           {symbol?.SymbolName?.split('_')[0] || 'Place Order'}
         </div>
-        <div className="ml-auto text-sm text-gray-400">Token: {token}</div>
       </div>
 
       {/* Chart */}
@@ -399,7 +479,7 @@ export default function OrderTrade() {
       </div>
 
       {/* Order form */}
-      <div className="p-3 flex-1 overflow-y-auto">
+      <div className="p-3 flex-1 overflow-y-auto flex flex-col">
         <div className="flex border-b border-gray-700 mb-3">
           <button
             onClick={() => setActiveTab('market')}
@@ -419,11 +499,22 @@ export default function OrderTrade() {
           <label className="block text-gray-300 text-xs font-medium mb-1">Lot Size</label>
           <input
             type="number"
-            min="1"
+            min="0.01"
+            step="0.01"
             max="999"
             value={orderData.lotSize}
             onChange={(e) => {
-              const v = e.target.value; if (v === '' || v === '0') handleInputChange('lotSize',''); else handleInputChange('lotSize', parseInt(v)||'');
+              const value = e.target.value;
+              if (value === '' || value === '0' || value === '0.') {
+                handleInputChange('lotSize', '');
+              } else {
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue) && numValue > 0) {
+                  handleInputChange('lotSize', value);
+                } else if (value === '' || value === '-') {
+                  handleInputChange('lotSize', value);
+                }
+              }
             }}
             className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
@@ -462,23 +553,71 @@ export default function OrderTrade() {
           </div>
         )}
         {success && (
-          <div className="mb-2 p-2 bg-green-900 border border-green-600 rounded text-green-400 text-xs">{success}</div>
+          <div className="mb-2 p-2 bg-green-900 border border-green-600 rounded flex items-center">
+            <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
+            <span className="text-green-400 text-xs">{success}</span>
+          </div>
         )}
 
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <button onClick={() => handleInputChange('orderType','SELL')} className={`py-2 px-2 rounded text-xs font-medium ${orderData.orderType==='SELL'?'bg-red-600 text-white':'bg-gray-700 text-gray-300'}`}>
-            <TrendingDown className="w-3 h-3 inline mr-1" />
-            Sell @ ₹{formatPrice(orderData.orderType==='SELL'? getCurrentPrice(): orderData.price)}
+        {/* Order Buttons - Direct Place Order at Bottom */}
+        <div className="grid grid-cols-2 gap-2 mt-auto pt-4">
+          <button
+            onClick={() => placeOrder('SELL')}
+            disabled={orderLoading || loading}
+            className="py-3 px-3 rounded-lg text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-red-600/50 flex items-center justify-center gap-2"
+          >
+            {orderLoading && placingOrderType === 'SELL' ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <span>Placing...</span>
+              </>
+            ) : (
+              <>
+                <TrendingDown className="w-4 h-4" />
+                <div className="text-center">
+                  <div className="text-xs opacity-90 mb-0.5">SELL</div>
+                  {isFXSymbol() ? (
+                    <div className="text-base font-bold">
+                      ${formatPrice(getSellPriceUSD())}
+                    </div>
+                  ) : (
+                    <div className="text-base font-bold">
+                      ₹{formatPrice(activeTab === 'market' ? symbol?.sell : orderData.price || symbol?.sell)}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </button>
-          <button onClick={() => handleInputChange('orderType','BUY')} className={`py-2 px-2 rounded text-xs font-medium ${orderData.orderType==='BUY'?'bg-green-600 text-white':'bg-gray-700 text-gray-300'}`}>
-            <TrendingUp className="w-3 h-3 inline mr-1" />
-            Buy @ ₹{formatPrice(orderData.orderType==='BUY'? getCurrentPrice(): orderData.price)}
+          <button
+            onClick={() => placeOrder('BUY')}
+            disabled={orderLoading || loading}
+            className="py-3 px-3 rounded-lg text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-green-600/50 flex items-center justify-center gap-2"
+          >
+            {orderLoading && placingOrderType === 'BUY' ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <span>Placing...</span>
+              </>
+            ) : (
+              <>
+                <TrendingUp className="w-4 h-4" />
+                <div className="text-center">
+                  <div className="text-xs opacity-90 mb-0.5">BUY</div>
+                  {isFXSymbol() ? (
+                    <div className="text-base font-bold">
+                      ${formatPrice(getBuyPriceUSD())}
+                    </div>
+                  ) : (
+                    <div className="text-base font-bold">
+                      ₹{formatPrice(activeTab === 'market' ? symbol?.buy : orderData.price || symbol?.buy)}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </button>
         </div>
-
-        <button onClick={placeOrder} disabled={orderLoading || loading} className="w-full py-2 px-3 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-          {orderLoading ? 'Placing Order...' : `Place ${orderData.orderType} Order`}
-        </button>
       </div>
     </div>
   );

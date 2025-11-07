@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Plus, TrendingUp, ArrowLeft, X, Check, TrendingDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { tradingAPI } from '../services/api';
-import OrderModal from '../components/OrderModal';
 
 const MarketWatch = () => {
+  const navigate = useNavigate();
+  
   // Get user from localStorage (you can modify this based on your auth system)
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('user');
@@ -23,8 +25,6 @@ const MarketWatch = () => {
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [selectedTokens, setSelectedTokens] = useState(new Set());
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [selectedSymbol, setSelectedSymbol] = useState(null);
   const [usdToInrRate, setUsdToInrRate] = useState(88.65); // Default fallback rate
   
   const websocketRef = useRef(null);
@@ -34,6 +34,9 @@ const MarketWatch = () => {
   const updateCountRef = useRef(0);
   const searchTimeoutRef = useRef(null);
   const exchangeRateIntervalRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const tabsContainerRef = useRef(null);
+  const tabRefs = useRef({});
 
   // Build tabs dynamically based on localStorage values
   const buildTabs = () => {
@@ -228,6 +231,9 @@ const MarketWatch = () => {
             updated = true;
             updateCountRef.current++;
             
+            // Calculate LTP in USD (midpoint of best bid/ask)
+            const ltpUSD = bestBidPriceUSD && bestAskPriceUSD ? (bestBidPriceUSD + bestAskPriceUSD) / 2 : (bestBidPriceUSD || bestAskPriceUSD || 0);
+            
             // Calculate change (difference from previous LTP in INR)
             const prevLtp = token.ltp || ltp;
             const change = ltp - prevLtp;
@@ -237,6 +243,9 @@ const MarketWatch = () => {
               buy: bestAskPrice, // Already converted to INR
               sell: bestBidPrice, // Already converted to INR
               ltp: ltp, // Already converted to INR
+              buyUSD: bestAskPriceUSD, // USD price
+              sellUSD: bestBidPriceUSD, // USD price
+              ltpUSD: ltpUSD, // USD price
               chg: change, // Change in INR
               high: high, // Already converted to INR
               low: low, // Already converted to INR
@@ -645,7 +654,50 @@ const MarketWatch = () => {
     setActiveTab(tabId);
     setSearchQuery('');
     setSearchResults([]);
+    
+    // Scroll to top of market data list when tab changes
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+    
+    // Scroll the selected tab into view in the tabs container
+    setTimeout(() => {
+      const tabElement = tabRefs.current[tabId];
+      if (tabElement && tabsContainerRef.current) {
+        tabElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }, 100);
   };
+  
+  // Also scroll to top when activeTab changes (handles programmatic changes)
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+    
+    // Scroll active tab into view when activeTab changes
+    setTimeout(() => {
+      const tabElement = tabRefs.current[activeTab];
+      if (tabElement && tabsContainerRef.current) {
+        tabElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }, 100);
+  }, [activeTab]);
+
 
   // Handle search modal open
   const handleSearchModalOpen = async () => {
@@ -720,27 +772,20 @@ const MarketWatch = () => {
     initializeWebSocket();
   };
 
-  // Handle order modal (exactly like original implementation)
-  const handleOrderModalOpen = (symbol) => {
-    // Store symbol lot size in localStorage exactly like original
+  // Navigate to order page when symbol is clicked
+  const handleSymbolClick = (symbol) => {
+    // Store symbol data in localStorage for OrderTrade page
     if (symbol && symbol.SymbolToken) {
       localStorage.setItem("SymbolLotSize", symbol.Lotsize || 1);
       localStorage.setItem("selected_token", symbol.SymbolToken);
       localStorage.setItem("selected_script", symbol.SymbolName);
       localStorage.setItem("selectedlotsize", symbol.Lotsize || 1);
+      localStorage.setItem("selected_exchange", symbol.ExchangeType || 'MCX');
     }
-    setSelectedSymbol(symbol);
-    setShowOrderModal(true);
-  };
-
-  const handleOrderModalClose = () => {
-    setShowOrderModal(false);
-    setSelectedSymbol(null);
-  };
-
-  const handleOrderPlaced = () => {
-    // Refresh any relevant data after order placement
-    console.log('Order placed successfully');
+    // Navigate to order page with symbol data
+    navigate(`/order/${symbol.SymbolToken}`, {
+      state: { symbol }
+    });
   };
 
   const formatPrice = (price) => {
@@ -799,11 +844,19 @@ const MarketWatch = () => {
       </div>
 
       {/* Fixed Tabs */}
-      <div className="flex-shrink-0 bg-gray-900/50 border-b border-gray-800/50 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div 
+        ref={tabsContainerRef}
+        className="flex-shrink-0 bg-gray-900/50 border-b border-gray-800/50 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+      >
         <div className="flex">
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              ref={(el) => {
+                if (el) {
+                  tabRefs.current[tab.id] = el;
+                }
+              }}
               onClick={() => handleTabChange(tab.id)}
               className={`relative flex-1 min-w-[110px] py-3 px-4 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                 activeTab === tab.id
@@ -821,13 +874,17 @@ const MarketWatch = () => {
       </div>
 
       {/* Scrollable Market Data List */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         {currentSymbols.length > 0 ? (
           <div className="bg-gray-900">
             {currentSymbols.map((symbol) => {
               const changeValue = parseFloat(symbol.chg || 0);
               const ltpValue = parseFloat(symbol.ltp || 0);
               const prevLtpValue = parseFloat(symbol.prevLtp || ltpValue);
+              
+              // Check if this is a Crypto/Forex/Commodity tab (FX tabs)
+              const isFXTab = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(activeTab);
+              const ltpUSD = parseFloat(symbol.ltpUSD || 0);
               
               // Calculate percentage change
               const changePercent = ltpValue && changeValue ? 
@@ -847,7 +904,7 @@ const MarketWatch = () => {
                 <div
                   key={symbol.SymbolToken}
                   className="py-2.5 px-4 border-b border-gray-800 hover:bg-gray-800 transition-colors cursor-pointer group"
-                  onClick={() => handleOrderModalOpen(symbol)}
+                  onClick={() => handleSymbolClick(symbol)}
                 >
                   <div className="flex justify-between items-center">
                     <div className="flex-1 min-w-0">
@@ -865,12 +922,32 @@ const MarketWatch = () => {
                     </div>
                     
                     <div className="text-right flex-shrink-0">
-                      <div className={`text-sm font-semibold ${ltpColor} transition-colors`}>
-                        ₹{formatPrice(ltpValue)}
-                      </div>
-                      <div className={`text-xs font-medium ${changeColor}`}>
-                        {isPositive ? '+' : ''}{formatPrice(changeValue)} ({isPositive ? '+' : ''}{changePercent}%)
-                      </div>
+                      {isFXTab ? (
+                        <>
+                          {/* Show both USD and INR side by side for FX tabs */}
+                          <div className={`flex items-center gap-2 justify-end ${ltpColor} transition-colors`}>
+                            <div className="text-sm font-semibold">
+                              ${formatPrice(ltpUSD)}
+                            </div>
+                            <div className="text-xs font-medium opacity-80">
+                              ₹{formatPrice(ltpValue)}
+                            </div>
+                          </div>
+                          <div className={`text-xs font-medium ${changeColor} mt-0.5`}>
+                            {isPositive ? '+' : ''}{formatPrice(changeValue)} ({isPositive ? '+' : ''}{changePercent}%)
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* Show only INR for MCX/NSE/OPT tabs */}
+                          <div className={`text-sm font-semibold ${ltpColor} transition-colors`}>
+                            ₹{formatPrice(ltpValue)}
+                          </div>
+                          <div className={`text-xs font-medium ${changeColor}`}>
+                            {isPositive ? '+' : ''}{formatPrice(changeValue)} ({isPositive ? '+' : ''}{changePercent}%)
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1009,14 +1086,6 @@ const MarketWatch = () => {
         </div>
       )}
 
-      {/* Order Modal */}
-      <OrderModal
-        isOpen={showOrderModal}
-        onClose={handleOrderModalClose}
-        symbol={selectedSymbol}
-        user={user}
-        onOrderPlaced={handleOrderPlaced}
-      />
     </div>
   );
 };

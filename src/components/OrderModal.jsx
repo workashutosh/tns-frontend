@@ -23,9 +23,9 @@ const OrderModal = ({
     activePL: 0,
     m2m: 0
   });
-  const [activeOrders, setActiveOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
+  const [placingOrderType, setPlacingOrderType] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -33,7 +33,6 @@ const OrderModal = ({
   useEffect(() => {
     if (isOpen && user?.UserId) {
       loadUserBalance();
-      loadActiveOrders();
     }
   }, [isOpen, user?.UserId]);
 
@@ -50,6 +49,7 @@ const OrderModal = ({
       setError('');
       setSuccess('');
       setActiveTab('market');
+      setPlacingOrderType(null);
     }
   }, [isOpen]);
 
@@ -71,34 +71,6 @@ const OrderModal = ({
     }
   };
 
-  const loadActiveOrders = async () => {
-    try {
-      const response = await tradingAPI.getConsolidatedTrades(user.UserId);
-      
-      // Parse the response if it's a string
-      let orders = response;
-      if (typeof response === 'string') {
-        try {
-          orders = JSON.parse(response);
-        } catch (parseError) {
-          console.error('Error parsing orders:', parseError);
-          orders = [];
-        }
-      }
-      
-      // Ensure orders is an array
-      if (!Array.isArray(orders)) {
-        console.warn('Orders is not an array:', orders);
-        orders = [];
-      }
-      
-      setActiveOrders(orders || []);
-    } catch (error) {
-      console.error('Error loading active orders:', error);
-      setActiveOrders([]);
-    }
-  };
-
   const handleInputChange = (field, value) => {
     setOrderData(prev => ({
       ...prev,
@@ -114,9 +86,9 @@ const OrderModal = ({
       return false;
     }
 
-    const lotSize = parseInt(orderData.lotSize) || 0;
-    if (!orderData.lotSize || lotSize < 1) {
-      setError('Lot size must be at least 1');
+    const lotSize = parseFloat(orderData.lotSize) || 0;
+    if (!orderData.lotSize || lotSize <= 0) {
+      setError('Lot size must be greater than 0');
       return false;
     }
 
@@ -141,16 +113,30 @@ const OrderModal = ({
   const calculateMargin = () => {
     if (!symbol || !orderData.lotSize) return 0;
     
-    const lotSize = parseInt(orderData.lotSize) || 0;
-    if (lotSize < 1) return 0;
+    const lotSize = parseFloat(orderData.lotSize) || 0;
+    if (lotSize <= 0) return 0;
     
-    const price = activeTab === 'market' 
-      ? (orderData.orderType === 'BUY' ? symbol.buy : symbol.sell)
-      : parseFloat(orderData.price) || 0;
+    const exchtype = symbol.ExchangeType || 'MCX';
+    const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
+    
+    // Get price in INR for margin calculation
+    let price;
+    if (activeTab === 'market') {
+      price = orderData.orderType === 'BUY' ? symbol.buy : symbol.sell;
+    } else {
+      // Limit order
+      if (isFX && orderData.price && symbol.buy && symbol.buyUSD) {
+        // Convert USD price to INR using the exchange rate
+        const usdToInrRate = symbol.buy / symbol.buyUSD;
+        price = parseFloat(orderData.price) * usdToInrRate;
+      } else {
+        // For non-FX or if conversion data not available, use price as-is (INR)
+        price = parseFloat(orderData.price) || 0;
+      }
+    }
     
     // Use the same margin calculation logic as placeOrder
     let marginvalue = 0;
-    const exchtype = symbol.ExchangeType || 'MCX';
     
     // Get exposure margins from localStorage
     const Intraday_Exposure_Margin_MCX = localStorage.getItem("Intraday_Exposure_Margin_MCX");
@@ -163,31 +149,31 @@ const OrderModal = ({
     const CDS_Exposure_Type = localStorage.getItem("CDS_Exposure_Type");
     
     if (exchtype === 'MCX') {
-      if (MCX_Exposure_Type && MCX_Exposure_Type.includes("per_lot")) {
-        const symbolname = symbol.SymbolName;
-        const symarr = symbolname.split("_");
-        const similersym = symarr[0]?.toString().trim();
-        const Intraday_Exposure = localStorage.getItem("MCX_Exposure_Lot_wise_" + similersym + "_Intraday");
-        marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure || 0);
+        if (MCX_Exposure_Type && MCX_Exposure_Type.includes("per_lot")) {
+          const symbolname = symbol.SymbolName;
+          const symarr = symbolname.split("_");
+          const similersym = symarr[0]?.toString().trim();
+          const Intraday_Exposure = localStorage.getItem("MCX_Exposure_Lot_wise_" + similersym + "_Intraday");
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure || 0);
+        } else {
+          const finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_MCX || 10);
+        }
+      } else if (exchtype === 'NSE') {
+        if (NSE_Exposure_Type === "per_lot") {
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_Equity || 0);
+        } else {
+          const finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_Equity || 10);
+        }
       } else {
-        const finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-        marginvalue = (parseInt(price) * finallotsize) / parseInt(Intraday_Exposure_Margin_MCX || 10);
+        if (CDS_Exposure_Type === "per_lot") {
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_CDS || 0);
+        } else {
+          const finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_CDS || 10);
+        }
       }
-    } else if (exchtype === 'NSE') {
-      if (NSE_Exposure_Type === "per_lot") {
-        marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure_Margin_Equity || 0);
-      } else {
-        const finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-        marginvalue = (parseInt(price) * finallotsize) / parseInt(Intraday_Exposure_Margin_Equity || 10);
-      }
-    } else {
-      if (CDS_Exposure_Type === "per_lot") {
-        marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure_Margin_CDS || 0);
-      } else {
-        const finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-        marginvalue = (parseInt(price) * finallotsize) / parseInt(Intraday_Exposure_Margin_CDS || 10);
-      }
-    }
     
     return marginvalue;
   };
@@ -242,15 +228,49 @@ const OrderModal = ({
     }
   };
 
-  const placeOrder = async () => {
-    if (!validateOrder()) return;
+  const placeOrder = async (orderTypeOverride = null) => {
+    // Use override if provided, otherwise use current orderData.orderType
+    const orderType = orderTypeOverride || orderData.orderType;
+    
+    // Temporarily set orderType if override is provided
+    if (orderTypeOverride) {
+      setOrderData(prev => ({ ...prev, orderType: orderTypeOverride }));
+    }
+    
+    // Validate with the orderType we're using
+    if (!symbol) {
+      setError('No symbol selected');
+      return;
+    }
+
+    const lotSize = parseFloat(orderData.lotSize) || 0;
+    if (!orderData.lotSize || lotSize <= 0) {
+      setError('Lot size must be greater than 0');
+      return;
+    }
+
+    if (activeTab === 'limit' && !orderData.price) {
+      setError('Price is required for limit orders');
+      return;
+    }
+
+    if (orderData.stopLoss && parseFloat(orderData.stopLoss) <= 0) {
+      setError('Stop loss must be greater than 0');
+      return;
+    }
+
+    if (orderData.takeProfit && parseFloat(orderData.takeProfit) <= 0) {
+      setError('Take profit must be greater than 0');
+      return;
+    }
 
     setOrderLoading(true);
+    setPlacingOrderType(orderType);
     setError('');
     setSuccess('');
 
     try {
-      const lotSize = parseInt(orderData.lotSize) || 1;
+      const lotSize = parseFloat(orderData.lotSize) || 1;
       
       // Calculate margin exactly like original CSHTML implementation
       let marginvalue = 0;
@@ -258,9 +278,24 @@ const OrderModal = ({
       let finallotsize = 0;
       
       const exchtype = symbol.ExchangeType || 'MCX';
-      const orderprice = activeTab === 'market' ? 
-        (orderData.orderType === 'BUY' ? symbol.buy : symbol.sell) : 
-        parseFloat(orderData.price);
+      const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
+      
+      // For market orders, use INR prices directly
+      // For limit orders with FX symbols, convert USD input to INR
+      let orderprice;
+      if (activeTab === 'market') {
+        orderprice = orderType === 'BUY' ? symbol.buy : symbol.sell;
+      } else {
+        // Limit order
+        if (isFX && orderData.price && symbol.buy && symbol.buyUSD) {
+          // Convert USD price to INR using the exchange rate
+          const usdToInrRate = symbol.buy / symbol.buyUSD;
+          orderprice = parseFloat(orderData.price) * usdToInrRate;
+        } else {
+          // For non-FX or if conversion data not available, use price as-is (INR)
+          orderprice = parseFloat(orderData.price);
+        }
+      }
       
       // Get exposure margins from localStorage (exactly like original)
       const Intraday_Exposure_Margin_MCX = localStorage.getItem("Intraday_Exposure_Margin_MCX");
@@ -284,32 +319,32 @@ const OrderModal = ({
           const similersym = symarr[0]?.toString().trim();
           const Intraday_Exposure = localStorage.getItem("MCX_Exposure_Lot_wise_" + similersym + "_Intraday");
           const Intraday_hold_Exposure = localStorage.getItem("MCX_Exposure_Lot_wise_" + similersym + "_Holding");
-          marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure || 0);
-          holdmarginvalue = parseInt(lotSize) * parseInt(Intraday_hold_Exposure || 0);
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure || 0);
+          holdmarginvalue = parseFloat(lotSize) * parseFloat(Intraday_hold_Exposure || 0);
         } else {
           // Percentage calculation
-          finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-          marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_MCX || 10);
-          holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_MCX || 10);
+          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_MCX || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_MCX || 10);
         }
       } else if (exchtype === 'NSE') {
         if (NSE_Exposure_Type === "per_lot") {
-          marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure_Margin_Equity || 0);
-          holdmarginvalue = parseInt(lotSize) * parseInt(Holding_Exposure_Margin_Equity || 0);
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_Equity || 0);
+          holdmarginvalue = parseFloat(lotSize) * parseFloat(Holding_Exposure_Margin_Equity || 0);
         } else {
-          finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-          marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_Equity || 10);
-          holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_Equity || 10);
+          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_Equity || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_Equity || 10);
         }
       } else {
         // CDS/OPT
         if (CDS_Exposure_Type === "per_lot") {
-          marginvalue = parseInt(lotSize) * parseInt(Intraday_Exposure_Margin_CDS || 0);
-          holdmarginvalue = parseInt(lotSize) * parseInt(Holding_Exposure_Margin_CDS || 0);
+          marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_CDS || 0);
+          holdmarginvalue = parseFloat(lotSize) * parseFloat(Holding_Exposure_Margin_CDS || 0);
         } else {
-          finallotsize = (parseInt(lotSize) * parseInt(symbol.Lotsize || 1));
-          marginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Intraday_Exposure_Margin_CDS || 10);
-          holdmarginvalue = (parseInt(orderprice) * finallotsize) / parseInt(Holding_Exposure_Margin_CDS || 10);
+          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_CDS || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_CDS || 10);
         }
       }
       
@@ -323,7 +358,7 @@ const OrderModal = ({
       if (activeTab === 'order') {
         const bid = symbol.sell || 0;
         const ask = symbol.buy || 0;
-        if (orderData.orderType === "SELL") {
+        if (orderType === "SELL") {
           if (parseFloat(orderprice) > parseFloat(bid)) {
             isstoplossorder = "false";
           } else {
@@ -351,17 +386,17 @@ const OrderModal = ({
         OrderNo: '',
         UserId: localStorage.getItem("userid") || user.UserId,
         UserName: localStorage.getItem("ClientName") || user.UserName || user.UserId,
-        OrderCategory: orderData.orderType,
+        OrderCategory: orderType,
         OrderType: activeTab === 'market' ? 'Market' : (isstoplossorder === "true" ? 'S/L' : 'Limit'),
         ScriptName: symbol.SymbolName,
         TokenNo: symbol.SymbolToken,
         ActionType: activeTab === 'market' ? 
-          (orderData.orderType === 'BUY' ? 'Bought By Trader' : 'Sold By Trader') : 
+          (orderType === 'BUY' ? 'Bought By Trader' : 'Sold By Trader') : 
           'Order Placed @@',
         OrderPrice: orderprice.toString(),
         Lot: lotSize.toString(),
-        MarginUsed: Math.round(marginvalue).toString(),
-        HoldingMarginReq: Math.round(holdmarginvalue).toString(),
+        MarginUsed: Math.round(parseFloat(marginvalue)).toString(),
+        HoldingMarginReq: Math.round(parseFloat(holdmarginvalue)).toString(),
         OrderStatus: activeTab === 'market' ? 'Active' : 'Pending',
         SymbolType: exchtype === 'CDS' ? 'OPT' : exchtype,
         isstoplossorder: activeTab === 'order' ? isstoplossorder : "",
@@ -370,9 +405,10 @@ const OrderModal = ({
 
       // CRITICAL CHECK 3: Check margin available (exactly like original)
       const marginAvailable = parseFloat(userBalance.marginAvailable || 0);
-      if (parseInt(marginvalue) > parseInt(marginAvailable)) {
+      if (parseFloat(marginvalue) > parseFloat(marginAvailable)) {
         setError('Insufficient margin available. Please reduce lot size.');
         setOrderLoading(false);
+        setPlacingOrderType(null);
         return;
       }
 
@@ -389,6 +425,7 @@ const OrderModal = ({
       if (canTrade !== 'true' && canTrade !== true) {
         setError(canTrade || 'Order validation failed');
         setOrderLoading(false);
+        setPlacingOrderType(null);
         return;
       }
 
@@ -419,6 +456,7 @@ const OrderModal = ({
       if (!saveResponse && saveResponse !== 'true') {
         setError('Failed to save order. Please try again.');
         setOrderLoading(false);
+        setPlacingOrderType(null);
         return;
       }
 
@@ -429,7 +467,7 @@ const OrderModal = ({
           await createSLTPForNewOrder(
             symbol.SymbolToken,
             symbol.SymbolName,
-            orderData.orderType,
+            orderType,
             orderData.stopLoss,
             orderData.takeProfit
           );
@@ -442,6 +480,7 @@ const OrderModal = ({
       // Show success message
       setSuccess('Order placed successfully!');
       setOrderLoading(false);
+      setPlacingOrderType(null);
       
       // Call callback to refresh data
       if (onOrderPlaced) {
@@ -472,16 +511,38 @@ const OrderModal = ({
       
       setError(errorMessage);
       setOrderLoading(false);
+      setPlacingOrderType(null);
     }
-  };
-
-  const getCurrentPrice = () => {
-    if (!symbol) return 0;
-    return orderData.orderType === 'BUY' ? symbol.buy : symbol.sell;
   };
 
   const formatPrice = (price) => {
     return parseFloat(price || 0).toFixed(2);
+  };
+
+  // Check if symbol is from FX tabs (Crypto/Forex/Commodity)
+  const isFXSymbol = () => {
+    if (!symbol) return false;
+    const exchtype = symbol.ExchangeType || '';
+    return ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
+  };
+
+  // Get USD price for display (for FX symbols)
+  const getBuyPriceUSD = () => {
+    if (!symbol) return 0;
+    if (activeTab === 'market') {
+      return parseFloat(symbol.buyUSD || 0);
+    }
+    // For limit orders, show the USD price user entered
+    return parseFloat(orderData.price || 0);
+  };
+
+  const getSellPriceUSD = () => {
+    if (!symbol) return 0;
+    if (activeTab === 'market') {
+      return parseFloat(symbol.sellUSD || 0);
+    }
+    // For limit orders, show the USD price user entered
+    return parseFloat(orderData.price || 0);
   };
 
   if (!isOpen) return null;
@@ -525,23 +586,6 @@ const OrderModal = ({
             </div>
           </div>
         </div>
-
-        {/* Active Orders */}
-        {Array.isArray(activeOrders) && activeOrders.length > 0 && (
-          <div className="p-2 bg-gray-600">
-            <div className="text-xs text-gray-300 mb-1">Active Orders:</div>
-            <div className="text-xs text-white">
-              {activeOrders.map((order, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>{order.ScriptName?.split('_')[0]}</span>
-                  <span className={order.OrderCategory === 'BUY' ? 'text-green-400' : 'text-red-400'}>
-                    {order.OrderCategory} {order.Lot}@{order.OrderPrice}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Symbol Info */}
         <div className="p-2 text-center border-b border-gray-700">
@@ -619,15 +663,21 @@ const OrderModal = ({
             </label>
             <input
               type="number"
-              min="1"
+              min="0.01"
+              step="0.01"
               max="999"
               value={orderData.lotSize}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === '' || value === '0') {
+                if (value === '' || value === '0' || value === '0.') {
                   handleInputChange('lotSize', '');
                 } else {
-                  handleInputChange('lotSize', parseInt(value) || '');
+                  const numValue = parseFloat(value);
+                  if (!isNaN(numValue) && numValue > 0) {
+                    handleInputChange('lotSize', value);
+                  } else if (value === '' || value === '-') {
+                    handleInputChange('lotSize', value);
+                  }
                 }
               }}
               className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -641,16 +691,21 @@ const OrderModal = ({
           {activeTab === 'limit' && (
             <div className="mb-2">
               <label className="block text-gray-300 text-xs font-medium mb-1">
-                Price
+                Price {isFXSymbol() ? '(USD)' : '(INR)'}
               </label>
               <input
                 type="number"
                 step="0.01"
                 value={orderData.price}
                 onChange={(e) => handleInputChange('price', e.target.value)}
-                placeholder="Enter price"
+                placeholder={isFXSymbol() ? "Enter price in USD" : "Enter price"}
                 className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
+              {isFXSymbol() && orderData.price && symbol?.buy && symbol?.buyUSD && (
+                <div className="text-gray-400 text-xs mt-1">
+                  ≈ ₹{formatPrice((parseFloat(orderData.price) * (symbol.buy / symbol.buyUSD)))}
+                </div>
+              )}
             </div>
           )}
 
@@ -699,47 +754,65 @@ const OrderModal = ({
             </div>
           )}
 
-          {/* Order Buttons */}
+          {/* Order Buttons - Direct Place Order */}
           <div className="grid grid-cols-2 gap-2 mb-2">
             <button
-              onClick={() => handleInputChange('orderType', 'SELL')}
-              className={`py-2 px-2 rounded text-xs font-medium transition-colors ${
-                orderData.orderType === 'SELL'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
+              onClick={() => placeOrder('SELL')}
+              disabled={orderLoading || loading}
+              className="py-3 px-3 rounded-lg text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-red-600/50 flex items-center justify-center gap-2"
             >
-              <TrendingDown className="w-3 h-3 inline mr-1" />
-              Sell @ ₹{formatPrice(orderData.orderType === 'SELL' ? getCurrentPrice() : orderData.price)}
+              {orderLoading && placingOrderType === 'SELL' ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <span>Placing...</span>
+                </>
+              ) : (
+                <>
+                  <TrendingDown className="w-4 h-4" />
+                  <div className="text-center">
+                    <div className="text-xs opacity-90 mb-0.5">SELL</div>
+                    {isFXSymbol() ? (
+                      <div className="text-base font-bold">
+                        ${formatPrice(getSellPriceUSD())}
+                      </div>
+                    ) : (
+                      <div className="text-base font-bold">
+                        ₹{formatPrice(activeTab === 'market' ? symbol?.sell : orderData.price || symbol?.sell)}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </button>
             <button
-              onClick={() => handleInputChange('orderType', 'BUY')}
-              className={`py-2 px-2 rounded text-xs font-medium transition-colors ${
-                orderData.orderType === 'BUY'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
+              onClick={() => placeOrder('BUY')}
+              disabled={orderLoading || loading}
+              className="py-3 px-3 rounded-lg text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-green-600/50 flex items-center justify-center gap-2"
             >
-              <TrendingUp className="w-3 h-3 inline mr-1" />
-              Buy @ ₹{formatPrice(orderData.orderType === 'BUY' ? getCurrentPrice() : orderData.price)}
+              {orderLoading && placingOrderType === 'BUY' ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <span>Placing...</span>
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="w-4 h-4" />
+                  <div className="text-center">
+                    <div className="text-xs opacity-90 mb-0.5">BUY</div>
+                    {isFXSymbol() ? (
+                      <div className="text-base font-bold">
+                        ${formatPrice(getBuyPriceUSD())}
+                      </div>
+                    ) : (
+                      <div className="text-base font-bold">
+                        ₹{formatPrice(activeTab === 'market' ? symbol?.buy : orderData.price || symbol?.buy)}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </button>
           </div>
-
-          {/* Place Order Button */}
-          <button
-            onClick={placeOrder}
-            disabled={orderLoading || loading}
-            className="w-full py-2 px-3 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {orderLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
-                Placing Order...
-              </div>
-            ) : (
-              `Place ${orderData.orderType} Order`
-            )}
-          </button>
         </div>
       </div>
     </div>

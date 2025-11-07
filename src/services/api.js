@@ -4,8 +4,8 @@ import axios from 'axios';
 // - In production (https), default to same-origin proxy "/api" to avoid mixed-content
 // - Allow override via Vite env: VITE_API_BASE_URL
 // - In dev (http), fall back to the direct IP endpoint
-//const API_BASE_URL = 'https://www.api.tradenstocko.com/api/';
-const API_BASE_URL = 'http://localhost:5000/api/';
+const API_BASE_URL = 'https://www.api.tradenstocko.com/api/';
+//const API_BASE_URL = 'http://localhost:5000/api/';
 
 // Create axios instance
 const api = axios.create({
@@ -125,10 +125,30 @@ export const tradingAPI = {
   // Get market time
   getMarketTime: async (exchange, refId) => {
     try {
+      // Get refId from localStorage if not provided
+      let refIdToUse = refId;
+      if (!refIdToUse || refIdToUse === '') {
+        refIdToUse = localStorage.getItem('Refid');
+      }
+      
+      // If still no refId, try to get from user object
+      if (!refIdToUse || refIdToUse === '') {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          refIdToUse = user?.Refid;
+        }
+      }
+      
+      // Fallback to default value '4355' if still no refId
+      if (!refIdToUse || refIdToUse === '') {
+        refIdToUse = '4355';
+      }
+      
       const response = await api.get('/getmarkettime/', {
         params: {
           Exchange: exchange,
-          refid: refId
+          refid: refIdToUse
         }
       });
       return response.data;

@@ -42,14 +42,20 @@ const Portfolio = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [slValue, setSLValue] = useState('');
   const [tpValue, setTPValue] = useState('');
+  const [usdToInrRate, setUsdToInrRate] = useState(88.65); // Default fallback rate
   
   // WebSocket and refs
   const websocketRef = useRef(null);
+  const fxWebSocketRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const fxReconnectTimeoutRef = useRef(null);
   const mountedRef = useRef(true);
   const tokensRef = useRef('');
+  const fxSymbolsRef = useRef([]);
   const totalMarginUsedRef = useRef(0);
   const reconnectAttemptRef = useRef(0);
+  const fxReconnectAttemptRef = useRef(0);
+  const exchangeRateIntervalRef = useRef(null);
 
   // Bottom navigation items
   const bottomNavItems = [
@@ -60,21 +66,54 @@ const Portfolio = () => {
     { id: 'profile', icon: User, label: 'Profile' }
   ];
 
+  // Fetch USD to INR exchange rate
+  const fetchExchangeRate = useCallback(async () => {
+    try {
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const data = await response.json();
+      if (data.rates && data.rates.INR) {
+        setUsdToInrRate(data.rates.INR);
+        console.log('USD to INR rate updated:', data.rates.INR);
+      }
+    } catch (error) {
+      console.error('Error fetching exchange rate:', error);
+      // Keep using the previous rate or default
+    }
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     mountedRef.current = true;
+    
+    // Fetch exchange rate on mount and set up periodic updates (every 5 minutes)
+    fetchExchangeRate();
+    exchangeRateIntervalRef.current = setInterval(() => {
+      if (mountedRef.current) {
+        fetchExchangeRate();
+      }
+    }, 5 * 60 * 1000); // Update every 5 minutes
     
     return () => {
       mountedRef.current = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
+      if (fxReconnectTimeoutRef.current) {
+        clearTimeout(fxReconnectTimeoutRef.current);
+      }
+      if (exchangeRateIntervalRef.current) {
+        clearInterval(exchangeRateIntervalRef.current);
+      }
       if (websocketRef.current) {
         websocketRef.current.close();
         websocketRef.current = null;
       }
+      if (fxWebSocketRef.current) {
+        fxWebSocketRef.current.close();
+        fxWebSocketRef.current = null;
+      }
     };
-  }, []);
+  }, [fetchExchangeRate]);
 
   // Initialize data on component mount
   useEffect(() => {
@@ -115,6 +154,30 @@ const Portfolio = () => {
     }
   };
 
+  // Refresh closed orders when exchange rate changes (for USD conversion)
+  useEffect(() => {
+    if (user?.UserId && usdToInrRate > 0 && closedOrders.length > 0) {
+      // Re-process closed orders with updated exchange rate
+      setClosedOrders(prevOrders => {
+        return prevOrders.map(order => {
+          if (order.isFX && usdToInrRate > 0) {
+            const orderPriceUSD = parseFloat(order.OrderPrice || 0) / usdToInrRate;
+            const broughtByUSD = parseFloat(order.BroughtBy || 0) / usdToInrRate;
+            const plUSD = parseFloat(order.P_L || 0) / usdToInrRate;
+            
+            return {
+              ...order,
+              orderPriceUSD: parseFloat(orderPriceUSD.toFixed(4)),
+              broughtByUSD: parseFloat(broughtByUSD.toFixed(4)),
+              plUSD: parseFloat(plUSD.toFixed(2))
+            };
+          }
+          return order;
+        });
+      });
+    }
+  }, [usdToInrRate, user?.UserId]);
+
   // Get user balance and financial data
   const getUserBalance = async () => {
     try {
@@ -150,9 +213,27 @@ const Portfolio = () => {
       if (data.length > 0) {
         let tokens = '';
         let totalMargin = 0;
+        const fxSymbols = [];
         
         const orders = data.map(item => {
-          tokens += item.TokenNo + ',';
+          // Check if this is an FX symbol (FOREX, CRYPTO, COMMODITY)
+          const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(item.SymbolType);
+          
+          if (!isFX) {
+            tokens += item.TokenNo + ',';
+          } else {
+            // For FX symbols, store symbol name for FX WebSocket
+            const scriptParts = item.ScriptName.split('_');
+            const symbolName = scriptParts[0];
+            fxSymbols.push({
+              symbolName,
+              tokenNo: item.TokenNo,
+              orderCategory: item.OrderCategory,
+              orderPrice: parseFloat(item.OrderPrice || 0),
+              lotSize: (parseFloat(item.selectedlotsize || 1) * parseFloat(item.Lot || 1))
+            });
+          }
+          
           totalMargin += Math.round(item.MarginUsed);
           
           const scriptParts = item.ScriptName.split('_');
@@ -165,10 +246,29 @@ const Portfolio = () => {
           
           // Calculate initial P/L from cmp value (exactly like original)
           let profitLoss = 0;
+          let profitLossUSD = 0;
           const cmp = parseFloat(item.cmp || 0);
           const orderPrice = parseFloat(item.OrderPrice || 0);
           const lotSize = (parseFloat(item.selectedlotsize || 1) * parseFloat(item.Lot || 1));
           
+          // For FX orders, calculate USD prices and P/L
+          let orderPriceUSD = 0;
+          let currentPriceUSD = 0;
+          if (isFX && usdToInrRate > 0) {
+            // Convert OrderPrice from INR to USD
+            orderPriceUSD = orderPrice / usdToInrRate;
+            // Convert CMP from INR to USD
+            currentPriceUSD = cmp / usdToInrRate;
+            
+            // Calculate P/L in USD
+            if (item.OrderCategory === "SELL") {
+              profitLossUSD = (orderPriceUSD - currentPriceUSD) * lotSize;
+            } else {
+              profitLossUSD = (currentPriceUSD - orderPriceUSD) * lotSize;
+            }
+          }
+          
+          // Calculate P/L in INR (for non-FX or as fallback)
           if (item.OrderCategory === "SELL") {
             profitLoss = (orderPrice - cmp) * lotSize;
           } else {
@@ -180,25 +280,38 @@ const Portfolio = () => {
             scriptName,
             exchange,
             profitLoss: parseFloat(profitLoss.toFixed(2)),
+            profitLossUSD: isFX ? parseFloat(profitLossUSD.toFixed(2)) : 0,
+            orderPriceUSD: isFX ? parseFloat(orderPriceUSD.toFixed(4)) : 0,
+            currentPriceUSD: isFX ? parseFloat(currentPriceUSD.toFixed(4)) : 0,
             currentPrice: item.cmp,
             isStopLossOrder,
             orderCategoryDisplay,
             stopLossPrice: item.StopLossPrice || '',
-            takeProfitPrice: item.TakeProfitPrice || ''
+            takeProfitPrice: item.TakeProfitPrice || '',
+            isFX,
+            symbolType: item.SymbolType
           };
         });
         
         totalMarginUsedRef.current = totalMargin;
         tokensRef.current = tokens.slice(0, -1); // Remove trailing comma
+        fxSymbolsRef.current = fxSymbols;
         
         setActiveOrders(orders);
         
-        // Initialize WebSocket for real-time updates
+        // Initialize WebSocket for MCX/NSE orders
         if (tokensRef.current) {
           initializeWebSocket(tokensRef.current);
         }
+        
+        // Initialize FX WebSocket for FOREX/CRYPTO/COMMODITY orders
+        if (fxSymbols.length > 0) {
+          initializeFXWebSocket();
+        }
       } else {
         setActiveOrders([]);
+        tokensRef.current = '';
+        fxSymbolsRef.current = [];
       }
     } catch (error) {
       console.error('Error fetching active orders:', error);
@@ -212,7 +325,32 @@ const Portfolio = () => {
       const data = await tradingAPI.getUserClosedOrders(user.UserId);
       
       if (data.length > 0) {
-        setClosedOrders(data);
+        // Process closed orders to add FX detection and USD prices
+        const processedData = data.map(item => {
+          const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(item.SymbolType);
+          
+          // Calculate USD prices for FX orders
+          let orderPriceUSD = 0;
+          let broughtByUSD = 0;
+          let plUSD = 0;
+          
+          if (isFX && usdToInrRate > 0) {
+            orderPriceUSD = parseFloat(item.OrderPrice || 0) / usdToInrRate;
+            broughtByUSD = parseFloat(item.BroughtBy || 0) / usdToInrRate;
+            // Convert P/L from INR to USD
+            plUSD = parseFloat(item.P_L || 0) / usdToInrRate;
+          }
+          
+          return {
+            ...item,
+            isFX,
+            orderPriceUSD: isFX ? parseFloat(orderPriceUSD.toFixed(4)) : 0,
+            broughtByUSD: isFX ? parseFloat(broughtByUSD.toFixed(4)) : 0,
+            plUSD: isFX ? parseFloat(plUSD.toFixed(2)) : 0
+          };
+        });
+        
+        setClosedOrders(processedData);
       } else {
         setClosedOrders([]);
       }
@@ -222,7 +360,7 @@ const Portfolio = () => {
     }
   };
 
-  // Update market data from WebSocket
+  // Update market data from WebSocket (MCX/NSE format)
   const updateMarketData = useCallback((data) => {
     if (!data || !data.instrument_token) return;
     
@@ -230,7 +368,8 @@ const Portfolio = () => {
     
     setActiveOrders(prevOrders => {
       const updatedOrders = prevOrders.map(order => {
-        if (order.TokenNo?.toString() === tokenToFind) {
+        // Only update non-FX orders
+        if (order.TokenNo?.toString() === tokenToFind && !order.isFX) {
           const bid = data.bid === "0" || data.bid === 0 ? data.last_price : data.bid;
           const ask = data.ask === "0" || data.ask === 0 ? data.last_price : data.ask;
           
@@ -257,6 +396,73 @@ const Portfolio = () => {
       return updatedOrders;
     });
   }, []);
+
+  // Update market data from FX WebSocket (FOREX/CRYPTO/COMMODITY tick format)
+  const updateFXMarketData = useCallback((tickData) => {
+    if (!tickData || !tickData.type || tickData.type !== 'tick' || !tickData.data) {
+      return;
+    }
+
+    const { Symbol, BestBid, BestAsk } = tickData.data;
+    
+    if (!Symbol) return;
+
+    // Get USD prices from tick data
+    const bestBidPriceUSD = BestBid?.Price || 0;
+    const bestAskPriceUSD = BestAsk?.Price || 0;
+    
+    // Convert USD prices to INR using real-time exchange rate
+    const bestBidPrice = bestBidPriceUSD * usdToInrRate;
+    const bestAskPrice = bestAskPriceUSD * usdToInrRate;
+    
+    // Calculate LTP (Last Traded Price) in INR - midpoint of best bid/ask
+    const ltp = bestBidPrice && bestAskPrice ? (bestBidPrice + bestAskPrice) / 2 : (bestBidPrice || bestAskPrice || 0);
+    
+    setActiveOrders(prevOrders => {
+      const updatedOrders = prevOrders.map(order => {
+        // Match by SymbolName (the Symbol from tick data should match SymbolName)
+        const symbolName = order.scriptName || order.ScriptName?.split('_')[0];
+        if (order.isFX && (symbolName === Symbol || order.ScriptName === Symbol)) {
+          let currentPrice = 0;
+          let profitLoss = 0;
+          
+          // Calculate prices and P/L in USD for FX orders
+          let currentPriceUSD = 0;
+          let profitLossUSD = 0;
+          
+          if (order.OrderCategory === "SELL") {
+            currentPrice = bestAskPrice; // Use ask price for SELL orders (INR)
+            currentPriceUSD = bestAskPriceUSD; // Use ask price for SELL orders (USD)
+            profitLoss = (parseFloat(order.OrderPrice) - parseFloat(currentPrice)) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+            // Calculate P/L in USD
+            const orderPriceUSD = parseFloat(order.OrderPrice) / usdToInrRate;
+            profitLossUSD = (orderPriceUSD - currentPriceUSD) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+          } else {
+            currentPrice = bestBidPrice; // Use bid price for BUY orders (INR)
+            currentPriceUSD = bestBidPriceUSD; // Use bid price for BUY orders (USD)
+            profitLoss = (parseFloat(currentPrice) - parseFloat(order.OrderPrice)) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+            // Calculate P/L in USD
+            const orderPriceUSD = parseFloat(order.OrderPrice) / usdToInrRate;
+            profitLossUSD = (currentPriceUSD - orderPriceUSD) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+          }
+          
+          return {
+            ...order,
+            currentPrice: parseFloat(currentPrice),
+            profitLoss: parseFloat(profitLoss.toFixed(2)),
+            currentPriceUSD: parseFloat(currentPriceUSD.toFixed(4)),
+            profitLossUSD: parseFloat(profitLossUSD.toFixed(2)),
+            buyUSD: bestAskPriceUSD,
+            sellUSD: bestBidPriceUSD,
+            ltpUSD: (bestBidPriceUSD + bestAskPriceUSD) / 2
+          };
+        }
+        return order;
+      });
+      
+      return updatedOrders;
+    });
+  }, [usdToInrRate]);
   
   // Calculate and update balance data when active orders change
   useEffect(() => {
@@ -444,6 +650,121 @@ const Portfolio = () => {
     connectWebSocket();
   }, [updateMarketData]);
 
+  // Initialize FX WebSocket for FOREX/CRYPTO/COMMODITY
+  const initializeFXWebSocket = useCallback(() => {
+    const uri = "wss://www.fxsoc.tradenstocko.com:8001/ws";
+    
+    // Close existing FX connection if any
+    if (fxWebSocketRef.current) {
+      try {
+        fxWebSocketRef.current.close(1000, 'Reconnecting');
+      } catch (error) {
+        console.log('Error closing existing FX WebSocket:', error);
+      }
+      fxWebSocketRef.current = null;
+    }
+    
+    // Clear any existing reconnection timeout
+    if (fxReconnectTimeoutRef.current) {
+      clearTimeout(fxReconnectTimeoutRef.current);
+      fxReconnectTimeoutRef.current = null;
+    }
+    
+    const maxReconnectAttempts = 10;
+    
+    const connectFXWebSocket = () => {
+      try {
+        console.log(`Attempting FX WebSocket connection (attempt ${fxReconnectAttemptRef.current + 1})...`);
+        
+        const ws = new WebSocket(uri);
+        fxWebSocketRef.current = ws;
+        
+        const connectTimeout = setTimeout(() => {
+          if (ws.readyState === WebSocket.CONNECTING) {
+            console.log('FX WebSocket connection timeout');
+            ws.close();
+          }
+        }, 10000);
+        
+        ws.onopen = () => {
+          clearTimeout(connectTimeout);
+          
+          if (!mountedRef.current) {
+            ws.close();
+            return;
+          }
+          
+          console.log('✓ FX WebSocket connected successfully');
+          fxReconnectAttemptRef.current = 0;
+          
+          // FX WebSocket automatically sends all data, no need to send tokens
+        };
+        
+        ws.onerror = (event) => {
+          clearTimeout(connectTimeout);
+          if (!mountedRef.current) return;
+          console.error('FX WebSocket error:', event);
+        };
+        
+        ws.onclose = (event) => {
+          clearTimeout(connectTimeout);
+          if (!mountedRef.current) return;
+          
+          console.log('FX WebSocket disconnected', { 
+            code: event.code, 
+            reason: event.reason 
+          });
+          fxWebSocketRef.current = null;
+          
+          // Reconnect logic
+          if (mountedRef.current && fxSymbolsRef.current.length > 0 && fxReconnectAttemptRef.current < maxReconnectAttempts) {
+            fxReconnectAttemptRef.current++;
+            const delay = Math.min(1000 * Math.pow(2, fxReconnectAttemptRef.current - 1), 30000);
+            
+            console.log(`Scheduling FX reconnect in ${delay}ms (attempt ${fxReconnectAttemptRef.current}/${maxReconnectAttempts})`);
+            
+            fxReconnectTimeoutRef.current = setTimeout(() => {
+              if (mountedRef.current && fxSymbolsRef.current.length > 0) {
+                connectFXWebSocket();
+              }
+            }, delay);
+          }
+        };
+        
+        ws.onmessage = (event) => {
+          if (!mountedRef.current) return;
+          
+          if (!event.data || event.data === "" || event.data === "true") {
+            return;
+          }
+          
+          try {
+            const data = JSON.parse(event.data);
+            updateFXMarketData(data);
+          } catch (error) {
+            console.error('Error parsing FX WebSocket data:', error);
+          }
+        };
+        
+      } catch (error) {
+        console.error('Error creating FX WebSocket:', error);
+        
+        if (mountedRef.current && fxSymbolsRef.current.length > 0 && fxReconnectAttemptRef.current < maxReconnectAttempts) {
+          fxReconnectAttemptRef.current++;
+          const delay = Math.min(1000 * Math.pow(2, fxReconnectAttemptRef.current - 1), 30000);
+          
+          fxReconnectTimeoutRef.current = setTimeout(() => {
+            if (mountedRef.current && fxSymbolsRef.current.length > 0) {
+              connectFXWebSocket();
+            }
+          }, delay);
+        }
+      }
+    };
+    
+    connectFXWebSocket();
+  }, [updateFXMarketData]);
+
   // Close trade functionality
   const closeTrade = async (order) => {
     const minutecount = localStorage.getItem("profittradestoptime");
@@ -477,16 +798,31 @@ const Portfolio = () => {
     if (!confirmed) return;
     
     try {
-      const refid = localStorage.getItem("Refid");
+      // Get refId from user object or localStorage, fallback to '4355'
+      const refid = user?.Refid || localStorage.getItem("Refid") || '4355';
       
       // Check market time
       const marketTimeResponse = await tradingAPI.getMarketTime(order.SymbolType, refid);
       const marketData = marketTimeResponse.split('|');
-      const startTime = marketData[0] + ":00";
-      const endTime = marketData[1] + ":00";
+      
+      // Handle market time - if response already has seconds, use as-is, otherwise add ":00"
+      let startTime = marketData[0] || '';
+      let endTime = marketData[1] || '';
+      
+      // Check if time already includes seconds (format: HH:MM:SS)
+      if (startTime && startTime.split(':').length === 2) {
+        startTime = startTime + ":00";
+      }
+      if (endTime && endTime.split(':').length === 2) {
+        endTime = endTime + ":00";
+      }
+      
+      // Special case: If start and end time are the same (like "5:00:00|5:00:00"), 
+      // it might indicate 24/7 market (crypto) - allow closing anytime
+      const is24x7Market = startTime === endTime && startTime !== '';
       
       const today = new Date();
-      if (today.getDay() === 6 || today.getDay() === 0) {
+      if (!is24x7Market && (today.getDay() === 6 || today.getDay() === 0)) {
         toast.error("Market not open.");
         return;
       }
@@ -494,51 +830,59 @@ const Portfolio = () => {
       const currentTime = new Date();
       const currentTimeStr = currentTime.getHours() + ":" + currentTime.getMinutes() + ":00";
       
-      const currentSeconds = getTimeInSeconds(currentTimeStr);
-      const startSeconds = getTimeInSeconds(startTime);
-      const endSeconds = getTimeInSeconds(endTime);
-      
-      if (currentSeconds >= startSeconds && currentSeconds <= endSeconds) {
-        // Get order number - in the backend it's the Id field
-        const orderNo = order.Id || order.OrderNo || order.OrderId || order.orderNo || order.orderId;
+      // For 24/7 markets (crypto), skip time validation
+      if (is24x7Market) {
+        // Allow closing for 24/7 markets
+      } else {
+        const currentSeconds = getTimeInSeconds(currentTimeStr);
+        const startSeconds = getTimeInSeconds(startTime);
+        const endSeconds = getTimeInSeconds(endTime);
         
-        console.log('Closing order with OrderNo:', orderNo, 'Full order:', order);
-        
-        if (!orderNo) {
-          toast.error("Order number not found");
+        if (currentSeconds < startSeconds || currentSeconds > endSeconds) {
+          toast.error("Market not open.");
           return;
         }
-        
-        // Calculate P/L
-        const pl = order.profitLoss;
-        
-        // Calculate brokerage (you may need to adjust this based on your logic)
-        const brokerage = Math.abs(pl) * 0.01; // Example: 1% of absolute P/L
-        
-        // Get current date for ClosedAt
-        const datee = new Date();
-        const finaldate = datee.getFullYear() + "-" + (datee.getMonth() + 1) + "-" + datee.getDate();
-        
-        const result = await tradingAPI.updateOrder(
-          pl.toFixed(2),              // lp
-          brokerage.toFixed(2),       // brokerage
-          order.currentPrice,          // BroughtBy
-          finaldate,                   // ClosedAt
-          orderNo,                     // orderno
-          user.UserId,                 // uid
-          order.OrderCategory,         // ordertype
-          order.TokenNo                // tokenno
-        );
-        
-        if (result === 'true' || result === true) {
-          toast.success("Trade Closed!");
-          // Refresh data
-          await initializePortfolioData();
-        } else {
-          toast.error("Failed to close trade");
-        }
+      }
+      
+      // Get order number - in the backend it's the Id field
+      const orderNo = order.Id || order.OrderNo || order.OrderId || order.orderNo || order.orderId;
+      
+      console.log('Closing order with OrderNo:', orderNo, 'Full order:', order);
+      
+      if (!orderNo) {
+        toast.error("Order number not found");
+        return;
+      }
+      
+      // Calculate P/L - ALWAYS use INR values for backend (even for FX orders)
+      // Note: For FX orders, profitLossUSD is for display only, backend always expects INR
+      const pl = order.profitLoss; // This is always in INR
+      
+      // Calculate brokerage (you may need to adjust this based on your logic)
+      const brokerage = Math.abs(pl) * 0.01; // Example: 1% of absolute P/L
+      
+      // Get current date for ClosedAt
+      const datee = new Date();
+      const finaldate = datee.getFullYear() + "-" + (datee.getMonth() + 1) + "-" + datee.getDate();
+      
+      // Always send INR values to backend (rupees)
+      const result = await tradingAPI.updateOrder(
+        pl.toFixed(2),              // lp (P/L in INR)
+        brokerage.toFixed(2),       // brokerage (in INR)
+        order.currentPrice,          // BroughtBy (current price in INR)
+        finaldate,                   // ClosedAt
+        orderNo,                     // orderno
+        user.UserId,                 // uid
+        order.OrderCategory,         // ordertype
+        order.TokenNo                // tokenno
+      );
+      
+      if (result === 'true' || result === true) {
+        toast.success("Trade Closed!");
+        // Refresh data
+        await initializePortfolioData();
       } else {
-        toast.error("Market not open.");
+        toast.error("Failed to close trade");
       }
     } catch (error) {
       console.error('Error closing trade:', error);
@@ -673,10 +1017,20 @@ const Portfolio = () => {
               </div>
               <div className="text-right">
                 <div className={`font-semibold ${order.OrderCategory === 'SELL' ? 'text-red-400' : 'text-green-400'}`}>
-                  {order.orderCategoryDisplay} {order.Lot} @ {order.OrderPrice}
+                  {order.orderCategoryDisplay} {order.Lot} @ {
+                    order.isFX ? (
+                      <>${order.orderPriceUSD ? order.orderPriceUSD.toFixed(4) : (order.OrderPrice && usdToInrRate ? (parseFloat(order.OrderPrice) / usdToInrRate).toFixed(4) : '0.0000')}</>
+                    ) : (
+                      <>{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}</>
+                    )
+                  }
                 </div>
-                <div className={`text-sm font-medium ${order.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {order.profitLoss >= 0 ? '+' : ''}{order.profitLoss.toFixed(2)}
+                <div className={`text-sm font-medium ${(order.isFX ? order.profitLossUSD : order.profitLoss) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {order.isFX ? (
+                    <>{(order.profitLossUSD || 0) >= 0 ? '+' : ''}${(order.profitLossUSD || 0).toFixed(2)}</>
+                  ) : (
+                    <>{order.profitLoss >= 0 ? '+' : ''}{order.profitLoss.toFixed(2)}</>
+                  )}
                 </div>
               </div>
             </div>
@@ -699,7 +1053,13 @@ const Portfolio = () => {
             
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-400">
-                CMP: <span className="text-white font-medium">{order.currentPrice}</span>
+                CMP: <span className="text-white font-medium">
+                  {order.isFX ? (
+                    <>${order.currentPriceUSD ? order.currentPriceUSD.toFixed(4) : '0.0000'}</>
+                  ) : (
+                    <>{order.currentPrice ? parseFloat(order.currentPrice).toFixed(2) : '0.00'}</>
+                  )}
+                </span>
               </div>
               <div className="flex space-x-2">
                 <button
@@ -749,16 +1109,32 @@ const Portfolio = () => {
             
             <div className="flex justify-between items-center mb-2">
               <div className="text-sm text-gray-400">
-                AvgSell: <span className="text-white font-medium">{order.OrderPrice}</span>
+                AvgSell: <span className="text-white font-medium">
+                  {order.isFX ? (
+                    <>${order.orderPriceUSD ? order.orderPriceUSD.toFixed(4) : (order.OrderPrice && usdToInrRate ? (parseFloat(order.OrderPrice) / usdToInrRate).toFixed(4) : '0.0000')}</>
+                  ) : (
+                    <>{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}</>
+                  )}
+                </span>
               </div>
               <div className="text-sm text-gray-400">
-                AvgBuy: <span className="text-white font-medium">{order.BroughtBy}</span>
+                AvgBuy: <span className="text-white font-medium">
+                  {order.isFX ? (
+                    <>${order.broughtByUSD ? order.broughtByUSD.toFixed(4) : (order.BroughtBy && usdToInrRate ? (parseFloat(order.BroughtBy) / usdToInrRate).toFixed(4) : '0.0000')}</>
+                  ) : (
+                    <>{order.BroughtBy ? parseFloat(order.BroughtBy).toFixed(2) : '0.00'}</>
+                  )}
+                </span>
               </div>
             </div>
             
             <div className="text-sm">
-              Profit/Loss: <span className={`font-medium ${parseInt(order.P_L) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {parseInt(order.P_L) >= 0 ? '+' : ''}{parseInt(order.P_L)}
+              Profit/Loss: <span className={`font-medium ${(order.isFX ? order.plUSD : parseInt(order.P_L || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {order.isFX ? (
+                  <>{(order.plUSD || 0) >= 0 ? '+' : ''}${(order.plUSD || 0).toFixed(2)}</>
+                ) : (
+                  <>{parseInt(order.P_L || 0) >= 0 ? '+' : ''}{parseInt(order.P_L || 0)}</>
+                )}
               </span>
             </div>
           </div>
