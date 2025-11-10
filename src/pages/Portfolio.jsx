@@ -247,32 +247,36 @@ const Portfolio = () => {
           // Calculate initial P/L from cmp value (exactly like original)
           let profitLoss = 0;
           let profitLossUSD = 0;
+          let orderPriceUSD = 0;
+          let currentPriceUSD = 0;
           const cmp = parseFloat(item.cmp || 0);
           const orderPrice = parseFloat(item.OrderPrice || 0);
           const lotSize = (parseFloat(item.selectedlotsize || 1) * parseFloat(item.Lot || 1));
           
-          // For FX orders, calculate USD prices and P/L
-          let orderPriceUSD = 0;
-          let currentPriceUSD = 0;
-          if (isFX && usdToInrRate > 0) {
-            // Convert OrderPrice from INR to USD
-            orderPriceUSD = orderPrice / usdToInrRate;
-            // Convert CMP from INR to USD
-            currentPriceUSD = cmp / usdToInrRate;
-            
-            // Calculate P/L in USD
-            if (item.OrderCategory === "SELL") {
-              profitLossUSD = (orderPriceUSD - currentPriceUSD) * lotSize;
-            } else {
-              profitLossUSD = (currentPriceUSD - orderPriceUSD) * lotSize;
+          // Only calculate P/L if we have a valid current price (cmp > 0)
+          // If cmp is 0, P/L will be 0 initially and updated by WebSocket with live prices
+          if (cmp > 0) {
+            // For FX orders, calculate USD prices and P/L
+            if (isFX && usdToInrRate > 0) {
+              // Convert OrderPrice from INR to USD
+              orderPriceUSD = orderPrice / usdToInrRate;
+              // Convert CMP from INR to USD
+              currentPriceUSD = cmp / usdToInrRate;
+              
+              // Calculate P/L in USD
+              if (item.OrderCategory === "SELL") {
+                profitLossUSD = (orderPriceUSD - currentPriceUSD) * lotSize;
+              } else {
+                profitLossUSD = (currentPriceUSD - orderPriceUSD) * lotSize;
+              }
             }
-          }
-          
-          // Calculate P/L in INR (for non-FX or as fallback)
-          if (item.OrderCategory === "SELL") {
-            profitLoss = (orderPrice - cmp) * lotSize;
-          } else {
-            profitLoss = (cmp - orderPrice) * lotSize;
+            
+            // Calculate P/L in INR (for non-FX or as fallback)
+            if (item.OrderCategory === "SELL") {
+              profitLoss = (orderPrice - cmp) * lotSize;
+            } else {
+              profitLoss = (cmp - orderPrice) * lotSize;
+            }
           }
           
           return {
@@ -767,10 +771,41 @@ const Portfolio = () => {
 
   // Close trade functionality
   const closeTrade = async (order) => {
+    const symbolType = order.SymbolType || order.symbolType || '';
+    const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(symbolType);
+    
     const minutecount = localStorage.getItem("profittradestoptime");
     
-    // Check scalping restriction
-    if (minutecount && minutecount !== "" && minutecount > 0) {
+    // Check scalping restriction - skip for FX markets (24/7) and old orders
+    if (minutecount && minutecount !== "" && minutecount > 0 && !isFX) {
+      // Parse order date and time to get accurate time difference
+      const orderDateStr = order.OrderDate || '';
+      const orderTimeStr = order.OrderTime || '';
+      
+      if (orderDateStr && orderTimeStr) {
+        try {
+          // Parse order datetime (format: YYYY-MM-DD HH:MM or similar)
+          const orderDateTimeStr = `${orderDateStr} ${orderTimeStr}`;
+          const orderDateTime = new Date(orderDateTimeStr);
+          
+          // Get current IST time
+          const currentDate = new Date();
+          const istOffset = 5.5 * 60 * 60 * 1000;
+          const utcTime = currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000);
+          const currentIST = new Date(utcTime + istOffset);
+          
+          // Calculate time difference in minutes
+          const timeDifferenceInMinutes = (currentIST - orderDateTime) / (1000 * 60);
+          
+          // Only check scalping if order is profitable and within the time window
+          // Also skip if order is older than 24 hours (1440 minutes) - likely not scalping
+          if (order.profitLoss > 0 && timeDifferenceInMinutes >= 0 && timeDifferenceInMinutes < parseInt(minutecount) && timeDifferenceInMinutes < 1440) {
+            toast.error(`Scalping not allowed. You can only close profitable trades after ${minutecount} minutes from order placement.`);
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing order datetime for scalping check:', error);
+          // Fallback to old method if date parsing fails
       const currentDate = new Date();
       const istOffset = 5.5 * 60 * 60 * 1000;
       const utcTime = currentDate.getTime() + (currentDate.getTimezoneOffset() * 60000);
@@ -779,17 +814,20 @@ const Portfolio = () => {
       const currentHours = istTime.getHours();
       const currentMinutes = istTime.getMinutes();
       
-      const orderTimeParts = order.OrderTime.split(':');
-      const orderHours = parseInt(orderTimeParts[0]);
-      const orderMinutes = parseInt(orderTimeParts[1]);
+          const orderTimeParts = orderTimeStr.split(':');
+          const orderHours = parseInt(orderTimeParts[0]) || 0;
+          const orderMinutes = parseInt(orderTimeParts[1]) || 0;
       
       const currentTotalMinutes = (currentHours * 60) + currentMinutes;
       const orderTotalMinutes = (orderHours * 60) + orderMinutes;
       const timeDifferenceInMinutes = currentTotalMinutes - orderTotalMinutes;
       
-      if (order.profitLoss > 0 && timeDifferenceInMinutes < parseInt(minutecount)) {
+          // Only check if positive difference (same day) and within reasonable window
+          if (order.profitLoss > 0 && timeDifferenceInMinutes >= 0 && timeDifferenceInMinutes < parseInt(minutecount) && timeDifferenceInMinutes < 1440) {
         toast.error(`Scalping not allowed. You can only close profitable trades after ${minutecount} minutes from order placement.`);
         return;
+          }
+        }
       }
     }
     
@@ -817,10 +855,17 @@ const Portfolio = () => {
         endTime = endTime + ":00";
       }
       
-      // Special case: If start and end time are the same (like "5:00:00|5:00:00"), 
-      // it might indicate 24/7 market (crypto) - allow closing anytime
-      const is24x7Market = startTime === endTime && startTime !== '';
+      // Detect 24/7 markets:
+      // 1. Check if SymbolType is CRYPTO/FOREX/COMMODITY (24/7 markets)
+      // 2. Check if start and end time are the same (like "5:00:00|5:00:00")
+      // 3. Check if start is "0:00:00" and end is "23:59:00" or "23:59:59" (24-hour market)
+      // Ensure isFX is available (it's declared at function start)
+      const isFXMarket = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(symbolType);
+      const is24x7Market = isFXMarket || 
+                           (startTime === endTime && startTime !== '') ||
+                           (startTime === '0:00:00' && (endTime === '23:59:00' || endTime === '23:59:59'));
       
+      // Skip weekend check for 24/7 markets (crypto, forex, commodity)
       const today = new Date();
       if (!is24x7Market && (today.getDay() === 6 || today.getDay() === 0)) {
         toast.error("Market not open.");
@@ -830,15 +875,18 @@ const Portfolio = () => {
       const currentTime = new Date();
       const currentTimeStr = currentTime.getHours() + ":" + currentTime.getMinutes() + ":00";
       
-      // For 24/7 markets (crypto), skip time validation
+      // For 24/7 markets (crypto, forex, commodity), skip time validation
       if (is24x7Market) {
-        // Allow closing for 24/7 markets
+        // Allow closing for 24/7 markets anytime
       } else {
         const currentSeconds = getTimeInSeconds(currentTimeStr);
         const startSeconds = getTimeInSeconds(startTime);
         const endSeconds = getTimeInSeconds(endTime);
         
-        if (currentSeconds < startSeconds || currentSeconds > endSeconds) {
+        // Handle edge case where end time is 23:59:00 - treat as 24:00:00 (end of day)
+        const effectiveEndSeconds = (endTime === '23:59:00' || endTime === '23:59:59') ? 24 * 60 * 60 : endSeconds;
+        
+        if (currentSeconds < startSeconds || currentSeconds > effectiveEndSeconds) {
           toast.error("Market not open.");
           return;
         }
@@ -858,8 +906,57 @@ const Portfolio = () => {
       // Note: For FX orders, profitLossUSD is for display only, backend always expects INR
       const pl = order.profitLoss; // This is always in INR
       
-      // Calculate brokerage (you may need to adjust this based on your logic)
-      const brokerage = Math.abs(pl) * 0.01; // Example: 1% of absolute P/L
+      // Calculate brokerage based on symbol type
+      // Ensure isFX is available (it's declared at function start)
+      const isFXForBrokerage = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(symbolType);
+      let brokerage = 0;
+      
+      if (isFXForBrokerage) {
+        // For FX symbols (CRYPTO, FOREX, COMMODITY), use specific brokerage settings
+        let brokerageType = '';
+        let brokerageValue = 0;
+        
+        if (symbolType === 'CRYPTO') {
+          brokerageType = localStorage.getItem('CryptoBrokerageType') || '';
+          brokerageValue = parseFloat(localStorage.getItem('CryptoBrokerage') || 0);
+        } else if (symbolType === 'FOREX') {
+          brokerageType = localStorage.getItem('ForexBrokerageType') || '';
+          brokerageValue = parseFloat(localStorage.getItem('ForexBrokerage') || 0);
+        } else if (symbolType === 'COMMODITY') {
+          brokerageType = localStorage.getItem('CommodityBrokerageType') || '';
+          brokerageValue = parseFloat(localStorage.getItem('CommodityBrokerage') || 0);
+        }
+        
+        if (brokerageType === 'per_lot') {
+          // Per lot brokerage
+          const lotSize = parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1);
+          brokerage = lotSize * brokerageValue;
+        } else {
+          // Percentage-based brokerage (per crore or percentage)
+          // Calculate based on trade value (order price + current price) * lot size
+          const orderPrice = parseFloat(order.OrderPrice || 0);
+          const currentPrice = parseFloat(order.currentPrice || 0);
+          const lotSize = parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1);
+          const tradeValue = (orderPrice + currentPrice) * lotSize;
+          
+          // If brokerageValue is a percentage (like 0.01 for 1%), multiply directly
+          // If it's per crore, divide by 10000000
+          if (brokerageValue < 1) {
+            // Assume it's a percentage (0.01 = 1%)
+            brokerage = tradeValue * brokerageValue;
+          } else {
+            // Assume it's per crore
+            brokerage = (tradeValue * brokerageValue) / 10000000;
+          }
+        }
+      } else {
+        // For MCX, NSE, OPT - use existing logic (you may want to implement similar logic)
+        // For now, using 1% as fallback
+        brokerage = Math.abs(pl) * 0.01;
+      }
+      
+      // Ensure brokerage is not negative
+      brokerage = Math.abs(brokerage);
       
       // Get current date for ClosedAt
       const datee = new Date();
@@ -1017,20 +1114,10 @@ const Portfolio = () => {
               </div>
               <div className="text-right">
                 <div className={`font-semibold ${order.OrderCategory === 'SELL' ? 'text-red-400' : 'text-green-400'}`}>
-                  {order.orderCategoryDisplay} {order.Lot} @ {
-                    order.isFX ? (
-                      <>${order.orderPriceUSD ? order.orderPriceUSD.toFixed(4) : (order.OrderPrice && usdToInrRate ? (parseFloat(order.OrderPrice) / usdToInrRate).toFixed(4) : '0.0000')}</>
-                    ) : (
-                      <>{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}</>
-                    )
-                  }
+                  {order.orderCategoryDisplay} {order.Lot} @ ₹{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}
                 </div>
-                <div className={`text-sm font-medium ${(order.isFX ? order.profitLossUSD : order.profitLoss) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {order.isFX ? (
-                    <>{(order.profitLossUSD || 0) >= 0 ? '+' : ''}${(order.profitLossUSD || 0).toFixed(2)}</>
-                  ) : (
-                    <>{order.profitLoss >= 0 ? '+' : ''}{order.profitLoss.toFixed(2)}</>
-                  )}
+                <div className={`text-sm font-medium ${(order.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {order.profitLoss >= 0 ? '+' : ''}₹{order.profitLoss?.toFixed(2) || '0.00'}
                 </div>
               </div>
             </div>
@@ -1054,11 +1141,7 @@ const Portfolio = () => {
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-400">
                 CMP: <span className="text-white font-medium">
-                  {order.isFX ? (
-                    <>${order.currentPriceUSD ? order.currentPriceUSD.toFixed(4) : '0.0000'}</>
-                  ) : (
-                    <>{order.currentPrice ? parseFloat(order.currentPrice).toFixed(2) : '0.00'}</>
-                  )}
+                  ₹{order.currentPrice ? parseFloat(order.currentPrice).toFixed(2) : '0.00'}
                 </span>
               </div>
               <div className="flex space-x-2">
@@ -1110,31 +1193,19 @@ const Portfolio = () => {
             <div className="flex justify-between items-center mb-2">
               <div className="text-sm text-gray-400">
                 AvgSell: <span className="text-white font-medium">
-                  {order.isFX ? (
-                    <>${order.orderPriceUSD ? order.orderPriceUSD.toFixed(4) : (order.OrderPrice && usdToInrRate ? (parseFloat(order.OrderPrice) / usdToInrRate).toFixed(4) : '0.0000')}</>
-                  ) : (
-                    <>{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}</>
-                  )}
+                  ₹{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}
                 </span>
               </div>
               <div className="text-sm text-gray-400">
                 AvgBuy: <span className="text-white font-medium">
-                  {order.isFX ? (
-                    <>${order.broughtByUSD ? order.broughtByUSD.toFixed(4) : (order.BroughtBy && usdToInrRate ? (parseFloat(order.BroughtBy) / usdToInrRate).toFixed(4) : '0.0000')}</>
-                  ) : (
-                    <>{order.BroughtBy ? parseFloat(order.BroughtBy).toFixed(2) : '0.00'}</>
-                  )}
+                  ₹{order.BroughtBy ? parseFloat(order.BroughtBy).toFixed(2) : '0.00'}
                 </span>
               </div>
             </div>
             
-            <div className="text-sm">
-              Profit/Loss: <span className={`font-medium ${(order.isFX ? order.plUSD : parseInt(order.P_L || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {order.isFX ? (
-                  <>{(order.plUSD || 0) >= 0 ? '+' : ''}${(order.plUSD || 0).toFixed(2)}</>
-                ) : (
-                  <>{parseInt(order.P_L || 0) >= 0 ? '+' : ''}{parseInt(order.P_L || 0)}</>
-                )}
+            <div className="text-sm text-gray-400">
+              Profit/Loss: <span className={`font-medium ${(parseInt(order.P_L || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {parseInt(order.P_L || 0) >= 0 ? '+' : ''}₹{parseInt(order.P_L || 0).toFixed(2)}
               </span>
             </div>
           </div>

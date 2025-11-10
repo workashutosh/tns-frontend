@@ -1,6 +1,17 @@
 import { useState, useEffect, createContext, useContext } from 'react';
+import { useUserDataRefresh } from './useUserDataRefresh';
+import { authAPI } from '../services/api';
+import { getDeviceIP } from '../utils/deviceUtils';
+import { storeUserDataToLocalStorage } from '../utils/userDataStorage';
 
 const AuthContext = createContext();
+
+// Internal component to handle user data refresh
+// This must be inside the AuthProvider to access the context
+function AuthRefreshHandler({ user, updateUser, isAuthenticated }) {
+  useUserDataRefresh(user, updateUser, isAuthenticated);
+  return null;
+}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -42,17 +53,63 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(newUserData));
   };
 
+  /**
+   * Manually refresh user data from server
+   * This can be called when needed (e.g., before critical actions)
+   */
+  const refreshUserData = async () => {
+    if (!user?.UserId) {
+      return false;
+    }
+
+    try {
+      const deviceIp = await getDeviceIP();
+      const response = await authAPI.refreshData(user.UserId, deviceIp);
+      
+      if (response && response.UserId) {
+        const oldPassword = localStorage.getItem('oldpassword');
+        storeUserDataToLocalStorage(response, oldPassword);
+        
+        const updatedUserData = {
+          ...response,
+          deviceId: user.deviceId || null,
+          deviceIp: deviceIp,
+          oldpassword: oldPassword || user.oldpassword || null
+        };
+        
+        updateUser(updatedUserData);
+        
+        // Dispatch custom event to notify components that user data was refreshed
+        window.dispatchEvent(new CustomEvent('userDataRefreshed', { 
+          detail: { response } 
+        }));
+        
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      return false;
+    }
+  };
+
   const value = {
     user,
     isAuthenticated,
     loading,
     login,
     logout,
-    updateUser
+    updateUser,
+    refreshUserData
   };
 
   return (
     <AuthContext.Provider value={value}>
+      <AuthRefreshHandler 
+        user={user} 
+        updateUser={updateUser} 
+        isAuthenticated={isAuthenticated} 
+      />
       {children}
     </AuthContext.Provider>
   );

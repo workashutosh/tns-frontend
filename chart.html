@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FXOpen Live Chart</title>
+  
+  <!-- ✅ Correct CDN for Lightweight Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.min.js"></script>
+  
+  <style>
+    body {
+      background: #0d1117;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #chart {
+      width: 90%;
+      height: 500px;
+      margin-top: 30px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>FXOpen Live Chart - BTCUSD</h2>
+  <div id="chart"></div>
+
+  <script>
+    // === STEP 1: Initialize the chart AFTER script is loaded ===
+    const chartContainer = document.getElementById('chart');
+    const chart = LightweightCharts.createChart(chartContainer, {
+      width: chartContainer.clientWidth,
+      height: 500,
+      layout: { background: { color: '#0d1117' }, textColor: '#DDD' },
+      grid: { vertLines: { color: '#222' }, horzLines: { color: '#222' } },
+    });
+
+    const candleSeries = chart.addCandlestickSeries();
+
+    // === STEP 2: Connect to FXOpen WebSocket ===
+    const ws = new WebSocket("wss://marginalttlivewebapi.fxopen.net:3000/WSGateway");
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket connected.");
+
+      // Authorize with your credentials
+      ws.send(JSON.stringify({
+        "Id": 1,
+        "Request": "Authorize",
+        "Params": {
+          "WebApiId": "65d219c4-5978-4540-af0f-a70345d9b761",
+          "WebApiKey": "fWgS3W7m6JJAzGHF",
+          "WebApiSecret": "PcjDNzex6E7Dw9ejdZc4SpSbtTsKnHSnxFegKH6wa58sdYB6w69ACzbzsgj5fDgx"
+        }
+      }));
+    };
+
+    ws.onmessage = (msg) => {
+      const data = JSON.parse(msg.data);
+      console.log("📩", data);
+
+      // Authorized
+      if (data.Result && data.Result.Authorized) {
+        console.log("✅ Authorized successfully.");
+
+        // Request historical 1-minute bars
+        ws.send(JSON.stringify({
+          "Id": 2,
+          "Request": "QuoteHistoryBars",
+          "Params": {
+            "Symbol": "BTCUSD",
+            "Periodicity": "M1",
+            "PriceType": "bid",
+            "Timestamp": Date.now(),
+            "Count": -100
+          }
+        }));
+
+        // Subscribe to live quotes
+        ws.send(JSON.stringify({
+          "Id": 3,
+          "Request": "SubscribeToQuotes",
+          "Params": { "Symbol": ["BTCUSD"] }
+        }));
+      }
+
+      // Historical bars
+      if (data.Result && data.Result.Bars) {
+        const bars = data.Result.Bars.map(bar => ({
+          time: Math.floor(bar.Timestamp / 1000),
+          open: bar.Open,
+          high: bar.High,
+          low: bar.Low,
+          close: bar.Close
+        }));
+        candleSeries.setData(bars);
+        console.log("📊 Historical bars loaded");
+      }
+
+      // Live ticks
+      if (data.Type === "tick" && data.Data?.Symbol === "BTCUSD") {
+        const tick = data.Data;
+        const candle = {
+          time: Math.floor(tick.Timestamp / 1000),
+          open: tick.BestBid?.Price,
+          high: tick.BestBid?.Price,
+          low: tick.BestBid?.Price,
+          close: tick.BestAsk?.Price
+        };
+        candleSeries.update(candle);
+      }
+    };
+
+    ws.onerror = (err) => console.error("❌ WebSocket error:", err);
+    ws.onclose = () => console.warn("⚠️ Connection closed");
+
+    // === Resize handling ===
+    window.addEventListener('resize', () => {
+      chart.applyOptions({ width: chartContainer.clientWidth });
+    });
+  </script>
+</body>
+</html>

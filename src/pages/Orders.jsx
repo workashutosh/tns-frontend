@@ -24,6 +24,7 @@ const Orders = () => {
   const fxReconnectAttemptRef = useRef(0);
   const [usdToInrRate, setUsdToInrRate] = useState(88.65); // Default fallback rate
   const exchangeRateIntervalRef = useRef(null);
+  const ordersStateRef = useRef([]); // Keep reference to current orders for preserving WebSocket updates
 
   const tabs = [
     { id: 'pending', label: 'Pending' },
@@ -59,9 +60,11 @@ const Orders = () => {
     if (!data || !data.instrument_token) return;
     
     const tokenToFind = data.instrument_token.toString();
+    console.log('Orders: updateMarketData called for token:', tokenToFind, 'activeTab:', activeTab);
     
     setOrders(prevOrders => {
-      return prevOrders.map(order => {
+      const updatedOrders = prevOrders.map(order => {
+        // Only update active orders (not pending/closed) and non-FX orders
         if (order.TokenNo?.toString() === tokenToFind && activeTab === 'active' && !order.isFX) {
           const bid = data.bid === "0" || data.bid === 0 ? data.last_price : data.bid;
           const ask = data.ask === "0" || data.ask === 0 ? data.last_price : data.ask;
@@ -77,6 +80,8 @@ const Orders = () => {
             profitLoss = (parseFloat(currentPrice) - parseFloat(order.OrderPrice)) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
           }
           
+          console.log('Orders: Updating order', order.ScriptName, 'currentPrice:', currentPrice, 'profitLoss:', profitLoss);
+          
           return {
             ...order,
             currentPrice: parseFloat(currentPrice),
@@ -85,6 +90,8 @@ const Orders = () => {
         }
         return order;
       });
+      ordersStateRef.current = updatedOrders; // Update ref
+      return updatedOrders;
     });
   }, [activeTab]);
 
@@ -98,6 +105,8 @@ const Orders = () => {
     
     if (!Symbol) return;
 
+    console.log('Orders: updateFXMarketData called for Symbol:', Symbol, 'activeTab:', activeTab);
+
     // Get USD prices from tick data
     const bestBidPriceUSD = BestBid?.Price || 0;
     const bestAskPriceUSD = BestAsk?.Price || 0;
@@ -107,10 +116,15 @@ const Orders = () => {
     const bestAskPrice = bestAskPriceUSD * usdToInrRate;
     
     setOrders(prevOrders => {
-      return prevOrders.map(order => {
+      const updatedOrders = prevOrders.map(order => {
+        // Only update active orders (not pending/closed) and FX orders
         if (activeTab === 'active' && order.isFX) {
-          const symbolName = order.ScriptName?.split('_')[0];
+          // Match by SymbolName (the Symbol from tick data should match SymbolName)
+          // Use scriptName if available (from Portfolio), otherwise split ScriptName
+          const symbolName = order.scriptName || order.ScriptName?.split('_')[0];
           if (symbolName === Symbol || order.ScriptName === Symbol) {
+            console.log('Orders: Matching FX order found:', order.ScriptName, 'Symbol:', Symbol);
+            
             let currentPrice = 0;
             let profitLoss = 0;
             
@@ -134,6 +148,8 @@ const Orders = () => {
               profitLossUSD = (currentPriceUSD - orderPriceUSD) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
             }
             
+            console.log('Orders: Updating FX order', order.ScriptName, 'currentPrice:', currentPrice, 'profitLoss:', profitLoss);
+            
             return {
               ...order,
               currentPrice: parseFloat(currentPrice),
@@ -148,6 +164,8 @@ const Orders = () => {
         }
         return order;
       });
+      ordersStateRef.current = updatedOrders; // Update ref
+      return updatedOrders;
     });
   }, [activeTab, usdToInrRate]);
 
@@ -172,7 +190,6 @@ const Orders = () => {
     }
     
     const maxReconnectAttempts = 10;
-    const reconnectAttemptRef = { current: 0 };
     
     const connectWebSocket = () => {
       try {
@@ -194,6 +211,7 @@ const Orders = () => {
           }
           
           reconnectAttemptRef.current = 0;
+          console.log('Orders: WebSocket connected, sending tokens:', tokens);
           
           if (tokens && tokens.trim().length > 0) {
             try {
@@ -243,6 +261,7 @@ const Orders = () => {
           
           try {
             const data = JSON.parse(event.data);
+            console.log('Orders: Received WebSocket data:', data);
             updateMarketData(data);
           } catch (error) {
             console.error('Error parsing WebSocket data:', error);
@@ -356,6 +375,7 @@ const Orders = () => {
           
           try {
             const data = JSON.parse(event.data);
+            console.log('Orders: Received FX WebSocket data:', data);
             updateFXMarketData(data);
           } catch (error) {
             console.error('Error parsing FX WebSocket data:', error);
@@ -439,10 +459,23 @@ const Orders = () => {
       // Parse response if it's a string
       let data = typeof response === 'string' ? JSON.parse(response) : response;
       
-      // For active orders, initialize WebSocket for live updates
+      // For active orders, preserve WebSocket updates and initialize WebSocket for live updates
       if (activeTab === 'active' && data.length > 0) {
         let tokens = '';
         const fxSymbols = [];
+        
+        // Preserve existing WebSocket updates from current orders state
+        const existingOrdersMap = new Map();
+        ordersStateRef.current.forEach(order => {
+          if (order.TokenNo) {
+            existingOrdersMap.set(order.TokenNo.toString(), {
+              currentPrice: order.currentPrice,
+              profitLoss: order.profitLoss,
+              currentPriceUSD: order.currentPriceUSD,
+              profitLossUSD: order.profitLossUSD
+            });
+          }
+        });
         
         data = data.map(item => {
           // Check if this is an FX symbol (FOREX, CRYPTO, COMMODITY)
@@ -463,37 +496,51 @@ const Orders = () => {
           // Calculate initial P/L
           let profitLoss = 0;
           let profitLossUSD = 0;
+          let orderPriceUSD = 0;
+          let currentPriceUSD = 0;
           const cmp = parseFloat(item.cmp || 0);
           const orderPrice = parseFloat(item.OrderPrice || 0);
           const lotSize = (parseFloat(item.selectedlotsize || 1) * parseFloat(item.Lot || 1));
           
-          // For FX orders, calculate USD prices and P/L
-          let orderPriceUSD = 0;
-          let currentPriceUSD = 0;
-          if (isFX && usdToInrRate > 0) {
-            // Convert OrderPrice from INR to USD
-            orderPriceUSD = orderPrice / usdToInrRate;
-            // Convert CMP from INR to USD
-            currentPriceUSD = cmp / usdToInrRate;
-            
-            // Calculate P/L in USD
-            if (item.OrderCategory === "SELL") {
-              profitLossUSD = (orderPriceUSD - currentPriceUSD) * lotSize;
-            } else {
-              profitLossUSD = (currentPriceUSD - orderPriceUSD) * lotSize;
-            }
-          }
+          // Check if we have WebSocket-updated values for this order
+          const existingUpdate = existingOrdersMap.get(item.TokenNo?.toString());
+          const hasWebSocketUpdate = existingUpdate && existingUpdate.currentPrice > 0;
           
-          // Calculate P/L in INR (for non-FX or as fallback)
-          if (item.OrderCategory === "SELL") {
-            profitLoss = (orderPrice - cmp) * lotSize;
-          } else {
-            profitLoss = (cmp - orderPrice) * lotSize;
+          if (hasWebSocketUpdate) {
+            // Use WebSocket-updated values
+            profitLoss = existingUpdate.profitLoss || 0;
+            profitLossUSD = existingUpdate.profitLossUSD || 0;
+            currentPriceUSD = existingUpdate.currentPriceUSD || 0;
+          } else if (cmp > 0) {
+            // Only calculate P/L if we have a valid current price (cmp > 0)
+            // If cmp is 0, P/L will be 0 initially and updated by WebSocket with live prices
+            // For FX orders, calculate USD prices and P/L
+            if (isFX && usdToInrRate > 0) {
+              // Convert OrderPrice from INR to USD
+              orderPriceUSD = orderPrice / usdToInrRate;
+              // Convert CMP from INR to USD
+              currentPriceUSD = cmp / usdToInrRate;
+              
+              // Calculate P/L in USD
+              if (item.OrderCategory === "SELL") {
+                profitLossUSD = (orderPriceUSD - currentPriceUSD) * lotSize;
+              } else {
+                profitLossUSD = (currentPriceUSD - orderPriceUSD) * lotSize;
+              }
+            }
+            
+            // Calculate P/L in INR (for non-FX or as fallback)
+            if (item.OrderCategory === "SELL") {
+              profitLoss = (orderPrice - cmp) * lotSize;
+            } else {
+              profitLoss = (cmp - orderPrice) * lotSize;
+            }
           }
           
           return {
             ...item,
-            currentPrice: cmp,
+            scriptName: item.ScriptName?.split('_')[0] || item.ScriptName, // Add scriptName for FX symbol matching
+            currentPrice: hasWebSocketUpdate ? existingUpdate.currentPrice : cmp,
             profitLoss: parseFloat(profitLoss.toFixed(2)),
             profitLossUSD: isFX ? parseFloat(profitLossUSD.toFixed(2)) : 0,
             orderPriceUSD: isFX ? parseFloat(orderPriceUSD.toFixed(4)) : 0,
@@ -505,18 +552,22 @@ const Orders = () => {
         
         tokensRef.current = tokens.slice(0, -1);
         fxSymbolsRef.current = fxSymbols;
+        ordersStateRef.current = data; // Update ref
         setOrders(data);
         
         // Initialize WebSocket for MCX/NSE orders
-        if (tokensRef.current) {
+        if (tokensRef.current && tokensRef.current.trim().length > 0) {
+          console.log('Orders: Initializing WebSocket with tokens:', tokensRef.current);
           initializeWebSocket(tokensRef.current);
         }
         
         // Initialize FX WebSocket for FOREX/CRYPTO/COMMODITY orders
         if (fxSymbols.length > 0) {
+          console.log('Orders: Initializing FX WebSocket with symbols:', fxSymbols);
           initializeFXWebSocket();
         }
       } else {
+        ordersStateRef.current = data; // Update ref
         setOrders(data);
       }
     } catch (error) {
@@ -691,44 +742,28 @@ const Orders = () => {
                     <div>
                       <p className="text-gray-400">Order Price</p>
                       <p className="font-medium text-white">
-                        {order.isFX ? (
-                          <>${order.orderPriceUSD ? order.orderPriceUSD.toFixed(4) : (order.OrderPrice && usdToInrRate ? (parseFloat(order.OrderPrice) / usdToInrRate).toFixed(4) : '0.0000')}</>
-                        ) : (
-                          <>₹{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}</>
-                        )}
+                        ₹{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}
                       </p>
                     </div>
                     {activeTab === 'active' && order.currentPrice !== undefined && (
                       <div>
                         <p className="text-gray-400">Current Price</p>
                         <p className="font-medium text-white">
-                          {order.isFX ? (
-                            <>${order.currentPriceUSD ? order.currentPriceUSD.toFixed(4) : '0.0000'}</>
-                          ) : (
-                            <>₹{order.currentPrice ? parseFloat(order.currentPrice).toFixed(2) : '0.00'}</>
-                          )}
+                          ₹{order.currentPrice ? parseFloat(order.currentPrice).toFixed(2) : '0.00'}
                         </p>
                       </div>
                     )}
                     <div>
                       <p className="text-gray-400">Margin Used</p>
                       <p className="font-medium text-white">
-                        {order.isFX ? (
-                          <>${order.MarginUsed && usdToInrRate ? (parseFloat(order.MarginUsed) / usdToInrRate).toFixed(2) : '0.00'}</>
-                        ) : (
-                          <>₹{order.MarginUsed ? parseFloat(order.MarginUsed).toFixed(2) : '0.00'}</>
-                        )}
+                        ₹{order.MarginUsed ? parseFloat(order.MarginUsed).toFixed(2) : '0.00'}
                       </p>
                     </div>
                     {activeTab === 'active' && order.profitLoss !== undefined && (
                       <div>
                         <p className="text-gray-400">Profit/Loss</p>
-                        <p className={`font-medium ${(order.isFX ? order.profitLossUSD : order.profitLoss) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {order.isFX ? (
-                            <>{(order.profitLossUSD || 0) >= 0 ? '+' : ''}${(order.profitLossUSD || 0).toFixed(2)}</>
-                          ) : (
-                            <>{order.profitLoss >= 0 ? '+' : ''}₹{order.profitLoss?.toFixed(2) || '0.00'}</>
-                          )}
+                        <p className={`font-medium ${(order.profitLoss || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {order.profitLoss >= 0 ? '+' : ''}₹{order.profitLoss?.toFixed(2) || '0.00'}
                         </p>
                       </div>
                     )}

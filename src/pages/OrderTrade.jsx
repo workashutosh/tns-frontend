@@ -61,7 +61,9 @@ export default function OrderTrade() {
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
   const wsRef = useRef(null);
+  const fxWsRef = useRef(null);
   const lastBarRef = useRef(null);
+  const [usdToInrRate, setUsdToInrRate] = useState(88.65);
 
   // Initialize symbol from location.state or localStorage
   useEffect(() => {
@@ -136,9 +138,30 @@ export default function OrderTrade() {
     };
   }, [chartsReady]);
 
-  // Subscribe to WS for this token and build 1m candles
+  // Fetch USD to INR exchange rate
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const data = await response.json();
+        if (data.rates && data.rates.INR) {
+          setUsdToInrRate(data.rates.INR);
+        }
+      } catch (error) {
+        console.error('Error fetching exchange rate:', error);
+      }
+    };
+    fetchExchangeRate();
+    const interval = setInterval(fetchExchangeRate, 5 * 60 * 1000); // Update every 5 minutes
+    return () => clearInterval(interval);
+  }, []);
+
+  // Subscribe to WS for MCX/NSE tokens and build 1m candles
   useEffect(() => {
     if (!symbol?.SymbolToken || !seriesRef.current) return;
+    const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(symbol?.ExchangeType || '');
+    if (isFX) return; // FX symbols use different WebSocket
+    
     const uri = 'wss://ws.tradewingss.com/api/webapiwebsoc';
     const ws = new WebSocket(uri);
     wsRef.current = ws;
@@ -177,12 +200,122 @@ export default function OrderTrade() {
         bar.close = price;
         seriesRef.current.update(bar);
       }
+
+      // Update symbol market data
+      const bid = tick.bid === "0" || tick.bid === 0 ? tick.last_price : tick.bid;
+      const ask = tick.ask === "0" || tick.ask === 0 ? tick.last_price : tick.ask;
+      setSymbol(prev => ({
+        ...prev,
+        buy: parseFloat(ask) || prev?.buy || 0,
+        sell: parseFloat(bid) || prev?.sell || 0,
+        ltp: parseFloat(tick.last_price) || prev?.ltp || 0,
+        chg: parseFloat(tick.change) || prev?.chg || 0,
+        high: parseFloat(tick.high_) || prev?.high || 0,
+        low: parseFloat(tick.low_) || prev?.low || 0,
+        open: parseFloat(tick.open_) || prev?.open || 0,
+        close: parseFloat(tick.close_) || prev?.close || 0,
+        oi: tick.oi || prev?.oi || 0,
+        volume: tick.volume || prev?.volume || 0
+      }));
     };
     ws.onclose = () => { wsRef.current = null; };
     ws.onerror = () => {};
 
     return () => { try { ws.close(); } catch {} };
-  }, [symbol?.SymbolToken, chartsReady]);
+  }, [symbol?.SymbolToken, symbol?.ExchangeType, chartsReady]);
+
+  // Subscribe to FX WebSocket for FOREX/CRYPTO/COMMODITY
+  useEffect(() => {
+    if (!symbol?.SymbolName || !seriesRef.current) return;
+    const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(symbol?.ExchangeType || '');
+    if (!isFX) return;
+
+    const uri = 'wss://www.fxsoc.tradenstocko.com:8001/ws';
+    const ws = new WebSocket(uri);
+    fxWsRef.current = ws;
+
+    ws.onopen = () => {
+      // FX WebSocket automatically sends all data
+    };
+    ws.onmessage = (event) => {
+      if (!event.data || event.data === '' || event.data === 'true') return;
+      try {
+        const tickData = JSON.parse(event.data);
+        if (!tickData || tickData.type !== 'tick' || !tickData.data) return;
+        
+        const { Symbol, BestBid, BestAsk, Bids, Asks } = tickData.data;
+        const symbolName = symbol.SymbolName?.split('_')[0] || symbol.SymbolName;
+        
+        if (Symbol !== symbolName && Symbol !== symbol.SymbolName) return;
+
+        const bestBidPriceUSD = BestBid?.Price || 0;
+        const bestAskPriceUSD = BestAsk?.Price || 0;
+        const bestBidPrice = bestBidPriceUSD * usdToInrRate;
+        const bestAskPrice = bestAskPriceUSD * usdToInrRate;
+        
+        const highUSD = Asks && Asks.length > 0 
+          ? Math.max(...Asks.map(ask => ask.Price || 0))
+          : bestAskPriceUSD;
+        const lowUSD = Bids && Bids.length > 0
+          ? Math.min(...Bids.map(bid => bid.Price || 0))
+          : bestBidPriceUSD;
+        
+        const ltpUSD = bestBidPriceUSD && bestAskPriceUSD 
+          ? (bestBidPriceUSD + bestAskPriceUSD) / 2 
+          : (bestBidPriceUSD || bestAskPriceUSD || 0);
+        const ltp = ltpUSD * usdToInrRate;
+        
+        const totalVolume = (Bids ? Bids.reduce((sum, bid) => sum + (bid.Volume || 0), 0) : 0) +
+                           (Asks ? Asks.reduce((sum, ask) => sum + (ask.Volume || 0), 0) : 0);
+        
+        const prevLtp = symbol?.ltp || ltp;
+        const change = ltp - prevLtp;
+
+        // Update chart
+        const price = ltpUSD;
+        const tsSec = Math.floor(Date.now() / 1000);
+        const bucket = floorToMinute(tsSec);
+        if (!lastBarRef.current || lastBarRef.current.time !== bucket) {
+          const newBar = { time: bucket, open: price, high: price, low: price, close: price };
+          lastBarRef.current = newBar;
+          seriesRef.current.update(newBar);
+        } else {
+          const bar = lastBarRef.current;
+          bar.high = Math.max(bar.high, price);
+          bar.low = Math.min(bar.low, price);
+          bar.close = price;
+          seriesRef.current.update(bar);
+        }
+
+        // Update symbol market data
+        setSymbol(prev => ({
+          ...prev,
+          buy: bestAskPrice,
+          sell: bestBidPrice,
+          buyUSD: bestAskPriceUSD,
+          sellUSD: bestBidPriceUSD,
+          ltp: ltp,
+          ltpUSD: ltpUSD,
+          high: highUSD * usdToInrRate,
+          highUSD: highUSD,
+          low: lowUSD * usdToInrRate,
+          lowUSD: lowUSD,
+          chg: change,
+          volume: totalVolume,
+          open: prev?.open || ltp,
+          openUSD: prev?.openUSD || ltpUSD,
+          close: prev?.close || ltp,
+          closeUSD: prev?.closeUSD || ltpUSD
+        }));
+      } catch (error) {
+        console.error('Error parsing FX WebSocket data:', error);
+      }
+    };
+    ws.onclose = () => { fxWsRef.current = null; };
+    ws.onerror = () => {};
+
+    return () => { try { ws.close(); } catch {} };
+  }, [symbol?.SymbolName, symbol?.ExchangeType, chartsReady, usdToInrRate]);
 
   const handleInputChange = (field, value) => {
     setOrderData(prev => ({ ...prev, [field]: value }));
@@ -192,6 +325,15 @@ export default function OrderTrade() {
 
   const formatPrice = (p) => parseFloat(p || 0).toFixed(2);
   
+  // Format FX price - show 5 decimal places without rounding (like 1.15830)
+  const formatFXPrice = (price) => {
+    if (!price || price === 0) return '0.00000';
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) return '0.00000';
+    // Always show 5 decimal places to match FX price format
+    return numPrice.toFixed(5);
+  };
+  
   // Check if symbol is from FX tabs (Crypto/Forex/Commodity)
   const isFXSymbol = () => {
     if (!symbol) return false;
@@ -199,11 +341,11 @@ export default function OrderTrade() {
     return ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
   };
 
-  // Get USD price for display (for FX symbols)
+  // Get USD price for display (for FX symbols) - return raw value without formatting
   const getBuyPriceUSD = () => {
     if (!symbol) return 0;
     if (activeTab === 'market') {
-      return parseFloat(symbol.buyUSD || 0);
+      return symbol.buyUSD || symbol.buy || 0;
     }
     // For limit orders, show the USD price user entered
     return parseFloat(orderData.price || 0);
@@ -212,7 +354,7 @@ export default function OrderTrade() {
   const getSellPriceUSD = () => {
     if (!symbol) return 0;
     if (activeTab === 'market') {
-      return parseFloat(symbol.sellUSD || 0);
+      return symbol.sellUSD || symbol.sell || 0;
     }
     // For limit orders, show the USD price user entered
     return parseFloat(orderData.price || 0);
@@ -478,6 +620,79 @@ export default function OrderTrade() {
         </div>
       </div>
 
+      {/* Market Data Grid */}
+      <div className="px-3 py-3 bg-gray-800 border-b border-gray-700">
+        <div className="grid grid-cols-3 gap-3 text-xs">
+          {/* Column 1 */}
+          <div className="space-y-2">
+            <div>
+              <div className="text-gray-400 mb-0.5">Bid</div>
+              <div className="text-white font-semibold">
+                {isFXSymbol() ? formatFXPrice(symbol?.sellUSD || symbol?.sell || 0) : formatPrice(symbol?.sell || 0)}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400 mb-0.5">High</div>
+              <div className="text-white font-semibold">
+                {isFXSymbol() ? formatFXPrice((symbol?.highUSD || symbol?.high || 0)) : formatPrice(symbol?.high || 0)}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400 mb-0.5">Close</div>
+              <div className="text-white font-semibold">
+                {isFXSymbol() ? formatFXPrice((symbol?.closeUSD || symbol?.close || 0)) : formatPrice(symbol?.close || 0)}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400 mb-0.5">Change</div>
+              <div className={`font-semibold ${(symbol?.chg || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {(symbol?.chg || 0) >= 0 ? '+' : ''}{formatPrice(symbol?.chg || 0)}
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2 */}
+          <div className="space-y-2">
+            <div>
+              <div className="text-gray-400 mb-0.5">Ask</div>
+              <div className="text-white font-semibold">
+                {isFXSymbol() ? formatFXPrice(symbol?.buyUSD || symbol?.buy || 0) : formatPrice(symbol?.buy || 0)}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400 mb-0.5">Low</div>
+              <div className="text-white font-semibold">
+                {isFXSymbol() ? formatFXPrice((symbol?.lowUSD || symbol?.low || 0)) : formatPrice(symbol?.low || 0)}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400 mb-0.5">OL</div>
+              <div className="text-white font-semibold">{symbol?.oi || 0}</div>
+            </div>
+          </div>
+
+          {/* Column 3 */}
+          <div className="space-y-2">
+            <div>
+              <div className="text-gray-400 mb-0.5">Ltp</div>
+              <div className="text-white font-semibold">
+                {isFXSymbol() ? formatFXPrice(symbol?.ltpUSD || symbol?.ltp || 0) : formatPrice(symbol?.ltp || 0)}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400 mb-0.5">Open</div>
+              <div className="text-white font-semibold">
+                {isFXSymbol() ? formatFXPrice((symbol?.openUSD || symbol?.open || 0)) : formatPrice(symbol?.open || 0)}
+              </div>
+            </div>
+            <div>
+              <div className="text-gray-400 mb-0.5">Vol</div>
+              <div className="text-white font-semibold">{symbol?.volume || 0}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Order form */}
       <div className="p-3 flex-1 overflow-y-auto flex flex-col">
         <div className="flex border-b border-gray-700 mb-3">
@@ -578,7 +793,7 @@ export default function OrderTrade() {
                   <div className="text-xs opacity-90 mb-0.5">SELL</div>
                   {isFXSymbol() ? (
                     <div className="text-base font-bold">
-                      ${formatPrice(getSellPriceUSD())}
+                      {formatFXPrice(getSellPriceUSD())}
                     </div>
                   ) : (
                     <div className="text-base font-bold">
@@ -606,7 +821,7 @@ export default function OrderTrade() {
                   <div className="text-xs opacity-90 mb-0.5">BUY</div>
                   {isFXSymbol() ? (
                     <div className="text-base font-bold">
-                      ${formatPrice(getBuyPriceUSD())}
+                      {formatFXPrice(getBuyPriceUSD())}
                     </div>
                   ) : (
                     <div className="text-base font-bold">

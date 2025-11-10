@@ -2,54 +2,40 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Plus, TrendingUp, ArrowLeft, X, Check, TrendingDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { tradingAPI } from '../services/api';
+import OrderModal from '../components/OrderModal';
+import { useAuth } from '../hooks/useAuth.jsx';
 
 const MarketWatch = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
-  // Get user from localStorage (you can modify this based on your auth system)
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : { UserId: 'demo123', Refid: 'ref123' };
-  });
-  
-  const [activeTab, setActiveTab] = useState('MCX');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [marketData, setMarketData] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [wsConnected, setWsConnected] = useState(false);
-  const [wsError, setWsError] = useState(null);
-  const [connectionAttempts, setConnectionAttempts] = useState(0);
-  const [lastUpdate, setLastUpdate] = useState(Date.now());
-  const [selectedTokens, setSelectedTokens] = useState(new Set());
-  const [usdToInrRate, setUsdToInrRate] = useState(88.65); // Default fallback rate
-  
-  const websocketRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
-  const isInitializingRef = useRef(false);
-  const mountedRef = useRef(true);
-  const updateCountRef = useRef(0);
-  const searchTimeoutRef = useRef(null);
-  const exchangeRateIntervalRef = useRef(null);
-  const scrollContainerRef = useRef(null);
-  const tabsContainerRef = useRef(null);
-  const tabRefs = useRef({});
-
   // Build tabs dynamically based on localStorage values
+  // Define this function BEFORE useState hooks that use it
   const buildTabs = () => {
-    const tabs = [
-      { id: 'MCX', label: 'MCX Futures' },
-      { id: 'NSE', label: 'NSE Futures' },
-      { id: 'OPT', label: 'OPTION' }
-    ];
+    const tabs = [];
     
     // Check localStorage for trading permissions
+    const isMCXTrade = localStorage.getItem('IsMCXTrade') === 'true';
+    const isNSETrade = localStorage.getItem('IsNSETrade') === 'true';
+    const isCDSTrade = localStorage.getItem('IsCDSTrade') === 'true';
     const tradeInCrypto = localStorage.getItem('Trade_in_crypto') === 'true';
     const tradeInForex = localStorage.getItem('Trade_in_forex') === 'true';
     const tradeInCommodity = localStorage.getItem('Trade_in_commodity') === 'true';
+    
+    // Add MCX tab if enabled
+    if (isMCXTrade) {
+      tabs.push({ id: 'MCX', label: 'MCX Futures' });
+    }
+    
+    // Add NSE tab if enabled
+    if (isNSETrade) {
+      tabs.push({ id: 'NSE', label: 'NSE Futures' });
+    }
+    
+    // Add OPT (CDS) tab if enabled
+    if (isCDSTrade) {
+      tabs.push({ id: 'OPT', label: 'OPTION' });
+    }
     
     // Add Crypto tab if enabled
     if (tradeInCrypto) {
@@ -69,8 +55,82 @@ const MarketWatch = () => {
     return tabs;
   };
   
-  const [tabs] = useState(() => buildTabs());
-
+  // Initialize activeTab based on available tabs
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabs = buildTabs();
+    return tabs.length > 0 ? tabs[0].id : 'MCX';
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [marketData, setMarketData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [wsError, setWsError] = useState(null);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [selectedTokens, setSelectedTokens] = useState(new Set());
+  const [usdToInrRate, setUsdToInrRate] = useState(88.65); // Default fallback rate
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [selectedSymbol, setSelectedSymbol] = useState(null);
+  
+  const websocketRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
+  const isInitializingRef = useRef(false);
+  const mountedRef = useRef(true);
+  const updateCountRef = useRef(0);
+  const searchTimeoutRef = useRef(null);
+  const exchangeRateIntervalRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const tabsContainerRef = useRef(null);
+  const tabRefs = useRef({});
+  
+  const [tabs, setTabs] = useState(() => buildTabs());
+  
+  // Function to update tabs based on current localStorage values
+  const updateTabs = useCallback(() => {
+    const newTabs = buildTabs();
+    setTabs(newTabs);
+    
+    // If current activeTab is not in the new tabs, switch to first available tab
+    if (newTabs.length > 0 && !newTabs.find(tab => tab.id === activeTab)) {
+      setActiveTab(newTabs[0].id);
+    }
+  }, [activeTab]);
+  
+  // Update tabs when user object changes (happens after refresh)
+  useEffect(() => {
+    updateTabs();
+  }, [user, updateTabs]);
+  
+  // Listen for custom event when user data is refreshed
+  useEffect(() => {
+    const handleUserDataRefreshed = () => {
+      // Rebuild tabs when user data is refreshed
+      updateTabs();
+    };
+    
+    window.addEventListener('userDataRefreshed', handleUserDataRefreshed);
+    
+    // Also check periodically (every 2 seconds) to catch localStorage changes
+    const intervalId = setInterval(() => {
+      const newTabs = buildTabs();
+      const currentTabsString = JSON.stringify(tabs.map(t => t.id).sort());
+      const newTabsString = JSON.stringify(newTabs.map(t => t.id).sort());
+      
+      if (currentTabsString !== newTabsString) {
+        updateTabs();
+      }
+    }, 2000);
+    
+    return () => {
+      window.removeEventListener('userDataRefreshed', handleUserDataRefreshed);
+      clearInterval(intervalId);
+    };
+  }, [tabs, updateTabs]);
+  
   // Fetch USD to INR exchange rate
   const fetchExchangeRate = useCallback(async () => {
     try {
@@ -772,9 +832,9 @@ const MarketWatch = () => {
     initializeWebSocket();
   };
 
-  // Navigate to order page when symbol is clicked
+  // Open order modal when symbol is clicked
   const handleSymbolClick = (symbol) => {
-    // Store symbol data in localStorage for OrderTrade page
+    // Store symbol data in localStorage
     if (symbol && symbol.SymbolToken) {
       localStorage.setItem("SymbolLotSize", symbol.Lotsize || 1);
       localStorage.setItem("selected_token", symbol.SymbolToken);
@@ -782,14 +842,22 @@ const MarketWatch = () => {
       localStorage.setItem("selectedlotsize", symbol.Lotsize || 1);
       localStorage.setItem("selected_exchange", symbol.ExchangeType || 'MCX');
     }
-    // Navigate to order page with symbol data
-    navigate(`/order/${symbol.SymbolToken}`, {
-      state: { symbol }
-    });
+    // Open modal with symbol data
+    setSelectedSymbol(symbol);
+    setShowOrderModal(true);
   };
 
   const formatPrice = (price) => {
     return parseFloat(price || 0).toFixed(2);
+  };
+
+  // Format FX price - show 5 decimal places without currency symbol (like 1.15860)
+  const formatFXPrice = (price) => {
+    if (!price || price === 0) return '0.00000';
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) return '0.00000';
+    // Always show 5 decimal places to match FX price format
+    return numPrice.toFixed(5);
   };
 
   const getExchangeName = (symbolName) => {
@@ -924,14 +992,9 @@ const MarketWatch = () => {
                     <div className="text-right flex-shrink-0">
                       {isFXTab ? (
                         <>
-                          {/* Show both USD and INR side by side for FX tabs */}
-                          <div className={`flex items-center gap-2 justify-end ${ltpColor} transition-colors`}>
-                            <div className="text-sm font-semibold">
-                              ${formatPrice(ltpUSD)}
-                            </div>
-                            <div className="text-xs font-medium opacity-80">
-                              ₹{formatPrice(ltpValue)}
-                            </div>
+                          {/* Show FX prices with 5 decimals, no currency symbol */}
+                          <div className={`text-sm font-semibold ${ltpColor} transition-colors`}>
+                            {formatFXPrice(ltpUSD)}
                           </div>
                           <div className={`text-xs font-medium ${changeColor} mt-0.5`}>
                             {isPositive ? '+' : ''}{formatPrice(changeValue)} ({isPositive ? '+' : ''}{changePercent}%)
@@ -1086,6 +1149,19 @@ const MarketWatch = () => {
         </div>
       )}
 
+      {/* Order Modal */}
+      <OrderModal
+        isOpen={showOrderModal}
+        onClose={() => {
+          setShowOrderModal(false);
+          setSelectedSymbol(null);
+        }}
+        symbol={selectedSymbol}
+        user={user}
+        onOrderPlaced={() => {
+          // Refresh market data or handle order placement
+        }}
+      />
     </div>
   );
 };

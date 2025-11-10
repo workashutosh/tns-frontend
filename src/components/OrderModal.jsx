@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, TrendingUp, TrendingDown, Clock, AlertCircle } from 'lucide-react';
 import { tradingAPI } from '../services/api';
+import ChartModal from './ChartModal';
 
 const OrderModal = ({ 
   isOpen, 
@@ -28,6 +29,42 @@ const OrderModal = ({
   const [placingOrderType, setPlacingOrderType] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [usdToInrRate, setUsdToInrRate] = useState(88.65);
+  const [liveSymbol, setLiveSymbol] = useState(symbol); // Local state for live price updates
+  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
+  
+  // WebSocket refs for live price updates
+  const wsRef = useRef(null);
+  const fxWsRef = useRef(null);
+
+  // Use liveSymbol instead of symbol for price calculations
+  // Define this before useEffect hooks that use it
+  const currentSymbol = liveSymbol || symbol;
+
+  // Update liveSymbol when symbol prop changes
+  useEffect(() => {
+    setLiveSymbol(symbol);
+  }, [symbol]);
+
+  // Fetch USD to INR exchange rate
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const data = await response.json();
+        if (data.rates && data.rates.INR) {
+          setUsdToInrRate(data.rates.INR);
+        }
+      } catch (error) {
+        console.error('Error fetching exchange rate:', error);
+      }
+    };
+    if (isOpen) {
+      fetchExchangeRate();
+      const interval = setInterval(fetchExchangeRate, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isOpen]);
 
   // Load user balance and active orders when modal opens
   useEffect(() => {
@@ -52,6 +89,103 @@ const OrderModal = ({
       setPlacingOrderType(null);
     }
   }, [isOpen]);
+
+  // WebSocket for MCX/NSE symbols
+  useEffect(() => {
+    if (!isOpen || !currentSymbol?.SymbolToken) return;
+    const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(currentSymbol?.ExchangeType || '');
+    if (isFX) return;
+
+    const uri = 'wss://ws.tradewingss.com/api/webapiwebsoc';
+    const ws = new WebSocket(uri);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      try { ws.send(currentSymbol.SymbolToken.toString()); } catch {}
+    };
+
+    ws.onmessage = (event) => {
+      const raw = event.data;
+      if (!raw || raw === '' || raw === 'true') return;
+      let tick = null;
+      try { tick = JSON.parse(raw); } catch {
+        let depth = 0, buf = '';
+        for (let i = 0; i < raw.length; i++) {
+          const ch = raw[i];
+          if (ch === '{') depth++;
+          if (depth > 0) buf += ch;
+          if (ch === '}') { depth--; if (depth === 0) break; }
+        }
+        try { tick = buf ? JSON.parse(buf) : null; } catch {}
+      }
+      if (!tick || tick.instrument_token?.toString() !== currentSymbol.SymbolToken?.toString()) return;
+
+      const bid = tick.bid === "0" || tick.bid === 0 ? tick.last_price : tick.bid;
+      const ask = tick.ask === "0" || tick.ask === 0 ? tick.last_price : tick.ask;
+      
+      // Update local symbol state with live prices
+      setLiveSymbol(prev => ({
+        ...prev,
+        buy: parseFloat(ask) || prev?.buy || 0,
+        sell: parseFloat(bid) || prev?.sell || 0,
+        ltp: parseFloat(tick.last_price) || prev?.ltp || 0
+      }));
+    };
+
+    ws.onclose = () => { wsRef.current = null; };
+    ws.onerror = () => {};
+
+    return () => { try { ws.close(); } catch {} };
+  }, [isOpen, currentSymbol?.SymbolToken, currentSymbol?.ExchangeType]);
+
+  // WebSocket for FX symbols (FOREX/CRYPTO/COMMODITY)
+  useEffect(() => {
+    if (!isOpen || !currentSymbol?.SymbolName) return;
+    const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(currentSymbol?.ExchangeType || '');
+    if (!isFX) return;
+
+    const uri = 'wss://www.fxsoc.tradenstocko.com:8001/ws';
+    const ws = new WebSocket(uri);
+    fxWsRef.current = ws;
+
+    ws.onopen = () => {};
+
+    ws.onmessage = (event) => {
+      if (!event.data || event.data === '' || event.data === 'true') return;
+      try {
+        const tickData = JSON.parse(event.data);
+        if (!tickData || tickData.type !== 'tick' || !tickData.data) return;
+        
+        const { Symbol, BestBid, BestAsk } = tickData.data;
+        const symbolName = currentSymbol.SymbolName?.split('_')[0] || currentSymbol.SymbolName;
+        
+        if (Symbol !== symbolName && Symbol !== currentSymbol.SymbolName) return;
+
+        const bestBidPriceUSD = BestBid?.Price || 0;
+        const bestAskPriceUSD = BestAsk?.Price || 0;
+        const bestBidPrice = bestBidPriceUSD * usdToInrRate;
+        const bestAskPrice = bestAskPriceUSD * usdToInrRate;
+        
+        // Update local symbol state with live FX prices
+        setLiveSymbol(prev => ({
+          ...prev,
+          buy: bestAskPrice,
+          sell: bestBidPrice,
+          buyUSD: bestAskPriceUSD,
+          sellUSD: bestBidPriceUSD,
+          ltp: (bestBidPrice + bestAskPrice) / 2,
+          ltpUSD: (bestBidPriceUSD + bestAskPriceUSD) / 2
+        }));
+      } catch (error) {
+        console.error('Error parsing FX WebSocket data:', error);
+      }
+    };
+
+    ws.onclose = () => { fxWsRef.current = null; };
+    ws.onerror = () => {};
+
+    return () => { try { ws.close(); } catch {} };
+  }, [isOpen, currentSymbol?.SymbolName, currentSymbol?.ExchangeType, usdToInrRate]);
 
   const loadUserBalance = async () => {
     try {
@@ -81,7 +215,7 @@ const OrderModal = ({
   };
 
   const validateOrder = () => {
-    if (!symbol) {
+    if (!currentSymbol) {
       setError('No symbol selected');
       return false;
     }
@@ -90,6 +224,43 @@ const OrderModal = ({
     if (!orderData.lotSize || lotSize <= 0) {
       setError('Lot size must be greater than 0');
       return false;
+    }
+
+    // Validate lot size limits for CRYPTO, FOREX, COMMODITY
+    const exchtype = currentSymbol.ExchangeType || 'MCX';
+    if (exchtype === 'CRYPTO') {
+      const minLot = parseFloat(localStorage.getItem('MinLotSingleTradeCrypto') || 0);
+      const maxLot = parseFloat(localStorage.getItem('MaxLotSingleTradeCrypto') || 0);
+      if (minLot > 0 && lotSize < minLot) {
+        setError(`Minimum lot size for Crypto is ${minLot}`);
+        return false;
+      }
+      if (maxLot > 0 && lotSize > maxLot) {
+        setError(`Maximum lot size for Crypto is ${maxLot}`);
+        return false;
+      }
+    } else if (exchtype === 'FOREX') {
+      const minLot = parseFloat(localStorage.getItem('MinLotSingleTradeForex') || 0);
+      const maxLot = parseFloat(localStorage.getItem('MaxLotSingleTradeForex') || 0);
+      if (minLot > 0 && lotSize < minLot) {
+        setError(`Minimum lot size for Forex is ${minLot}`);
+        return false;
+      }
+      if (maxLot > 0 && lotSize > maxLot) {
+        setError(`Maximum lot size for Forex is ${maxLot}`);
+        return false;
+      }
+    } else if (exchtype === 'COMMODITY') {
+      const minLot = parseFloat(localStorage.getItem('MinLotSingleTradeCommodity') || 0);
+      const maxLot = parseFloat(localStorage.getItem('MaxLotSingleTradeCommodity') || 0);
+      if (minLot > 0 && lotSize < minLot) {
+        setError(`Minimum lot size for Commodity is ${minLot}`);
+        return false;
+      }
+      if (maxLot > 0 && lotSize > maxLot) {
+        setError(`Maximum lot size for Commodity is ${maxLot}`);
+        return false;
+      }
     }
 
     if (activeTab === 'limit' && !orderData.price) {
@@ -111,23 +282,23 @@ const OrderModal = ({
   };
 
   const calculateMargin = () => {
-    if (!symbol || !orderData.lotSize) return 0;
+    if (!currentSymbol || !orderData.lotSize) return 0;
     
     const lotSize = parseFloat(orderData.lotSize) || 0;
     if (lotSize <= 0) return 0;
     
-    const exchtype = symbol.ExchangeType || 'MCX';
+    const exchtype = currentSymbol.ExchangeType || 'MCX';
     const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
     
     // Get price in INR for margin calculation
     let price;
     if (activeTab === 'market') {
-      price = orderData.orderType === 'BUY' ? symbol.buy : symbol.sell;
+      price = orderData.orderType === 'BUY' ? (currentSymbol.buy || 0) : (currentSymbol.sell || 0);
     } else {
       // Limit order
-      if (isFX && orderData.price && symbol.buy && symbol.buyUSD) {
+      if (isFX && orderData.price && currentSymbol.buy && currentSymbol.buyUSD) {
         // Convert USD price to INR using the exchange rate
-        const usdToInrRate = symbol.buy / symbol.buyUSD;
+        const usdToInrRate = currentSymbol.buy / currentSymbol.buyUSD;
         price = parseFloat(orderData.price) * usdToInrRate;
       } else {
         // For non-FX or if conversion data not available, use price as-is (INR)
@@ -143,6 +314,11 @@ const OrderModal = ({
     const Intraday_Exposure_Margin_Equity = localStorage.getItem("Intraday_Exposure_Margin_Equity");
     const Intraday_Exposure_Margin_CDS = localStorage.getItem("Intraday_Exposure_Margin_CDS");
     
+    // Get FX-specific margins
+    const CryptoIntradayMargin = localStorage.getItem("CryptoIntradayMargin");
+    const ForexIntradayMargin = localStorage.getItem("ForexIntradayMargin");
+    const CommodityIntradayMargin = localStorage.getItem("CommodityIntradayMargin");
+    
     // Get exposure types
     const MCX_Exposure_Type = localStorage.getItem("Mcx_Exposure_Type");
     const NSE_Exposure_Type = localStorage.getItem("NSE_Exposure_Type");
@@ -150,27 +326,58 @@ const OrderModal = ({
     
     if (exchtype === 'MCX') {
         if (MCX_Exposure_Type && MCX_Exposure_Type.includes("per_lot")) {
-          const symbolname = symbol.SymbolName;
+          const symbolname = currentSymbol.SymbolName;
           const symarr = symbolname.split("_");
           const similersym = symarr[0]?.toString().trim();
           const Intraday_Exposure = localStorage.getItem("MCX_Exposure_Lot_wise_" + similersym + "_Intraday");
           marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure || 0);
         } else {
-          const finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          const finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
           marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_MCX || 10);
         }
       } else if (exchtype === 'NSE') {
         if (NSE_Exposure_Type === "per_lot") {
           marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_Equity || 0);
         } else {
-          const finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          const finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
           marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_Equity || 10);
         }
+      } else if (exchtype === 'CRYPTO') {
+        // Use CryptoIntradayMargin
+        const cryptoMargin = parseFloat(CryptoIntradayMargin || 0);
+        const finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
+        // If margin value is large (> 1000), treat as per_lot, otherwise as percentage
+        if (cryptoMargin > 1000) {
+          marginvalue = parseFloat(lotSize) * cryptoMargin;
+        } else {
+          marginvalue = (parseFloat(price) * finallotsize) / (cryptoMargin || 10);
+        }
+      } else if (exchtype === 'FOREX') {
+        // Use ForexIntradayMargin
+        const forexMargin = parseFloat(ForexIntradayMargin || 0);
+        const finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
+        // If margin value is large (> 1000), treat as per_lot, otherwise as percentage
+        if (forexMargin > 1000) {
+          marginvalue = parseFloat(lotSize) * forexMargin;
+        } else {
+          marginvalue = (parseFloat(price) * finallotsize) / (forexMargin || 10);
+        }
+      } else if (exchtype === 'COMMODITY') {
+        // Use CommodityIntradayMargin
+        const commodityMargin = parseFloat(CommodityIntradayMargin || 0);
+        const finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
+        // If margin value is large (> 1000), treat as per_lot, otherwise as percentage
+        if (commodityMargin > 1000) {
+          marginvalue = parseFloat(lotSize) * commodityMargin;
+        } else {
+          marginvalue = (parseFloat(price) * finallotsize) / (commodityMargin || 10);
+        }
       } else {
+        // CDS/OPT
         if (CDS_Exposure_Type === "per_lot") {
           marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_CDS || 0);
         } else {
-          const finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          const finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
           marginvalue = (parseFloat(price) * finallotsize) / parseFloat(Intraday_Exposure_Margin_CDS || 10);
         }
       }
@@ -277,19 +484,19 @@ const OrderModal = ({
       let holdmarginvalue = 0;
       let finallotsize = 0;
       
-      const exchtype = symbol.ExchangeType || 'MCX';
+      const exchtype = currentSymbol.ExchangeType || 'MCX';
       const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
       
       // For market orders, use INR prices directly
       // For limit orders with FX symbols, convert USD input to INR
       let orderprice;
       if (activeTab === 'market') {
-        orderprice = orderType === 'BUY' ? symbol.buy : symbol.sell;
+        orderprice = orderType === 'BUY' ? (currentSymbol.buy || 0) : (currentSymbol.sell || 0);
       } else {
         // Limit order
-        if (isFX && orderData.price && symbol.buy && symbol.buyUSD) {
+        if (isFX && orderData.price && currentSymbol.buy && currentSymbol.buyUSD) {
           // Convert USD price to INR using the exchange rate
-          const usdToInrRate = symbol.buy / symbol.buyUSD;
+          const usdToInrRate = currentSymbol.buy / currentSymbol.buyUSD;
           orderprice = parseFloat(orderData.price) * usdToInrRate;
         } else {
           // For non-FX or if conversion data not available, use price as-is (INR)
@@ -305,6 +512,11 @@ const OrderModal = ({
       const Intraday_Exposure_Margin_CDS = localStorage.getItem("Intraday_Exposure_Margin_CDS");
       const Holding_Exposure_Margin_CDS = localStorage.getItem("Holding_Exposure_Margin_CDS");
       
+      // Get FX-specific margins
+      const CryptoIntradayMargin = localStorage.getItem("CryptoIntradayMargin");
+      const ForexIntradayMargin = localStorage.getItem("ForexIntradayMargin");
+      const CommodityIntradayMargin = localStorage.getItem("CommodityIntradayMargin");
+      
       // Get exposure types
       const MCX_Exposure_Type = localStorage.getItem("Mcx_Exposure_Type");
       const NSE_Exposure_Type = localStorage.getItem("NSE_Exposure_Type");
@@ -314,7 +526,7 @@ const OrderModal = ({
       if (exchtype === 'MCX') {
         if (MCX_Exposure_Type && MCX_Exposure_Type.includes("per_lot")) {
           // Per lot calculation
-          const symbolname = symbol.SymbolName;
+          const symbolname = currentSymbol.SymbolName;
           const symarr = symbolname.split("_");
           const similersym = symarr[0]?.toString().trim();
           const Intraday_Exposure = localStorage.getItem("MCX_Exposure_Lot_wise_" + similersym + "_Intraday");
@@ -323,7 +535,7 @@ const OrderModal = ({
           holdmarginvalue = parseFloat(lotSize) * parseFloat(Intraday_hold_Exposure || 0);
         } else {
           // Percentage calculation
-          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
           marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_MCX || 10);
           holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_MCX || 10);
         }
@@ -332,9 +544,45 @@ const OrderModal = ({
           marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_Equity || 0);
           holdmarginvalue = parseFloat(lotSize) * parseFloat(Holding_Exposure_Margin_Equity || 0);
         } else {
-          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
           marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_Equity || 10);
           holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_Equity || 10);
+        }
+      } else if (exchtype === 'CRYPTO') {
+        // Use CryptoIntradayMargin
+        const cryptoMargin = parseFloat(CryptoIntradayMargin || 0);
+        finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
+        // If margin value is large (> 1000), treat as per_lot, otherwise as percentage
+        if (cryptoMargin > 1000) {
+          marginvalue = parseFloat(lotSize) * cryptoMargin;
+          holdmarginvalue = parseFloat(lotSize) * cryptoMargin; // Using same for holding
+        } else {
+          marginvalue = (parseFloat(orderprice) * finallotsize) / (cryptoMargin || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / (cryptoMargin || 10); // Using same for holding
+        }
+      } else if (exchtype === 'FOREX') {
+        // Use ForexIntradayMargin
+        const forexMargin = parseFloat(ForexIntradayMargin || 0);
+        finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
+        // If margin value is large (> 1000), treat as per_lot, otherwise as percentage
+        if (forexMargin > 1000) {
+          marginvalue = parseFloat(lotSize) * forexMargin;
+          holdmarginvalue = parseFloat(lotSize) * forexMargin; // Using same for holding
+        } else {
+          marginvalue = (parseFloat(orderprice) * finallotsize) / (forexMargin || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / (forexMargin || 10); // Using same for holding
+        }
+      } else if (exchtype === 'COMMODITY') {
+        // Use CommodityIntradayMargin
+        const commodityMargin = parseFloat(CommodityIntradayMargin || 0);
+        finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
+        // If margin value is large (> 1000), treat as per_lot, otherwise as percentage
+        if (commodityMargin > 1000) {
+          marginvalue = parseFloat(lotSize) * commodityMargin;
+          holdmarginvalue = parseFloat(lotSize) * commodityMargin; // Using same for holding
+        } else {
+          marginvalue = (parseFloat(orderprice) * finallotsize) / (commodityMargin || 10);
+          holdmarginvalue = (parseFloat(orderprice) * finallotsize) / (commodityMargin || 10); // Using same for holding
         }
       } else {
         // CDS/OPT
@@ -342,7 +590,7 @@ const OrderModal = ({
           marginvalue = parseFloat(lotSize) * parseFloat(Intraday_Exposure_Margin_CDS || 0);
           holdmarginvalue = parseFloat(lotSize) * parseFloat(Holding_Exposure_Margin_CDS || 0);
         } else {
-          finallotsize = (parseFloat(lotSize) * parseFloat(symbol.Lotsize || 1));
+          finallotsize = (parseFloat(lotSize) * parseFloat(currentSymbol.Lotsize || 1));
           marginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Intraday_Exposure_Margin_CDS || 10);
           holdmarginvalue = (parseFloat(orderprice) * finallotsize) / parseFloat(Holding_Exposure_Margin_CDS || 10);
         }
@@ -356,8 +604,8 @@ const OrderModal = ({
       // Determine if it's a stop loss order (for pending orders)
       let isstoplossorder = "";
       if (activeTab === 'order') {
-        const bid = symbol.sell || 0;
-        const ask = symbol.buy || 0;
+        const bid = currentSymbol.sell || 0;
+        const ask = currentSymbol.buy || 0;
         if (orderType === "SELL") {
           if (parseFloat(orderprice) > parseFloat(bid)) {
             isstoplossorder = "false";
@@ -374,7 +622,7 @@ const OrderModal = ({
       }
       
       // Get the symbol lot size from localStorage (exactly like original)
-      const actualLotSize = localStorage.getItem("SymbolLotSize") || symbol.Lotsize || 1;
+      const actualLotSize = localStorage.getItem("SymbolLotSize") || currentSymbol.Lotsize || 1;
       
       // Prepare order payload EXACTLY like the original
       const orderPayload = {
@@ -388,8 +636,8 @@ const OrderModal = ({
         UserName: localStorage.getItem("ClientName") || user.UserName || user.UserId,
         OrderCategory: orderType,
         OrderType: activeTab === 'market' ? 'Market' : (isstoplossorder === "true" ? 'S/L' : 'Limit'),
-        ScriptName: symbol.SymbolName,
-        TokenNo: symbol.SymbolToken,
+        ScriptName: currentSymbol.SymbolName,
+        TokenNo: currentSymbol.SymbolToken,
         ActionType: activeTab === 'market' ? 
           (orderType === 'BUY' ? 'Bought By Trader' : 'Sold By Trader') : 
           'Order Placed @@',
@@ -465,8 +713,8 @@ const OrderModal = ({
         // For market orders, create SL/TP immediately
         try {
           await createSLTPForNewOrder(
-            symbol.SymbolToken,
-            symbol.SymbolName,
+            currentSymbol.SymbolToken,
+            currentSymbol.SymbolName,
             orderType,
             orderData.stopLoss,
             orderData.takeProfit
@@ -477,8 +725,27 @@ const OrderModal = ({
         }
       }
 
-      // Show success message
-      setSuccess('Order placed successfully!');
+      // Format price for display in success message
+      let displayPrice = '';
+      const isFXSymbol = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
+      
+      if (isFXSymbol && activeTab === 'market') {
+        // For FX market orders, show USD price (without $ sign, as per user preference)
+        if (orderType === 'BUY') {
+          displayPrice = currentSymbol.buyUSD ? formatFXPrice(currentSymbol.buyUSD) : formatPrice(orderprice);
+        } else {
+          displayPrice = currentSymbol.sellUSD ? formatFXPrice(currentSymbol.sellUSD) : formatPrice(orderprice);
+        }
+      } else if (isFXSymbol && activeTab === 'limit') {
+        // For FX limit orders, show the USD price user entered
+        displayPrice = formatFXPrice(parseFloat(orderData.price || 0));
+      } else {
+        // For non-FX, show INR price
+        displayPrice = `₹${formatPrice(orderprice)}`;
+      }
+      
+      // Show success message with order details
+      setSuccess(`${orderType} order placed successfully! ${lotSize} lot(s) @ ${displayPrice}`);
       setOrderLoading(false);
       setPlacingOrderType(null);
       
@@ -487,10 +754,9 @@ const OrderModal = ({
         onOrderPlaced();
       }
 
-      // Close modal and reload after showing success
+      // Close modal after showing success
       setTimeout(() => {
         onClose();
-        window.location.reload();
       }, 2000);
 
     } catch (error) {
@@ -521,25 +787,33 @@ const OrderModal = ({
 
   // Check if symbol is from FX tabs (Crypto/Forex/Commodity)
   const isFXSymbol = () => {
-    if (!symbol) return false;
-    const exchtype = symbol.ExchangeType || '';
+    if (!currentSymbol) return false;
+    const exchtype = currentSymbol.ExchangeType || '';
     return ['CRYPTO', 'FOREX', 'COMMODITY'].includes(exchtype);
+  };
+
+  // Format FX price to 5 decimal places
+  const formatFXPrice = (price) => {
+    if (!price || price === 0) return '0.00000';
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice)) return '0.00000';
+    return numPrice.toFixed(5);
   };
 
   // Get USD price for display (for FX symbols)
   const getBuyPriceUSD = () => {
-    if (!symbol) return 0;
+    if (!currentSymbol) return 0;
     if (activeTab === 'market') {
-      return parseFloat(symbol.buyUSD || 0);
+      return currentSymbol.buyUSD || currentSymbol.buy || 0;
     }
     // For limit orders, show the USD price user entered
     return parseFloat(orderData.price || 0);
   };
 
   const getSellPriceUSD = () => {
-    if (!symbol) return 0;
+    if (!currentSymbol) return 0;
     if (activeTab === 'market') {
-      return parseFloat(symbol.sellUSD || 0);
+      return currentSymbol.sellUSD || currentSymbol.sell || 0;
     }
     // For limit orders, show the USD price user entered
     return parseFloat(orderData.price || 0);
@@ -590,42 +864,23 @@ const OrderModal = ({
         {/* Symbol Info */}
         <div className="p-2 text-center border-b border-gray-700">
           <h4 className="text-white font-semibold text-sm">
-            {symbol?.SymbolName?.split('_')[0] || 'N/A'}
+            {currentSymbol?.SymbolName?.split('_')[0] || 'N/A'}
           </h4>
           <p className="text-gray-400 text-xs">
-            Lot Size: {symbol?.Lotsize || 1} • Exchange: {symbol?.ExchangeType || 'MCX'}
+            Lot Size: {currentSymbol?.Lotsize || 1} • Exchange: {currentSymbol?.ExchangeType || 'MCX'}
           </p>
-          <div className="mt-1">
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={() => window.open(`#chart-${symbol?.SymbolToken}`, '_blank')}
-                className="text-blue-400 hover:text-blue-300 text-xs"
-              >
-                📈 Open Chart
-              </button>
-              <span className="text-gray-600">|</span>
-              <button
-                onClick={() => {
-                  try {
-                    // Persist context like MarketWatch does
-                    if (symbol && symbol.SymbolToken) {
-                      localStorage.setItem("SymbolLotSize", symbol.Lotsize || 1);
-                      localStorage.setItem("selected_token", symbol.SymbolToken);
-                      localStorage.setItem("selected_script", symbol.SymbolName);
-                      localStorage.setItem("selectedlotsize", symbol.Lotsize || 1);
-                      localStorage.setItem("selected_exchange", symbol.ExchangeType || 'MCX');
-                    }
-                    window.location.assign(`/order/${symbol?.SymbolToken}`);
-                  } catch (e) {
-                    console.error('Failed to open order page with chart', e);
-                  }
-                }}
-                className="text-blue-400 hover:text-blue-300 text-xs"
-              >
-                Go to Order Page + Chart
-              </button>
+          {['CRYPTO', 'FOREX', 'COMMODITY'].includes(currentSymbol?.ExchangeType || '') && (
+            <div className="mt-1">
+              <div className="flex items-center justify-center">
+                <button
+                  onClick={() => setIsChartModalOpen(true)}
+                  className="text-blue-400 hover:text-blue-300 text-xs"
+                >
+                  📈 Open Chart
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Order Type Tabs */}
@@ -701,9 +956,9 @@ const OrderModal = ({
                 placeholder={isFXSymbol() ? "Enter price in USD" : "Enter price"}
                 className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              {isFXSymbol() && orderData.price && symbol?.buy && symbol?.buyUSD && (
+              {isFXSymbol() && orderData.price && currentSymbol?.buy && currentSymbol?.buyUSD && (
                 <div className="text-gray-400 text-xs mt-1">
-                  ≈ ₹{formatPrice((parseFloat(orderData.price) * (symbol.buy / symbol.buyUSD)))}
+                  ≈ ₹{formatPrice((parseFloat(orderData.price) * (currentSymbol.buy / currentSymbol.buyUSD)))}
                 </div>
               )}
             </div>
@@ -773,11 +1028,11 @@ const OrderModal = ({
                     <div className="text-xs opacity-90 mb-0.5">SELL</div>
                     {isFXSymbol() ? (
                       <div className="text-base font-bold">
-                        ${formatPrice(getSellPriceUSD())}
+                        {formatFXPrice(getSellPriceUSD())}
                       </div>
                     ) : (
                       <div className="text-base font-bold">
-                        ₹{formatPrice(activeTab === 'market' ? symbol?.sell : orderData.price || symbol?.sell)}
+                        ₹{formatPrice(activeTab === 'market' ? (currentSymbol?.sell || 0) : (orderData.price || currentSymbol?.sell || 0))}
                       </div>
                     )}
                   </div>
@@ -801,11 +1056,11 @@ const OrderModal = ({
                     <div className="text-xs opacity-90 mb-0.5">BUY</div>
                     {isFXSymbol() ? (
                       <div className="text-base font-bold">
-                        ${formatPrice(getBuyPriceUSD())}
+                        {formatFXPrice(getBuyPriceUSD())}
                       </div>
                     ) : (
                       <div className="text-base font-bold">
-                        ₹{formatPrice(activeTab === 'market' ? symbol?.buy : orderData.price || symbol?.buy)}
+                        ₹{formatPrice(activeTab === 'market' ? (currentSymbol?.buy || 0) : (orderData.price || currentSymbol?.buy || 0))}
                       </div>
                     )}
                   </div>
@@ -815,6 +1070,13 @@ const OrderModal = ({
           </div>
         </div>
       </div>
+
+      {/* Chart Modal */}
+      <ChartModal
+        isOpen={isChartModalOpen}
+        onClose={() => setIsChartModalOpen(false)}
+        symbol={currentSymbol?.SymbolName || currentSymbol}
+      />
     </div>
   );
 };
