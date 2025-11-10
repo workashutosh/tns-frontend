@@ -564,7 +564,9 @@ export default function OrderTrade() {
         selectedlotsize: orderPayload.selectedlotsize,
         OrderStatus: orderPayload.OrderStatus,
         SymbolType: orderPayload.SymbolType,
-        actualLot: orderPayload.actualLot
+        actualLot: orderPayload.actualLot,
+        HoldingMarginReq: orderPayload.HoldingMarginReq,
+        MarginUsed: orderPayload.HoldingMarginReq
       };
 
       const saveResponse = await tradingAPI.saveOrderByUser(savePayload);

@@ -163,13 +163,11 @@ const Portfolio = () => {
           if (order.isFX && usdToInrRate > 0) {
             const orderPriceUSD = parseFloat(order.OrderPrice || 0) / usdToInrRate;
             const broughtByUSD = parseFloat(order.BroughtBy || 0) / usdToInrRate;
-            const plUSD = parseFloat(order.P_L || 0) / usdToInrRate;
             
             return {
               ...order,
-              orderPriceUSD: parseFloat(orderPriceUSD.toFixed(4)),
-              broughtByUSD: parseFloat(broughtByUSD.toFixed(4)),
-              plUSD: parseFloat(plUSD.toFixed(2))
+              orderPriceUSD: parseFloat(orderPriceUSD.toFixed(5)),
+              broughtByUSD: parseFloat(broughtByUSD.toFixed(5))
             };
           }
           return order;
@@ -209,6 +207,13 @@ const Portfolio = () => {
     try {
       const response = await tradingAPI.getConsolidatedTrades(user.UserId);
       const data = JSON.parse(response);
+      
+      // Log the raw API response to see what fields are available
+      console.log('Raw API Response from getConsolidatedTrades:', data);
+      if (data.length > 0) {
+        console.log('Sample order object from API:', data[0]);
+        console.log('Available fields in order:', Object.keys(data[0]));
+      }
       
       if (data.length > 0) {
         let tokens = '';
@@ -251,7 +256,26 @@ const Portfolio = () => {
           let currentPriceUSD = 0;
           const cmp = parseFloat(item.cmp || 0);
           const orderPrice = parseFloat(item.OrderPrice || 0);
-          const lotSize = (parseFloat(item.selectedlotsize || 1) * parseFloat(item.Lot || 1));
+          
+          // Use actualLot (symbol lot size) if available, otherwise fallback to selectedlotsize * Lot
+          // actualLot is the symbol's lot size (e.g., 100000 for crypto)
+          // Lot is the number of lots (e.g., 1)
+          // So total quantity = actualLot * Lot = 100000 * 1 = 100000
+          const actualLotSize = parseFloat(item.actualLot || item.Lotsize || item.selectedlotsize || 1);
+          const numberOfLots = parseFloat(item.Lot || 1);
+          const lotSize = actualLotSize * numberOfLots;
+          
+          // Debug log for lot size calculation
+          console.log('Order Lot Size Calculation:', {
+            scriptName: scriptName,
+            actualLot: item.actualLot,
+            Lotsize: item.Lotsize,
+            selectedlotsize: item.selectedlotsize,
+            Lot: item.Lot,
+            actualLotSize,
+            numberOfLots,
+            calculatedLotSize: lotSize
+          });
           
           // Only calculate P/L if we have a valid current price (cmp > 0)
           // If cmp is 0, P/L will be 0 initially and updated by WebSocket with live prices
@@ -279,27 +303,41 @@ const Portfolio = () => {
             }
           }
           
-          return {
-            ...item,
-            scriptName,
-            exchange,
-            profitLoss: parseFloat(profitLoss.toFixed(2)),
-            profitLossUSD: isFX ? parseFloat(profitLossUSD.toFixed(2)) : 0,
-            orderPriceUSD: isFX ? parseFloat(orderPriceUSD.toFixed(4)) : 0,
-            currentPriceUSD: isFX ? parseFloat(currentPriceUSD.toFixed(4)) : 0,
-            currentPrice: item.cmp,
-            isStopLossOrder,
-            orderCategoryDisplay,
-            stopLossPrice: item.StopLossPrice || '',
-            takeProfitPrice: item.TakeProfitPrice || '',
-            isFX,
-            symbolType: item.SymbolType
-          };
+            return {
+              ...item,
+              scriptName,
+              exchange,
+              profitLoss: parseFloat(profitLoss.toFixed(2)),
+              profitLossUSD: isFX ? parseFloat(profitLossUSD.toFixed(2)) : 0,
+              orderPriceUSD: isFX ? parseFloat(orderPriceUSD.toFixed(5)) : 0,
+              currentPriceUSD: isFX ? parseFloat(currentPriceUSD.toFixed(5)) : 0,
+              currentPrice: item.cmp,
+              isStopLossOrder,
+              orderCategoryDisplay,
+              stopLossPrice: item.StopLossPrice || '',
+              takeProfitPrice: item.TakeProfitPrice || '',
+              isFX,
+              symbolType: item.SymbolType,
+              actualLot: item.actualLot, // Preserve actualLot for WebSocket updates
+              Lotsize: item.Lotsize, // Preserve Lotsize for WebSocket updates
+              calculatedLotSize: lotSize // Store calculated lot size for reference
+            };
         });
         
         totalMarginUsedRef.current = totalMargin;
         tokensRef.current = tokens.slice(0, -1); // Remove trailing comma
         fxSymbolsRef.current = fxSymbols;
+        
+        // Console log active orders lot size
+        console.log('Active Orders Lot Size:', orders.map(order => ({
+          scriptName: order.scriptName || order.ScriptName,
+          Lot: order.Lot,
+          selectedlotsize: order.selectedlotsize,
+          actualLot: order.actualLot,
+          Lotsize: order.Lotsize,
+          calculatedLotSize: (parseFloat(order.actualLot || order.Lotsize || order.selectedlotsize || 1) * parseFloat(order.Lot || 1)),
+          OrderCategory: order.OrderCategory
+        })));
         
         setActiveOrders(orders);
         
@@ -341,16 +379,14 @@ const Portfolio = () => {
           if (isFX && usdToInrRate > 0) {
             orderPriceUSD = parseFloat(item.OrderPrice || 0) / usdToInrRate;
             broughtByUSD = parseFloat(item.BroughtBy || 0) / usdToInrRate;
-            // Convert P/L from INR to USD
-            plUSD = parseFloat(item.P_L || 0) / usdToInrRate;
+            // Note: P/L stays in INR, not converted to USD
           }
           
           return {
             ...item,
             isFX,
-            orderPriceUSD: isFX ? parseFloat(orderPriceUSD.toFixed(4)) : 0,
-            broughtByUSD: isFX ? parseFloat(broughtByUSD.toFixed(4)) : 0,
-            plUSD: isFX ? parseFloat(plUSD.toFixed(2)) : 0
+            orderPriceUSD: isFX ? parseFloat(orderPriceUSD.toFixed(5)) : 0,
+            broughtByUSD: isFX ? parseFloat(broughtByUSD.toFixed(5)) : 0
           };
         });
         
@@ -380,12 +416,17 @@ const Portfolio = () => {
           let currentPrice = 0;
           let profitLoss = 0;
           
+          // Use actualLot (symbol lot size) if available for lot size calculation
+          const actualLotSize = parseFloat(order.actualLot || order.Lotsize || order.selectedlotsize || 1);
+          const numberOfLots = parseFloat(order.Lot || 1);
+          const lotSize = actualLotSize * numberOfLots;
+          
           if (order.OrderCategory === "SELL") {
             currentPrice = ask;
-            profitLoss = (parseFloat(order.OrderPrice) - parseFloat(currentPrice)) * (order.selectedlotsize * order.Lot);
+            profitLoss = (parseFloat(order.OrderPrice) - parseFloat(currentPrice)) * lotSize;
           } else {
             currentPrice = bid;
-            profitLoss = (parseFloat(currentPrice) - parseFloat(order.OrderPrice)) * (order.selectedlotsize * order.Lot);
+            profitLoss = (parseFloat(currentPrice) - parseFloat(order.OrderPrice)) * lotSize;
           }
           
           return {
@@ -434,27 +475,34 @@ const Portfolio = () => {
           let currentPriceUSD = 0;
           let profitLossUSD = 0;
           
+          // Use actualLot (symbol lot size) if available for lot size calculation
+          const actualLotSize = parseFloat(order.actualLot || order.Lotsize || order.selectedlotsize || 1);
+          const numberOfLots = parseFloat(order.Lot || 1);
+          const lotSize = actualLotSize * numberOfLots;
+          
+          // Calculate orderPriceUSD once
+          const orderPriceUSD = parseFloat(order.OrderPrice) / usdToInrRate;
+          
           if (order.OrderCategory === "SELL") {
             currentPrice = bestAskPrice; // Use ask price for SELL orders (INR)
             currentPriceUSD = bestAskPriceUSD; // Use ask price for SELL orders (USD)
-            profitLoss = (parseFloat(order.OrderPrice) - parseFloat(currentPrice)) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+            profitLoss = (parseFloat(order.OrderPrice) - parseFloat(currentPrice)) * lotSize;
             // Calculate P/L in USD
-            const orderPriceUSD = parseFloat(order.OrderPrice) / usdToInrRate;
-            profitLossUSD = (orderPriceUSD - currentPriceUSD) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+            profitLossUSD = (orderPriceUSD - currentPriceUSD) * lotSize;
           } else {
             currentPrice = bestBidPrice; // Use bid price for BUY orders (INR)
             currentPriceUSD = bestBidPriceUSD; // Use bid price for BUY orders (USD)
-            profitLoss = (parseFloat(currentPrice) - parseFloat(order.OrderPrice)) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+            profitLoss = (parseFloat(currentPrice) - parseFloat(order.OrderPrice)) * lotSize;
             // Calculate P/L in USD
-            const orderPriceUSD = parseFloat(order.OrderPrice) / usdToInrRate;
-            profitLossUSD = (currentPriceUSD - orderPriceUSD) * (parseFloat(order.selectedlotsize || 1) * parseFloat(order.Lot || 1));
+            profitLossUSD = (currentPriceUSD - orderPriceUSD) * lotSize;
           }
           
           return {
             ...order,
             currentPrice: parseFloat(currentPrice),
             profitLoss: parseFloat(profitLoss.toFixed(2)),
-            currentPriceUSD: parseFloat(currentPriceUSD.toFixed(4)),
+            currentPriceUSD: parseFloat(currentPriceUSD.toFixed(5)),
+            orderPriceUSD: parseFloat(orderPriceUSD.toFixed(5)), // Preserve orderPriceUSD
             profitLossUSD: parseFloat(profitLossUSD.toFixed(2)),
             buyUSD: bestAskPriceUSD,
             sellUSD: bestBidPriceUSD,
@@ -1114,7 +1162,7 @@ const Portfolio = () => {
               </div>
               <div className="text-right">
                 <div className={`font-semibold ${order.OrderCategory === 'SELL' ? 'text-red-400' : 'text-green-400'}`}>
-                  {order.orderCategoryDisplay} {order.Lot} @ ₹{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}
+                  {order.orderCategoryDisplay} {order.Lot} @ {order.isFX ? '' : '₹'}{order.isFX ? (order.orderPriceUSD ? parseFloat(order.orderPriceUSD).toFixed(5) : '0.00000') : (order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00')}
                 </div>
                 <div className={`text-sm font-medium ${(order.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {order.profitLoss >= 0 ? '+' : ''}₹{order.profitLoss?.toFixed(2) || '0.00'}
@@ -1141,7 +1189,7 @@ const Portfolio = () => {
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-400">
                 CMP: <span className="text-white font-medium">
-                  ₹{order.currentPrice ? parseFloat(order.currentPrice).toFixed(2) : '0.00'}
+                  {order.isFX ? '' : '₹'}{order.isFX ? (order.currentPriceUSD ? parseFloat(order.currentPriceUSD).toFixed(5) : '0.00000') : (order.currentPrice ? parseFloat(order.currentPrice).toFixed(2) : '0.00')}
                 </span>
               </div>
               <div className="flex space-x-2">
@@ -1193,12 +1241,12 @@ const Portfolio = () => {
             <div className="flex justify-between items-center mb-2">
               <div className="text-sm text-gray-400">
                 AvgSell: <span className="text-white font-medium">
-                  ₹{order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00'}
+                  {order.isFX ? '' : '₹'}{order.isFX ? (order.orderPriceUSD ? parseFloat(order.orderPriceUSD).toFixed(5) : '0.00000') : (order.OrderPrice ? parseFloat(order.OrderPrice).toFixed(2) : '0.00')}
                 </span>
               </div>
               <div className="text-sm text-gray-400">
                 AvgBuy: <span className="text-white font-medium">
-                  ₹{order.BroughtBy ? parseFloat(order.BroughtBy).toFixed(2) : '0.00'}
+                  {order.isFX ? '' : '₹'}{order.isFX ? (order.broughtByUSD ? parseFloat(order.broughtByUSD).toFixed(5) : '0.00000') : (order.BroughtBy ? parseFloat(order.BroughtBy).toFixed(2) : '0.00')}
                 </span>
               </div>
             </div>

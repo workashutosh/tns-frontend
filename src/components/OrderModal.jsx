@@ -693,7 +693,9 @@ const OrderModal = ({
         selectedlotsize: orderPayload.selectedlotsize,
         OrderStatus: orderPayload.OrderStatus,
         SymbolType: orderPayload.SymbolType,
-        actualLot: orderPayload.actualLot
+        actualLot: orderPayload.actualLot,
+        HoldingMarginReq: orderPayload.HoldingMarginReq,
+        MarginUsed: orderPayload.HoldingMarginReq
       };
       
       console.log('Saving with simplified payload:', savePayload);
@@ -883,6 +885,93 @@ const OrderModal = ({
           )}
         </div>
 
+        {/* Market Data */}
+        {currentSymbol && (
+          <div className="p-2 bg-gray-700 border-b border-gray-700">
+            <div className={`grid gap-2 text-xs ${isFXSymbol() ? 'grid-cols-3' : 'grid-cols-3'}`}>
+              {/* Row 1 */}
+              <div>
+                <div className="text-gray-400">Bid</div>
+                <div className="text-white font-medium">
+                  {isFXSymbol() ? formatFXPrice(currentSymbol.sellUSD || currentSymbol.sell || 0) : `₹${formatPrice(currentSymbol.sell || 0)}`}
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-400">Ask</div>
+                <div className="text-white font-medium">
+                  {isFXSymbol() ? formatFXPrice(currentSymbol.buyUSD || currentSymbol.buy || 0) : `₹${formatPrice(currentSymbol.buy || 0)}`}
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-400">Ltp</div>
+                <div className="text-white font-medium">
+                  {isFXSymbol() ? formatFXPrice(currentSymbol.ltpUSD || currentSymbol.ltp || 0) : `₹${formatPrice(currentSymbol.ltp || 0)}`}
+                </div>
+              </div>
+              
+              {/* Row 2 - High, Low, and conditional fields */}
+              <div>
+                <div className="text-gray-400">High</div>
+                <div className="text-white font-medium">
+                  {isFXSymbol() ? (() => {
+                    // Convert INR to USD for FX symbols
+                    const highINR = currentSymbol.high || 0;
+                    const ltpINR = currentSymbol.ltp || 0;
+                    const ltpUSD = currentSymbol.ltpUSD || 0;
+                    const highUSD = (ltpINR > 0 && ltpUSD > 0) ? (highINR * (ltpUSD / ltpINR)) : 0;
+                    return formatFXPrice(highUSD);
+                  })() : `₹${formatPrice(currentSymbol.high || 0)}`}
+                </div>
+              </div>
+              <div>
+                <div className="text-gray-400">Low</div>
+                <div className="text-white font-medium">
+                  {isFXSymbol() ? (() => {
+                    // Convert INR to USD for FX symbols
+                    const lowINR = currentSymbol.low || 0;
+                    const ltpINR = currentSymbol.ltp || 0;
+                    const ltpUSD = currentSymbol.ltpUSD || 0;
+                    const lowUSD = (ltpINR > 0 && ltpUSD > 0) ? (lowINR * (ltpUSD / ltpINR)) : 0;
+                    return formatFXPrice(lowUSD);
+                  })() : `₹${formatPrice(currentSymbol.low || 0)}`}
+                </div>
+              </div>
+              {!isFXSymbol() && (
+                <>
+                  <div>
+                    <div className="text-gray-400">Open</div>
+                    <div className="text-white font-medium">₹{formatPrice(currentSymbol.open || 0)}</div>
+                  </div>
+                  
+                  {/* Row 3 - Only for non-FX symbols */}
+                  <div>
+                    <div className="text-gray-400">Close</div>
+                    <div className="text-white font-medium">₹{formatPrice(currentSymbol.close || 0)}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400">OL</div>
+                    <div className="text-white font-medium">{currentSymbol.oi || currentSymbol.ol || 0}</div>
+                  </div>
+                </>
+              )}
+              
+              {/* Lot Size (replaces Volume) */}
+              <div>
+                <div className="text-gray-400">Lot Size</div>
+                <div className="text-white font-medium">{currentSymbol.Lotsize || currentSymbol.lot_size || 1}</div>
+              </div>
+              
+              {/* Row 4 - Change */}
+              <div className="col-span-3">
+                <div className="text-gray-400">Change</div>
+                <div className={`font-medium ${(currentSymbol.chg || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {(currentSymbol.chg || 0) >= 0 ? '+' : ''}{isFXSymbol() ? formatFXPrice(currentSymbol.chg || 0) : `₹${formatPrice(currentSymbol.chg || 0)}`}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Order Type Tabs */}
         <div className="flex border-b border-gray-700">
           <button
@@ -924,16 +1013,37 @@ const OrderModal = ({
               value={orderData.lotSize}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === '' || value === '0' || value === '0.') {
+                // Allow empty string for clearing
+                if (value === '') {
                   handleInputChange('lotSize', '');
-                } else {
-                  const numValue = parseFloat(value);
-                  if (!isNaN(numValue) && numValue > 0) {
-                    handleInputChange('lotSize', value);
-                  } else if (value === '' || value === '-') {
-                    handleInputChange('lotSize', value);
-                  }
+                  return;
                 }
+                
+                // Allow decimal values starting with 0 (e.g., 0.1, 0.05, 0.01)
+                // Allow partial decimal input like "0." or "0.0" while typing
+                if (value === '0.' || value.startsWith('0.')) {
+                  handleInputChange('lotSize', value);
+                  return;
+                }
+                
+                // Allow standalone "0" temporarily so user can type "0." or "0.1"
+                if (value === '0') {
+                  handleInputChange('lotSize', value);
+                  return;
+                }
+                
+                // Parse the value to check if it's valid
+                const numValue = parseFloat(value);
+                
+                // Allow valid positive numbers (including decimals like 0.1, 0.05)
+                if (!isNaN(numValue) && numValue > 0) {
+                  handleInputChange('lotSize', value);
+                } 
+                // Allow negative sign for potential negative input (though we'll validate later)
+                else if (value === '-') {
+                  handleInputChange('lotSize', value);
+                }
+                // For any other invalid input, don't update
               }}
               className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             />

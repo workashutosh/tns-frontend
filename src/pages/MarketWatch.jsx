@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { tradingAPI } from '../services/api';
 import OrderModal from '../components/OrderModal';
 import { useAuth } from '../hooks/useAuth.jsx';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 const MarketWatch = () => {
   const navigate = useNavigate();
@@ -67,18 +68,12 @@ const MarketWatch = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
-  const [wsConnected, setWsConnected] = useState(false);
-  const [wsError, setWsError] = useState(null);
-  const [connectionAttempts, setConnectionAttempts] = useState(0);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [selectedTokens, setSelectedTokens] = useState(new Set());
   const [usdToInrRate, setUsdToInrRate] = useState(88.65); // Default fallback rate
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState(null);
   
-  const websocketRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
-  const isInitializingRef = useRef(false);
   const mountedRef = useRef(true);
   const updateCountRef = useRef(0);
   const searchTimeoutRef = useRef(null);
@@ -160,26 +155,15 @@ const MarketWatch = () => {
     
     return () => {
       mountedRef.current = false;
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
       if (exchangeRateIntervalRef.current) {
         clearInterval(exchangeRateIntervalRef.current);
       }
-      if (websocketRef.current) {
-        websocketRef.current.close();
-        websocketRef.current = null;
-      }
+      // WebSocket cleanup is handled by the shared service
     };
   }, [fetchExchangeRate]);
-  
-  // Check if current tab uses FX WebSocket (Crypto, Forex, Commodity)
-  const isFXWebSocketTab = useCallback(() => {
-    return ['CRYPTO', 'FOREX', 'COMMODITY'].includes(activeTab);
-  }, [activeTab]);
 
   // Update market data with live prices for MCX/NSE (original format)
   const updateMarketData = useCallback((result) => {
@@ -331,215 +315,35 @@ const MarketWatch = () => {
     });
   }, [activeTab, usdToInrRate]);
 
-  // Use a ref to store the latest tokens for WebSocket subscription
-  const latestTokensRef = useRef('');
+  // Check if current tab uses FX WebSocket (Crypto, Forex, Commodity)
+  const isFXWebSocketTab = useCallback(() => {
+    return ['CRYPTO', 'FOREX', 'COMMODITY'].includes(activeTab);
+  }, [activeTab]);
+
+  // Use shared WebSocket service
+  const isFX = isFXWebSocketTab();
+  const tokensArray = Array.from(selectedTokens);
   
-  // Update tokens ref when selected tokens change (Set, so no frequent updates)
-  useEffect(() => {
-    const allTokens = Array.from(selectedTokens);
-    latestTokensRef.current = allTokens.join(',');
-  }, [selectedTokens]);
-
-  // Initialize WebSocket
-  const initializeWebSocket = useCallback(() => {
-    if (isInitializingRef.current) {
-      console.log('WebSocket initialization already in progress, skipping...');
-      return;
+  // Handle WebSocket messages
+  const handleWebSocketMessage = useCallback((data) => {
+    if (!mountedRef.current) return;
+    
+    // Handle different message formats based on WebSocket type
+    if (isFX) {
+      // FX WebSocket sends tick data
+      updateFXMarketData(data);
+    } else {
+      // MCX/NSE WebSocket sends market data
+      updateMarketData(data);
     }
+  }, [isFX, updateMarketData, updateFXMarketData]);
 
-    if (connectionAttempts >= 5) {
-      console.error('Max WebSocket connection attempts reached');
-      setWsError('Connection failed after multiple attempts');
-      return;
-    }
-   
-    isInitializingRef.current = true;
-    
-    // Use different WebSocket URL for Crypto/Forex/Commodity
-    const useFXWebSocket = isFXWebSocketTab();
-    const uri = useFXWebSocket 
-      ? "wss://www.fxsoc.tradenstocko.com:8001/ws"
-      : "wss://ws.tradewingss.com/api/webapiwebsoc";
-    
-    console.log('Attempting WebSocket connection...', { 
-      attempt: connectionAttempts + 1,
-      type: useFXWebSocket ? 'FX' : 'MCX/NSE',
-      uri 
-    });
-    
-    if (websocketRef.current) {
-      try {
-        websocketRef.current.close();
-      } catch (e) {
-        console.log('Error closing existing WebSocket:', e);
-      }
-      websocketRef.current = null;
-    }
-    
-    try {
-      const ws = new WebSocket(uri);
-      websocketRef.current = ws;
-
-      ws.onopen = (event) => {
-        if (!mountedRef.current) return;
-        
-        console.log("✓ WebSocket connected successfully", { type: useFXWebSocket ? 'FX' : 'MCX/NSE' });
-        setWsConnected(true);
-        setWsError(null);
-        setConnectionAttempts(0);
-        isInitializingRef.current = false;
-        
-        // For FX WebSocket, no need to send tokens - it automatically sends all data
-        // For MCX/NSE, send token string to subscribe
-        if (!useFXWebSocket) {
-          const tokenString = latestTokensRef.current || "";
-          try {
-            ws.send(tokenString);
-          } catch (error) {
-            console.error('Error sending tokens:', error);
-          }
-        }
-      };
-
-      ws.onmessage = (event) => {
-        if (!mountedRef.current) return;
-        
-        if (event.data && event.data !== "true" && event.data !== "") {
-          try {
-            const result = JSON.parse(event.data);
-            
-            // Handle different message formats based on WebSocket type
-            if (useFXWebSocket) {
-              // FX WebSocket sends tick data
-              updateFXMarketData(result);
-            } else {
-              // MCX/NSE WebSocket sends market data
-              updateMarketData(result);
-            }
-          } catch (error) {
-            console.error('Error parsing WebSocket data:', error);
-          }
-        }
-      };
-
-      ws.onclose = (event) => {
-        if (!mountedRef.current) return;
-        
-        console.log("WebSocket disconnected", { code: event.code, reason: event.reason });
-        setWsConnected(false);
-        isInitializingRef.current = false;
-        websocketRef.current = null;
-        
-        if (connectionAttempts < 5) {
-          const delay = Math.min(1000 * Math.pow(2, connectionAttempts), 30000);
-          console.log(`Reconnecting in ${delay}ms...`);
-          
-          reconnectTimeoutRef.current = setTimeout(() => {
-            if (mountedRef.current) {
-              setConnectionAttempts(prev => prev + 1);
-              initializeWebSocket();
-            }
-          }, delay);
-        } else {
-          setWsError('Connection lost. Please refresh the page.');
-        }
-      };
-
-      ws.onerror = (error) => {
-        if (!mountedRef.current) return;
-        
-        console.error('WebSocket error:', {
-          readyState: ws.readyState,
-          url: ws.url
-        });
-        
-        setWsConnected(false);
-        setWsError('Connection error occurred');
-        isInitializingRef.current = false;
-      };
-      
-    } catch (error) {
-      console.error('Error creating WebSocket:', error);
-      setWsError('Failed to create WebSocket connection');
-      isInitializingRef.current = false;
-      
-      if (connectionAttempts < 5) {
-        reconnectTimeoutRef.current = setTimeout(() => {
-          if (mountedRef.current) {
-            setConnectionAttempts(prev => prev + 1);
-            initializeWebSocket();
-          }
-        }, 3000);
-      }
-    }
-  }, [connectionAttempts, updateMarketData, updateFXMarketData, isFXWebSocketTab]);
-
-  // Re-subscribe WebSocket when tokens change or tab changes
-  const tokensStringRef = useRef('');
-  const previousTabRef = useRef(activeTab);
-  
-  useEffect(() => {
-    // Get current tab's tokens from selectedTokens (Set of token IDs only)
-    const allTokens = Array.from(selectedTokens);
-    const tokenString = allTokens.join(',');
-    
-    // Check if tab type changed (FX vs non-FX) - need to reconnect with different WebSocket
-    const previousTab = previousTabRef.current;
-    const previousIsFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(previousTab);
-    const currentIsFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(activeTab);
-    
-    // If switching between FX and non-FX tabs, reconnect WebSocket
-    if (previousTab !== activeTab && previousIsFX !== currentIsFX) {
-      console.log('Tab type changed, reconnecting WebSocket...', { 
-        from: previousTab, 
-        to: activeTab,
-        fromType: previousIsFX ? 'FX' : 'MCX/NSE',
-        toType: currentIsFX ? 'FX' : 'MCX/NSE'
-      });
-      previousTabRef.current = activeTab;
-      
-      // Close existing connection and reconnect
-      if (websocketRef.current) {
-        try {
-          websocketRef.current.close();
-        } catch (e) {
-          console.log('Error closing WebSocket:', e);
-        }
-        websocketRef.current = null;
-      }
-      
-      // Reinitialize WebSocket with correct URL
-      setTimeout(() => {
-        if (mountedRef.current) {
-          setConnectionAttempts(0);
-          initializeWebSocket();
-        }
-      }, 500);
-      return;
-    }
-    
-    // Only re-subscribe if tokens actually changed AND WebSocket is connected (for MCX/NSE only)
-    if (tokenString !== tokensStringRef.current && websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN && !currentIsFX) {
-      console.log('Tokens changed, re-subscribing WebSocket...', { tab: activeTab, tokenCount: allTokens.length });
-      tokensStringRef.current = tokenString;
-      latestTokensRef.current = tokenString;
-      
-      try {
-        if (tokenString) {
-          websocketRef.current.send(tokenString);
-        } else {
-          websocketRef.current.send("");
-        }
-      } catch (error) {
-        console.error('Error re-subscribing WebSocket:', error);
-      }
-    } else if (tokenString !== tokensStringRef.current) {
-      tokensStringRef.current = tokenString;
-      latestTokensRef.current = tokenString;
-    }
-    
-    previousTabRef.current = activeTab;
-  }, [activeTab, selectedTokens, initializeWebSocket]);
+  // Subscribe to shared WebSocket service
+  const { isConnected: wsConnected } = useWebSocket(
+    isFX ? [] : tokensArray, // Only pass tokens for MCX/NSE
+    handleWebSocketMessage,
+    isFX // Use FX WebSocket for Crypto/Forex/Commodity
+  );
 
   // Initial load
   useEffect(() => {
@@ -597,12 +401,7 @@ const MarketWatch = () => {
       const tokenSet = new Set(formattedTokens.map(t => t.SymbolToken));
       setSelectedTokens(tokenSet);
       
-      // Initialize WebSocket after data is loaded
-      setTimeout(() => {
-        if (mountedRef.current) {
-          initializeWebSocket();
-        }
-      }, 500);
+      // WebSocket will automatically connect via useWebSocket hook
       
     } catch (error) {
       console.error('Error loading selected tokens:', error);
@@ -826,10 +625,10 @@ const MarketWatch = () => {
     }
   };
 
+  // Manual reconnect is handled by the shared WebSocket service
   const handleManualReconnect = () => {
-    setConnectionAttempts(0);
-    setWsError(null);
-    initializeWebSocket();
+    // The shared service handles reconnection automatically
+    console.log('Reconnection is handled automatically by the shared WebSocket service');
   };
 
   // Open order modal when symbol is clicked
