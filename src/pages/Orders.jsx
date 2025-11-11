@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, CheckCircle, XCircle, TrendingUp, TrendingDown, Home, Briefcase, Settings, User } from 'lucide-react';
+import { FileText, Clock, CheckCircle, XCircle, TrendingUp, TrendingDown, Home, Briefcase, User } from 'lucide-react';
 import { tradingAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -32,7 +32,6 @@ const Orders = () => {
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'orders', icon: FileText, label: 'Orders' },
     { id: 'portfolio', icon: Briefcase, label: 'Portfolio' },
-    { id: 'tools', icon: Settings, label: 'Tools' },
     { id: 'profile', icon: User, label: 'Profile' }
   ];
 
@@ -500,9 +499,6 @@ const Orders = () => {
         break;
       case 'portfolio':
         navigate('/portfolio');
-        break;
-      case 'tools':
-        navigate('/tools');
         break;
       case 'profile':
         navigate('/profile');

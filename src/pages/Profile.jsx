@@ -79,7 +79,6 @@ const Profile = () => {
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'orders', icon: FileText, label: 'Orders' },
     { id: 'portfolio', icon: Briefcase, label: 'Portfolio' },
-    { id: 'tools', icon: Settings, label: 'Tools' },
     { id: 'profile', icon: User, label: 'Profile' }
   ];
 
@@ -418,7 +417,6 @@ const Profile = () => {
       case 'home': navigate('/dashboard'); break;
       case 'orders': navigate('/orders'); break;
       case 'portfolio': navigate('/portfolio'); break;
-      case 'tools': navigate('/tools'); break;
       default: break;
     }
   };

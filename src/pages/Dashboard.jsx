@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Home, FileText, Briefcase, Settings, User, TrendingUp, TrendingDown, ArrowLeft } from 'lucide-react';
+import { Search, Plus, Home, FileText, Briefcase, User, TrendingUp, TrendingDown, ArrowLeft } from 'lucide-react';
 import { tradingAPI } from '../services/api';
 import MarketWatch from './MarketWatch';
 import toast from 'react-hot-toast';
@@ -20,7 +20,6 @@ const Dashboard = () => {
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'orders', icon: FileText, label: 'Orders' },
     { id: 'portfolio', icon: Briefcase, label: 'Portfolio' },
-    { id: 'tools', icon: Settings, label: 'Tools' },
     { id: 'profile', icon: User, label: 'Profile' }
   ];
 
@@ -89,9 +88,6 @@ const Dashboard = () => {
         break;
       case 'portfolio':
         navigate('/portfolio');
-        break;
-      case 'tools':
-        navigate('/tools');
         break;
       case 'profile':
         navigate('/profile');

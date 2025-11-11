@@ -10,7 +10,6 @@ import {
   Bookmark, 
   FileText, 
   Briefcase, 
-  Pin, 
   User,
   TrendingUp,
   TrendingDown,
@@ -62,7 +61,6 @@ const Portfolio = () => {
     { id: 'dashboard', icon: Bookmark, label: 'Home' },
     { id: 'orders', icon: FileText, label: 'Orders' },
     { id: 'portfolio', icon: Briefcase, label: 'Portfolio' },
-    { id: 'tools', icon: Pin, label: 'Tools' },
     { id: 'profile', icon: User, label: 'Profile' }
   ];
 
@@ -1088,9 +1086,6 @@ const Portfolio = () => {
         break;
       case 'portfolio':
         // Already on portfolio page
-        break;
-      case 'tools':
-        navigate('/tools');
         break;
       case 'profile':
         navigate('/profile');
