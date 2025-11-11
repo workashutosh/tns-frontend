@@ -48,6 +48,7 @@ const Profile = () => {
   const [kycImages, setKycImages] = useState({ aadhaar: null, pan: null });
   const [uploadMessage, setUploadMessage] = useState('');
   const [kycLoading, setKycLoading] = useState(false);
+  const [usdToInrRate, setUsdToInrRate] = useState(88.65); // Default fallback rate
   const [bankDetails, setBankDetails] = useState({
     accountHolderName: '',
     bankName: '',
@@ -69,6 +70,10 @@ const Profile = () => {
     remark: ''
   });
   const [useGateway, setUseGateway] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadTxnMessage, setUploadTxnMessage] = useState('');
+  const [uploadTxnLoading, setUploadTxnLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const bottomNavItems = [
     { id: 'home', icon: Home, label: 'Home' },
@@ -78,11 +83,56 @@ const Profile = () => {
     { id: 'profile', icon: User, label: 'Profile' }
   ];
 
+  // Fetch USD to INR exchange rate
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const data = await response.json();
+        if (data.rates && data.rates.INR) {
+          setUsdToInrRate(data.rates.INR);
+        }
+      } catch (error) {
+        console.error('Error fetching exchange rate:', error);
+        // Keep using the previous rate or default
+      }
+    };
+    
+    fetchExchangeRate();
+    // Update every 5 minutes
+    const interval = setInterval(fetchExchangeRate, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (user?.UserId) {
       loadProfileData();
     }
   }, [user]);
+
+  // Calculate balance data (activePL, m2m, marginAvailable) when activeOrders change
+  useEffect(() => {
+    // Calculate total active P/L from all orders
+    const totalActivePL = activeOrders.reduce((total, order) => total + (order.profitLoss || 0), 0);
+    
+    // Calculate total margin used from all orders
+    const totalMarginUsed = activeOrders.reduce((total, order) => total + (parseFloat(order.MarginUsed || 0)), 0);
+    
+    // Update balance data
+    setBalanceData(prev => {
+      const creditLimit = parseFloat(localStorage.getItem('CreditLimit')) || 0;
+      const ledgerBalance = prev.ledgerBalance || 0;
+      const m2m = ledgerBalance + totalActivePL + creditLimit;
+      const marginAvailable = m2m - totalMarginUsed;
+      
+      return {
+        ...prev,
+        activePL: totalActivePL,
+        m2m: m2m,
+        marginAvailable: Math.max(0, marginAvailable)
+      };
+    });
+  }, [activeOrders]);
 
   const loadProfileData = async () => {
     try {
@@ -105,7 +155,20 @@ const Profile = () => {
     try {
       if (!user?.UserId) return;
       const balance = await tradingAPI.getLedgerBalance(user.UserId);
-      setBalanceData(prev => ({ ...prev, ledgerBalance: parseFloat(balance || 0) }));
+      const ledgerBalance = parseFloat(balance || 0);
+      
+      setBalanceData(prev => {
+        // Calculate initial m2m with current activePL (will be updated by useEffect when orders load)
+        const activePL = prev.activePL || 0;
+        const creditLimit = parseFloat(localStorage.getItem('CreditLimit')) || 0;
+        const m2m = ledgerBalance + activePL + creditLimit;
+        
+        return {
+          ...prev,
+          ledgerBalance,
+          m2m: m2m
+        };
+      });
     } catch (error) {
       setBalanceData(prev => ({ ...prev, ledgerBalance: 0 }));
     }
@@ -114,9 +177,97 @@ const Profile = () => {
   const getActiveOrders = async () => {
     try {
       if (!user?.UserId) return;
-      const orders = await tradingAPI.getConsolidatedTrades(user.UserId);
-      setActiveOrders(Array.isArray(orders) ? orders : []);
+      let orders = await tradingAPI.getConsolidatedTrades(user.UserId);
+      
+      // Handle JSON-encoded response (backend may return JSON as string)
+      if (typeof orders === 'string') {
+        try {
+          orders = JSON.parse(orders);
+        } catch (e) {
+          console.error('Error parsing orders JSON:', e);
+          setActiveOrders([]);
+          return;
+        }
+      }
+      
+      const processedOrders = Array.isArray(orders) ? orders.map(item => {
+        // Check if this is an FX symbol (FOREX, CRYPTO, COMMODITY)
+        const isFX = ['CRYPTO', 'FOREX', 'COMMODITY'].includes(item.SymbolType);
+        
+        const scriptParts = item.ScriptName.split('_');
+        const scriptName = scriptParts[0];
+        const exchange = scriptParts[1];
+        
+        // Check if this is a stop loss order
+        const isStopLossOrder = item.isstoplossorder === 'true' || item.isstoplossorder === true;
+        const orderCategoryDisplay = isStopLossOrder ? `Stop ${item.OrderCategory}` : item.OrderCategory;
+        
+        // Calculate initial P/L from cmp value (exactly like Portfolio.jsx)
+        let profitLoss = 0;
+        let profitLossUSD = 0;
+        let orderPriceUSD = 0;
+        let currentPriceUSD = 0;
+        const cmp = parseFloat(item.cmp || 0);
+        const orderPrice = parseFloat(item.OrderPrice || 0);
+        
+        // Use actualLot (symbol lot size) if available, otherwise fallback to selectedlotsize * Lot
+        // actualLot is the symbol's lot size (e.g., 100000 for crypto)
+        // Lot is the number of lots (e.g., 1)
+        // So total quantity = actualLot * Lot = 100000 * 1 = 100000
+        const actualLotSize = parseFloat(item.actualLot || item.Lotsize || item.selectedlotsize || 1);
+        const numberOfLots = parseFloat(item.Lot || 1);
+        const lotSize = actualLotSize * numberOfLots;
+        
+        // Only calculate P/L if we have a valid current price (cmp > 0)
+        // If cmp is 0, P/L will be 0 initially and updated by WebSocket with live prices
+        if (cmp > 0) {
+          // For FX orders, calculate USD prices and P/L
+          if (isFX && usdToInrRate > 0) {
+            // Convert OrderPrice from INR to USD
+            orderPriceUSD = orderPrice / usdToInrRate;
+            // Convert CMP from INR to USD
+            currentPriceUSD = cmp / usdToInrRate;
+            
+            // Calculate P/L in USD
+            if (item.OrderCategory === "SELL") {
+              profitLossUSD = (orderPriceUSD - currentPriceUSD) * lotSize;
+            } else {
+              profitLossUSD = (currentPriceUSD - orderPriceUSD) * lotSize;
+            }
+          }
+          
+          // Calculate P/L in INR (for non-FX or as fallback)
+          if (item.OrderCategory === "SELL") {
+            profitLoss = (orderPrice - cmp) * lotSize;
+          } else {
+            profitLoss = (cmp - orderPrice) * lotSize;
+          }
+        }
+        
+        return {
+          ...item,
+          scriptName,
+          exchange,
+          profitLoss: parseFloat(profitLoss.toFixed(2)),
+          profitLossUSD: isFX ? parseFloat(profitLossUSD.toFixed(2)) : 0,
+          orderPriceUSD: isFX ? parseFloat(orderPriceUSD.toFixed(5)) : 0,
+          currentPriceUSD: isFX ? parseFloat(currentPriceUSD.toFixed(5)) : 0,
+          currentPrice: item.cmp,
+          isStopLossOrder,
+          orderCategoryDisplay,
+          stopLossPrice: item.StopLossPrice || '',
+          takeProfitPrice: item.TakeProfitPrice || '',
+          isFX,
+          symbolType: item.SymbolType,
+          actualLot: item.actualLot, // Preserve actualLot for WebSocket updates
+          Lotsize: item.Lotsize, // Preserve Lotsize for WebSocket updates
+          calculatedLotSize: lotSize // Store calculated lot size for reference
+        };
+      }) : [];
+      
+      setActiveOrders(processedOrders);
     } catch (error) {
+      console.error('Error fetching active orders:', error);
       setActiveOrders([]);
     }
   };
@@ -433,7 +584,7 @@ const Profile = () => {
   const fetchDepositDetails = async () => {
     try {
       // Fetch UPI details from gateway
-      const upiResponse = await fetch('https://tnsadmin.twmresearchalert.com/api/upigateway.php/upi_details/1');
+      const upiResponse = await fetch('https://tnsadmin.twmresearchalert.com/api/upigateway.php/upi_details/2');
       const upiData = await upiResponse.json();
       
       setDepositData({
@@ -450,6 +601,13 @@ const Profile = () => {
     fetchDepositDetails();
     // Generate transaction ID
     setPaymentData(prev => ({ ...prev, transactionId: `txn_${Date.now()}_${Math.floor(Math.random() * 1000000)}` }));
+    // Reset upload state
+    setUploadFile(null);
+    setUploadTxnMessage('');
+    setUploadTxnLoading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmitPayment = async () => {
@@ -473,6 +631,81 @@ const Profile = () => {
       getUserBalance();
     } catch (error) {
       toast.error('Failed to submit payment');
+    }
+  };
+
+  const handleUploadTransactionRecord = async () => {
+    // Clear previous message
+    setUploadTxnMessage('');
+    
+    // Get userId from localStorage
+    const userId = localStorage.getItem('userid');
+    
+    // Get txnId from paymentData.transactionId (or from input if needed)
+    const txnId = paymentData.transactionId || '';
+    
+    // Hardcoded status
+    const status = 'SUCCESS';
+    
+    // Validation
+    if (!userId) {
+      setUploadTxnMessage('User not identified.');
+      return;
+    }
+    
+    if (!txnId) {
+      setUploadTxnMessage('Transaction ID is empty.');
+      return;
+    }
+    
+    if (!uploadFile) {
+      setUploadTxnMessage('Please choose a file (JPG/PNG/PDF).');
+      return;
+    }
+    
+    // Create FormData
+    const formData = new FormData();
+    formData.append('userId', userId);
+    formData.append('txnId', txnId);
+    formData.append('status', status);
+    formData.append('image', uploadFile);
+    
+    // Set loading state
+    setUploadTxnLoading(true);
+    setUploadTxnMessage('Uploading...');
+    
+    try {
+      const response = await fetch('https://tnsadmin.twmresearchalert.com/api/uploadTransaction.php', {
+        method: 'POST',
+        body: formData
+      });
+      
+      // Handle JSON parsing errors gracefully
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        data = { status: 'error', message: 'Invalid JSON response' };
+      }
+      
+      if (data && data.status === 'success') {
+        setUploadTxnMessage('Uploaded successfully.');
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        setUploadFile(null);
+        // Close modal after successful upload
+        setTimeout(() => {
+          setShowDepositModal(false);
+        }, 1500);
+      } else {
+        setUploadTxnMessage(data && data.message ? data.message : 'Upload failed.');
+      }
+    } catch (error) {
+      setUploadTxnMessage('Network error while uploading.');
+    } finally {
+      setUploadTxnLoading(false);
     }
   };
 
@@ -535,7 +768,6 @@ const Profile = () => {
             <h2 className="text-white text-base font-semibold">Account</h2>
           </div>
           <div className="divide-y divide-gray-700">
-            <MenuItem icon={<Activity className="w-5 h-5" />} label="Intraday History" onClick={() => toast.info('Coming soon')} />
             <MenuItem icon={<User className="w-5 h-5" />} label="KYC" onClick={() => { setShowKYCModal(true); fetchKYCStatus(); }} />
             <MenuItem icon={<DollarSign className="w-5 h-5" />} label="Funds" onClick={() => setShowFundDetailsModal(true)} />
             <MenuItem icon={<FileText className="w-5 h-5" />} label="Bill & Invoice" onClick={() => setShowInvoiceBillModal(true)} />
@@ -588,36 +820,36 @@ const Profile = () => {
       </Modal>
 
       <Modal show={showFundDetailsModal} onClose={() => setShowFundDetailsModal(false)} title="Transaction History" size="lg">
-        <div className="max-h-[70vh] overflow-y-auto">
-          <div className="flex justify-between items-center p-3 bg-gray-900 rounded-lg mb-3 border border-gray-700">
-            <span className="text-sm font-medium text-gray-300">User Current Balance</span>
-            <span className="text-lg font-bold text-green-400">₹{(balanceData.ledgerBalance || 0).toFixed(0)}</span>
+        <div className="max-h-[70vh] overflow-y-auto scrollbar-hide">
+          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg mb-4 border border-gray-700 shadow-sm">
+            <span className="text-sm font-normal text-gray-400">User Current Balance</span>
+            <span className="text-xs font-semibold text-green-400">₹{(balanceData.ledgerBalance || 0).toLocaleString('en-IN')}</span>
           </div>
           {transactionHistory && transactionHistory.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {transactionHistory.map((t, idx) => {
                 const amount = parseFloat(t.Amount || 0);
                 const isNegative = amount < 0 || t.TransactionType === 'Withdrawal' || t.TransactionType === 'Loss';
                 const displayAmount = Math.abs(amount);
                 
                 return (
-                  <div key={idx} className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                  <div key={idx} className="bg-gray-900 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors">
                     <div className="grid grid-cols-3 gap-4 items-center">
                       <div className="text-left">
-                        <div className="text-xs text-gray-400 mb-1">{t.CreatedDate || '-'}</div>
+                        <div className="text-xs font-normal text-gray-400 mb-1">{t.CreatedDate || '-'}</div>
                         {t.Notes && t.Notes !== 'None' && (
-                          <div className="text-xs text-gray-500">{t.Notes}</div>
+                          <div className="text-xs font-normal text-gray-500 mt-1">{t.Notes}</div>
                         )}
                       </div>
                       <div className="text-center">
-                        <div className="text-sm font-medium text-gray-300">{t.TransactionType || '-'}</div>
+                        <div className="text-sm font-normal text-gray-300">{t.TransactionType || '-'}</div>
                         {t.ScriptName && (
-                          <div className="text-xs text-gray-500">{t.ScriptName}</div>
+                          <div className="text-xs font-normal text-gray-500 mt-1">{t.ScriptName}</div>
                         )}
                       </div>
                       <div className="text-right">
-                        <div className={`text-base font-bold ${isNegative ? 'text-red-400' : 'text-green-400'}`}>
-                          {isNegative ? '-' : '+'}₹{displayAmount.toFixed(2)}
+                        <div className={`text-xs font-semibold ${isNegative ? 'text-red-400' : 'text-green-400'}`}>
+                          {isNegative ? '-' : '+'}₹{displayAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </div>
                     </div>
@@ -626,7 +858,7 @@ const Profile = () => {
               })}
             </div>
           ) : (
-            <div className="text-center text-gray-400 p-8 text-sm">No transactions found</div>
+            <div className="text-center text-gray-400 p-12 text-sm font-normal">No transactions found</div>
           )}
         </div>
       </Modal>
@@ -866,69 +1098,133 @@ const Profile = () => {
       </Modal>
 
             <Modal show={showDepositModal} onClose={() => setShowDepositModal(false)} title="Deposit Online" size="lg">
-        <div className="">
-          {/* Left Side - QR Code (col-lg-7) */}
-          <div className=" ">
-            <div className="text-center">
-              {depositData.qrCodeUrl ? (
-                <>
-                  <a href={depositData.qrCodeUrl}>
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=270x270&data=${encodeURIComponent(depositData.qrCodeUrl)}`} alt="QR Code" width="270" className="mx-auto border border-gray-600 rounded" />
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Left Side - QR Code */}
+          <div className="flex flex-col items-center justify-center">
+            {depositData.qrCodeUrl ? (
+              <>
+                <div className="bg-white p-4 rounded-lg shadow-lg mb-4">
+                  <a href={depositData.qrCodeUrl} className="block">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(depositData.qrCodeUrl)}`} 
+                      alt="QR Code" 
+                      className="w-full h-auto rounded"
+                    />
                   </a>
-                  <div className="text-white mt-5 text-lg font-semibold">
-                    UPI ID : <span className="text-blue-400">{depositData.upiId || '-'}</span>
+                </div>
+                <div className="text-center">
+                  <div className="text-gray-400 text-xs mb-1 font-normal">UPI ID</div>
+                  <div className="text-white text-sm font-normal break-all px-2">
+                    <span className="text-blue-400">{depositData.upiId || '-'}</span>
                   </div>
-                </>
-              ) : (
-                <div className="text-gray-400 py-20">Loading QR Code...</div>
-              )}
-            </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-gray-400 py-20 text-sm font-normal">Loading QR Code...</div>
+            )}
           </div>
 
-          {/* Right Side - Form (col-lg-5) */}
-          <div className="">
-            <p className="text-gray-400 text-sm mb-3">
-              <b>Please fill the details after payment for payment approval.</b>
+          {/* Right Side - Form */}
+          <div className="space-y-4">
+            <p className="text-gray-400 text-xs mb-4 font-normal leading-relaxed">
+              Please fill the details after payment for payment approval.
             </p>
             
-            <div className="mb-3">
-                <label className="block text-gray-400 text-xs mb-1">Transaction ID</label>
-                <input 
-                  type="text" 
-                  value={paymentData.transactionId}
-                  readOnly
-                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white"
-                />
-              </div>
+            <div>
+              <label className="block text-gray-400 text-xs mb-1.5 font-normal">Transaction ID</label>
+              <input 
+                type="text" 
+                value={paymentData.transactionId}
+                readOnly
+                className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-gray-300 font-normal focus:outline-none focus:border-gray-500"
+              />
+            </div>
               
-              <div className="mb-3">
-                <label className="block text-gray-400 text-xs mb-1">Enter Amount</label>
-                <input 
-                  type="number" 
-                  value={paymentData.amount}
-                  onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
-                  required
-                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
+            <div>
+              <label className="block text-gray-400 text-xs mb-1.5 font-normal">Enter Amount</label>
+              <input 
+                type="number" 
+                value={paymentData.amount}
+                onChange={(e) => setPaymentData({...paymentData, amount: e.target.value})}
+                required
+                className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white font-normal focus:outline-none focus:border-blue-500"
+                placeholder="0.00"
+              />
+            </div>
               
-              <div className="mb-3">
-                <label className="block text-gray-400 text-xs mb-1">Enter Remarks</label>
-                <textarea 
-                  rows={5}
-                  value={paymentData.remark}
-                  onChange={(e) => setPaymentData({...paymentData, remark: e.target.value})}
-                  required
-                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500 resize-none"
-                />
-              </div>
+            <div>
+              <label className="block text-gray-400 text-xs mb-1.5 font-normal">Enter Remarks</label>
+              <textarea 
+                rows={4}
+                value={paymentData.remark}
+                onChange={(e) => setPaymentData({...paymentData, remark: e.target.value})}
+                required
+                className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white font-normal focus:outline-none focus:border-blue-500 resize-none"
+                placeholder="Enter payment remarks..."
+              />
+            </div>
               
-              <button 
-                onClick={handleSubmitPayment}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded text-sm font-medium"
-              >
-                Submit
-              </button>
+            {/* Transaction Record Upload */}
+            <div>
+              <label className="block text-gray-400 text-xs mb-1.5 font-normal">Upload Transaction Record</label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <label className="flex-1 cursor-pointer">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      id="txnUploadFile"
+                      accept="image/*,application/pdf"
+                      onChange={(e) => setUploadFile(e.target.files[0] || null)}
+                      className="hidden"
+                    />
+                    <div className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-gray-300 font-normal hover:border-gray-500 transition-colors flex items-center justify-between">
+                      <span className="text-xs truncate">
+                        {uploadFile ? uploadFile.name : 'Choose file (JPG/PNG/PDF)'}
+                      </span>
+                      <span className="text-xs text-blue-400 ml-2">Browse</span>
+                    </div>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleUploadTransactionRecord}
+                    disabled={uploadTxnLoading || !uploadFile}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-xs font-normal rounded transition-colors whitespace-nowrap"
+                  >
+                    {uploadTxnLoading ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+                {uploadTxnMessage && (
+                  <div
+                    id="uploadTxnMsg"
+                    className={`text-xs font-normal ${
+                      uploadTxnMessage === 'Uploading...' || uploadTxnMessage.includes('Uploading')
+                        ? 'text-gray-400'
+                        : uploadTxnMessage.includes('successfully') || uploadTxnMessage.includes('success')
+                        ? 'text-green-400'
+                        : 'text-red-400'
+                    }`}
+                    style={{
+                      color: uploadTxnMessage === 'Uploading...' || uploadTxnMessage.includes('Uploading')
+                        ? '#666'
+                        : uploadTxnMessage.includes('successfully') || uploadTxnMessage.includes('success')
+                        ? '#4ade80'
+                        : '#f87171'
+                    }}
+                  >
+                    {uploadTxnMessage}
+                  </div>
+                )}
+                <p className="text-gray-500 text-xs font-normal">Upload a transaction record / payment screenshot</p>
+              </div>
+            </div>
+              
+            <button 
+              onClick={handleSubmitPayment}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded text-sm font-normal transition-colors mt-2"
+            >
+              Submit Payment
+            </button>
           </div>
         </div>
       </Modal>

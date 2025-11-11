@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus } from 'lucide-react';
+import { LogIn, UserPlus, TrendingUp, Shield, Globe } from 'lucide-react';
 import logo from '../assets/logo.svg';
 
 
@@ -66,17 +66,43 @@ const Welcome = () => {
           </button>
         </div>
 
-        {/* Regulatory Information */}
+        {/* Platform Features */}
         <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">TRADENSTOCKO</h3>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>Member: BSE, NSE & MCX</p>
-            <p>SEBI Registration No: INZ000031633</p>
-            <p>CDSL Depository Participant ID: 12086000</p>
-            <p>NSDL Depository Participant ID: IN300648</p>
-            <p>Address: 123 Trading Street, Mumbai, Maharashtra 400001</p>
-            <p>Phone: +91-22-1234-5678</p>
-            <p>Email: support@tradenstocko.com</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-6 tracking-tight">Why Tradenstocko</h3>
+          
+          <div className="space-y-4">
+            {/* Markets */}
+            <div className="flex items-start space-x-3">
+              <div className="mt-0.5">
+                <Globe className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 mb-1">Multiple Markets</p>
+                <p className="text-xs text-gray-600 leading-relaxed">Trade across BSE, NSE, MCX, Crypto, and Forex markets from a single platform</p>
+              </div>
+            </div>
+
+            {/* Payment Security */}
+            <div className="flex items-start space-x-3">
+              <div className="mt-0.5">
+                <Shield className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 mb-1">Secure Payments</p>
+                <p className="text-xs text-gray-600 leading-relaxed">Bank-grade encryption and secure payment gateways to protect your transactions and funds</p>
+              </div>
+            </div>
+
+            {/* Performance */}
+            <div className="flex items-start space-x-3">
+              <div className="mt-0.5">
+                <TrendingUp className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 mb-1">Advanced Trading</p>
+                <p className="text-xs text-gray-600 leading-relaxed">Real-time data, instant execution, and powerful tools for informed decisions</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
