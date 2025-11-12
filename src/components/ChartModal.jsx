@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Loader2 } from 'lucide-react';
 // v5 syntax: npm install lightweight-charts@^5.0.9
-import { createChart, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
+import { createChart, CandlestickSeries } from 'lightweight-charts';
 
 const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
   const [chartHeight, setChartHeight] = useState(600);
@@ -14,7 +14,6 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
   const containerRef = useRef(null);
   const chartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
-  const volumeSeriesRef = useRef(null);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const deviceIdRef = useRef(null);
@@ -271,13 +270,6 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
             if (candlestickSeriesRef.current) {
               candlestickSeriesRef.current.update(closedBar);
             }
-            if (volumeSeriesRef.current) {
-              volumeSeriesRef.current.update({ 
-                time: closedBar.time, 
-                value: closedBar.volume, 
-                color: closedBar.close >= closedBar.open ? '#26a69a' : '#ef5350'
-              });
-            }
             return finalData;
           });
           setCurrentBar(null);
@@ -489,8 +481,9 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
       const container = containerRef.current;
       if (!container) return;
 
-      const width = container.clientWidth || 800;
-      const height = chartHeight || 400;
+      const containerRect = container.getBoundingClientRect();
+      const width = containerRect.width || container.clientWidth || 800;
+      const height = chartHeight || containerRect.height || 400;
 
       if (width <= 0 || height <= 0) {
         initTimeout = setTimeout(initChart, 100);
@@ -527,7 +520,7 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
           },
           rightPriceScale: { 
             borderColor: '#E0E0E0',
-            scaleMargins: { top: 0.1, bottom: 0.1 },
+            scaleMargins: { top: 0.05, bottom: 0.05 },
             entireTextOnly: false,
             autoScale: true,
           },
@@ -581,29 +574,6 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
         return;
       }
 
-      // Volume
-      if (data.some(d => d.volume > 0) && isMounted) {
-        try {
-          // v5: addSeries with HistogramSeries class
-          const volumeSeries = chart.addSeries(HistogramSeries, {
-            color: '#26a69a',
-            priceFormat: { type: 'volume' },
-            priceScaleId: '',
-            scaleMargins: { top: 0.75, bottom: 0.05 }, // Better spacing for volume
-            priceLineVisible: false,
-            lastValueVisible: false,
-          });
-          volumeSeriesRef.current = volumeSeries;
-          const dataToDisplay = data.length > 200 ? data.slice(-200) : data;
-          volumeSeries.setData(dataToDisplay.map(d => ({
-            time: d.time,
-            value: d.volume,
-            color: d.close >= d.open ? '#26a69a' : '#ef5350'
-          })));
-        } catch (error) {
-          console.error('Error creating volume series:', error);
-        }
-      }
 
       if (!isMounted) {
         try {
@@ -656,7 +626,6 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
         }
         chartRef.current = null;
         candlestickSeriesRef.current = null;
-        volumeSeriesRef.current = null;
       }
     };
   }, [isReady, chartHeight, data.length]); // Include data.length to reinit if data is cleared
@@ -675,15 +644,6 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
       // Update candlestick series with latest data
       if (candlestickSeriesRef.current && chartRef.current) {
         candlestickSeriesRef.current.setData(dataToDisplay);
-      }
-      
-      // Update volume series
-      if (volumeSeriesRef.current && chartRef.current) {
-        volumeSeriesRef.current.setData(dataToDisplay.map(d => ({
-          time: d.time,
-          value: d.volume,
-          color: d.close >= d.open ? '#26a69a' : '#ef5350'
-        })));
       }
       
       // Adjust visible range to show recent data (last 60 bars for optimal visibility)
@@ -709,7 +669,6 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
         // Chart was disposed, clear refs
         chartRef.current = null;
         candlestickSeriesRef.current = null;
-        volumeSeriesRef.current = null;
       } else {
         console.error('Error updating chart data:', error);
       }
@@ -720,8 +679,9 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
   const updateHeight = useCallback(() => {
     if (!containerRef.current) return;
     
-    const newHeight = Math.max(400, containerRef.current.clientHeight - 32);
-    const newWidth = containerRef.current.clientWidth || containerRef.current.getBoundingClientRect().width || 0;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newHeight = Math.max(400, containerRect.height);
+    const newWidth = containerRect.width || containerRef.current.clientWidth || 0;
     const shouldBeReady = newHeight > 0 && newWidth > 0;
     
     // Only update if values actually changed to prevent infinite loops
@@ -740,7 +700,10 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
     });
     
     if (chartRef.current) {
-      chartRef.current.applyOptions({ height: newHeight });
+      chartRef.current.applyOptions({ 
+        height: newHeight,
+        width: newWidth 
+      });
       chartRef.current.timeScale().fitContent();
     }
   }, []);
@@ -834,7 +797,7 @@ const ChartModal = ({ isOpen, onClose, symbol: propSymbol }) => {
             <X className="w-6 h-6" />
           </button>
         </div>
-        <div ref={containerRef} className="flex-1 p-4 overflow-hidden min-h-0 relative">
+        <div ref={containerRef} className="flex-1 overflow-hidden min-h-0 relative">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10 rounded">
               <Loader2 className="w-8 h-8 animate-spin text-white" />

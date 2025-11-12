@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { authAPI } from '../services/api';
 
 const Registration = () => {
-  const [currentStep, setCurrentStep] = useState(1); // 1: Mobile, 2: OTP, 3: Registration Form
+  const [currentStep, setCurrentStep] = useState(1); // 1: Mobile, 2: OTP, 3: Part 1 (Basic Info), 4: Part 2 (KYC Info)
   const [formData, setFormData] = useState({
     mobile: '',
     otp: '',
@@ -13,11 +13,39 @@ const Registration = () => {
     email: '',
     username: '',
     password: '',
+    language: '',
     aadhar: '',
     panNo: '',
     city: '',
     address: ''
   });
+
+  // Indian languages list
+  const indianLanguages = [
+    { value: 'hindi', label: 'Hindi (हिंदी)' },
+    { value: 'english', label: 'English' },
+    { value: 'bengali', label: 'Bengali (বাংলা)' },
+    { value: 'telugu', label: 'Telugu (తెలుగు)' },
+    { value: 'marathi', label: 'Marathi (मराठी)' },
+    { value: 'tamil', label: 'Tamil (தமிழ்)' },
+    { value: 'urdu', label: 'Urdu (اردو)' },
+    { value: 'gujarati', label: 'Gujarati (ગુજરાતી)' },
+    { value: 'kannada', label: 'Kannada (ಕನ್ನಡ)' },
+    { value: 'odia', label: 'Odia (ଓଡ଼ିଆ)' },
+    { value: 'punjabi', label: 'Punjabi (ਪੰਜਾਬੀ)' },
+    { value: 'malayalam', label: 'Malayalam (മലയാളം)' },
+    { value: 'assamese', label: 'Assamese (অসমীয়া)' },
+    { value: 'maithili', label: 'Maithili (मैथिली)' },
+    { value: 'sanskrit', label: 'Sanskrit (संस्कृतम्)' },
+    { value: 'kashmiri', label: 'Kashmiri (कॉशुर)' },
+    { value: 'konkani', label: 'Konkani (कोंकणी)' },
+    { value: 'manipuri', label: 'Manipuri (মৈতৈলোন)' },
+    { value: 'nepali', label: 'Nepali (नेपाली)' },
+    { value: 'sindhi', label: 'Sindhi (سنڌي)' },
+    { value: 'dogri', label: 'Dogri (डोगरी)' },
+    { value: 'bodo', label: 'Bodo (बड़ो)' },
+    { value: 'santhali', label: 'Santhali (संथाली)' }
+  ];
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -109,7 +137,7 @@ const Registration = () => {
       const result = await response.json();
       if (result.responseCode === 200 && result.data.verificationStatus === "VERIFICATION_COMPLETED") {
         toast.success('OTP verified successfully!');
-        setCurrentStep(3);
+        setCurrentStep(3); // Move to Part 1 of registration
       } else {
         toast.error('OTP verification failed.');
       }
@@ -137,27 +165,58 @@ const Registration = () => {
     }
   };
 
-  // Submit registration
-  const submitRegistration = async () => {
-    // Validate all fields
-    if (!validateEmail(formData.email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-    if (!validateAadhar(formData.aadhar)) {
-      toast.error('Please enter a valid 12-digit Aadhaar number');
-      return;
-    }
-    if (!validatePAN(formData.panNo)) {
-      toast.error('Please enter a valid PAN number');
-      return;
-    }
+  // Validate Part 1 (Basic Info)
+  const validatePart1 = () => {
     if (!validateName(formData.firstName)) {
       toast.error('Please enter a valid first name');
-      return;
+      return false;
     }
     if (!validateName(formData.lastName)) {
       toast.error('Please enter a valid last name');
+      return false;
+    }
+    if (!formData.username || formData.username.trim() === '') {
+      toast.error('Please enter a username');
+      return false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return false;
+    }
+    if (!formData.language || formData.language.trim() === '') {
+      toast.error('Please select a language');
+      return false;
+    }
+    return true;
+  };
+
+  // Validate Part 2 (KYC Info)
+  const validatePart2 = () => {
+    if (!validateAadhar(formData.aadhar)) {
+      toast.error('Please enter a valid 12-digit Aadhaar number');
+      return false;
+    }
+    if (!validatePAN(formData.panNo)) {
+      toast.error('Please enter a valid PAN number');
+      return false;
+    }
+    if (!formData.city || formData.city.trim() === '') {
+      toast.error('Please enter your city');
+      return false;
+    }
+    return true;
+  };
+
+  // Move to Part 2
+  const goToPart2 = () => {
+    if (validatePart1()) {
+      setCurrentStep(4);
+    }
+  };
+
+  // Submit registration
+  const submitRegistration = async () => {
+    if (!validatePart2()) {
       return;
     }
 
@@ -174,6 +233,7 @@ const Registration = () => {
         txtpanno: formData.panNo.toUpperCase(),
         txtcity: formData.city,
         txtaddress: formData.address,
+        txtlanguage: formData.language,
         txtdomainname: localStorage.getItem("prefix") || ""
       };
 
@@ -271,8 +331,8 @@ const Registration = () => {
   const renderStep3 = () => (
     <div className="space-y-4">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Registration</h1>
-        <p className="text-gray-600">Fill in your details to complete the registration</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Basic Information</h1>
+        <p className="text-gray-600">Step 1 of 2 - Enter your basic details</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -302,17 +362,7 @@ const Registration = () => {
         value={formData.mobile}
         readOnly
         className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
-        placeholder="Mobile Number"
-      />
-
-      <input
-        type="email"
-        name="email"
-        value={formData.email}
-        onChange={handleInputChange}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="Email Address"
-        required
+        placeholder="Phone Number"
       />
 
       <input
@@ -336,6 +386,45 @@ const Registration = () => {
         placeholder="Password"
         required
       />
+
+      <select
+        name="language"
+        value={formData.language}
+        onChange={handleInputChange}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+        required
+      >
+        <option value="">Select Language</option>
+        {indianLanguages.map((lang) => (
+          <option key={lang.value} value={lang.value}>
+            {lang.label}
+          </option>
+        ))}
+      </select>
+
+      <button
+        onClick={goToPart2}
+        disabled={loading}
+        className="w-full btn-trading disabled:opacity-50"
+      >
+        Continue
+      </button>
+
+      <button
+        onClick={() => navigate('/welcome')}
+        className="w-full btn-secondary"
+      >
+        Go Back To Login
+      </button>
+    </div>
+  );
+
+  const renderStep4 = () => (
+    <div className="space-y-4">
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">KYC Information</h1>
+        <p className="text-gray-600">Step 2 of 2 - Complete your verification details</p>
+      </div>
 
       <input
         type="text"
@@ -370,16 +459,6 @@ const Registration = () => {
         required
       />
 
-      <input
-        type="text"
-        name="address"
-        value={formData.address}
-        onChange={handleInputChange}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="Address"
-        required
-      />
-
       <button
         onClick={submitRegistration}
         disabled={loading}
@@ -389,10 +468,10 @@ const Registration = () => {
       </button>
 
       <button
-        onClick={() => navigate('/welcome')}
+        onClick={() => setCurrentStep(3)}
         className="w-full btn-secondary"
       >
-        Go Back To Login
+        Go Back
       </button>
     </div>
   );
@@ -418,6 +497,7 @@ const Registration = () => {
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
+          {currentStep === 4 && renderStep4()}
         </div>
       </div>
     </div>

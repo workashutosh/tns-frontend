@@ -204,7 +204,37 @@ const Portfolio = () => {
   const getActiveOrders = async () => {
     try {
       const response = await tradingAPI.getConsolidatedTrades(user.UserId);
-      const data = JSON.parse(response);
+      
+      // Handle different response formats
+      let data = response;
+      
+      // If response is a string, try to parse it as JSON
+      if (typeof response === 'string') {
+        try {
+          const trimmed = response.trim();
+          data = JSON.parse(trimmed);
+          // If the parsed result is still a string, parse again (double-stringified case)
+          if (typeof data === 'string') {
+            data = JSON.parse(data);
+          }
+        } catch (parseError) {
+          console.error('Failed to parse response as JSON:', parseError, 'Response:', response);
+          setActiveOrders([]);
+          return;
+        }
+      }
+      
+      // If response is an object but not an array, check for common array properties
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        data = data.data || data.orders || data.consolidatedTrades || data.result || [];
+      }
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.warn('getConsolidatedTrades returned non-array data:', data, 'Type:', typeof data);
+        setActiveOrders([]);
+        return;
+      }
       
       // Log the raw API response to see what fields are available
       console.log('Raw API Response from getConsolidatedTrades:', data);
@@ -337,7 +367,24 @@ const Portfolio = () => {
           OrderCategory: order.OrderCategory
         })));
         
-        setActiveOrders(orders);
+        // Sort orders by OrderDate and OrderTime descending (newest first)
+        const sortedOrders = orders.sort((a, b) => {
+          const dateA = a.OrderDate || '';
+          const timeA = a.OrderTime || '';
+          const dateB = b.OrderDate || '';
+          const timeB = b.OrderTime || '';
+          
+          // Combine date and time for comparison
+          const dateTimeA = `${dateA} ${timeA}`;
+          const dateTimeB = `${dateB} ${timeB}`;
+          
+          // Compare dates first, then times
+          if (dateTimeA > dateTimeB) return -1;
+          if (dateTimeA < dateTimeB) return 1;
+          return 0;
+        });
+        
+        setActiveOrders(sortedOrders);
         
         // Initialize WebSocket for MCX/NSE orders
         if (tokensRef.current) {
@@ -362,7 +409,40 @@ const Portfolio = () => {
   // Get closed orders
   const getClosedOrders = async () => {
     try {
-      const data = await tradingAPI.getUserClosedOrders(user.UserId);
+      const response = await tradingAPI.getUserClosedOrders(user.UserId);
+      
+      // Handle different response formats
+      let data = response;
+      
+      // If response is a string, try to parse it as JSON (handles stringified JSON arrays)
+      if (typeof response === 'string') {
+        try {
+          // Remove leading/trailing whitespace and quotes if present
+          const trimmed = response.trim();
+          // Parse the JSON string
+          data = JSON.parse(trimmed);
+          // If the parsed result is still a string, parse again (double-stringified case)
+          if (typeof data === 'string') {
+            data = JSON.parse(data);
+          }
+        } catch (parseError) {
+          console.error('Failed to parse response as JSON:', parseError, 'Response:', response);
+          setClosedOrders([]);
+          return;
+        }
+      }
+      
+      // If response is an object but not an array, check for common array properties
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        data = data.data || data.orders || data.closedOrders || data.result || [];
+      }
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.warn('getUserClosedOrders returned non-array data:', data, 'Type:', typeof data);
+        setClosedOrders([]);
+        return;
+      }
       
       if (data.length > 0) {
         // Process closed orders to add FX detection and USD prices
@@ -388,7 +468,24 @@ const Portfolio = () => {
           };
         });
         
-        setClosedOrders(processedData);
+        // Sort closed orders by OrderDate and OrderTime descending (newest first)
+        const sortedClosedOrders = processedData.sort((a, b) => {
+          const dateA = a.OrderDate || '';
+          const timeA = a.OrderTime || '';
+          const dateB = b.OrderDate || '';
+          const timeB = b.OrderTime || '';
+          
+          // Combine date and time for comparison
+          const dateTimeA = `${dateA} ${timeA}`;
+          const dateTimeB = `${dateB} ${timeB}`;
+          
+          // Compare dates first, then times
+          if (dateTimeA > dateTimeB) return -1;
+          if (dateTimeA < dateTimeB) return 1;
+          return 0;
+        });
+        
+        setClosedOrders(sortedClosedOrders);
       } else {
         setClosedOrders([]);
       }

@@ -101,7 +101,7 @@ export const authAPI = {
   // Register user
   register: async (userData) => {
     try {
-      const response = await api.post('/Register/', userData);
+      const response = await api.post('/register/', userData);
       return response.data;
     } catch (error) {
       throw error;

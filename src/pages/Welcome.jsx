@@ -78,7 +78,7 @@ const Welcome = () => {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 mb-1">Multiple Markets</p>
-                <p className="text-xs text-gray-600 leading-relaxed">Trade across BSE, NSE, MCX, Crypto, and Forex markets from a single platform</p>
+                <p className="text-xs text-gray-600 leading-relaxed">Access and Trade across multiple markets using one unified platform</p>
               </div>
             </div>
 
